@@ -1,0 +1,8 @@
+{
+  "name": "arbitra-client",
+  "version": "0.1.1",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^1.7.8"
+  }
+}
