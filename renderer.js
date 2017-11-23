@@ -58,7 +58,8 @@ document.onreadystatechange = function () {
 var message = {
   "header": {
     "type": "transaction",
-    "hash": ""
+    "hash": "fa9d4411d3cbaa4e2dd7c2e3ee4c380b307c7904335231df5d8357fa580f6173",
+    "from": "127.0.0.1"
   },
   "body": {
     "sender": "me",
@@ -66,18 +67,34 @@ var message = {
   }
 }
 
+function hashBody(json) {
+  var body = JSON.stringify(json.body)
+  return sha256(body)
+}
+
 function parseMessage(message) {
   try {
     msgjson = JSON.parse(message)
   } catch (e) {
-    console.log("Message would not parse as JSON")
+    console.log("Message does not parse as JSON")
     // should send back error to the person who sent it.
     return
   }
-  if (message.header.type == "transaction") {
-    console.log("its a transaction")
+  if (msgjson.header.type == "transaction") {
+    console.log("It's a transaction")
+  } else {
+    console.log("Message type unknown")
+  }
+  var msghash = hashBody(msgjson)
+  console.log(msghash)
+  if (msgjson.header.hash === msghash) {
+    console.log("hash matches")
+  } else {
+    console.log("hash does not match")
   }
 }
+
+parseMessage(JSON.stringify(message))
 
 var server = net.createServer(function(socket) {
   console.log("Server created")
