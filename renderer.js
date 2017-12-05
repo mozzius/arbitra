@@ -22,6 +22,8 @@ function sha256(data) {
   return hash
 }
 
+console.log(crypto.getCurves())
+
 document.onreadystatechange = function () {
   if (document.readyState == "complete") {
     // Close Buttons
@@ -58,14 +60,18 @@ document.onreadystatechange = function () {
 var message = {
   "header": {
     "type": "transaction",
-    "hash": "fa9d4411d3cbaa4e2dd7c2e3ee4c380b307c7904335231df5d8357fa580f6173",
+    "hash": "",
     "from": "127.0.0.1"
   },
   "body": {
     "sender": "me",
-    "reciever": "also me"
+    "reciever": "also me",
+    "amount": 12,
+    "time": Date.now()
   }
 }
+
+message.header.hash = hashBody(message)
 
 function hashBody(json) {
   var body = JSON.stringify(json.body)
@@ -86,7 +92,6 @@ function parseMessage(message) {
     console.log("Message type unknown")
   }
   var msghash = hashBody(msgjson)
-  console.log(msghash)
   if (msgjson.header.hash === msghash) {
     console.log("hash matches")
   } else {
@@ -106,16 +111,18 @@ var server = net.createServer(function(socket) {
   socket.on("end", socket.end)
 })
 
-server.listen(1337, "127.0.0.1")
+server.listen(80, "127.0.0.1")
 
-var client = new net.Socket()
-client.connect(1337, "127.0.0.1", function() {
-  client.write("Hash this string please")
-  client.on("data", function(data) {
-    console.log("Client received: " + data)
-    client.destroy()
+function sendMsg(message, ip) {
+  var client = new net.Socket()
+  client.connect(80, ip, function() {
+    client.write("Hash this string please")
+    client.on("data", function(data) {
+      console.log("Client received: " + data)
+      client.destroy()
+    })
+    client.on("close", function() {
+      console.log("Connection closed")
+    })  
   })
-  client.on("close", function() {
-    console.log("Connection closed")
-  })  
-})
+}
