@@ -22,7 +22,7 @@ function sha256(data) {
   return hash
 }
 
-console.log(crypto.getCurves())
+// signing uses elleptical curve
 
 document.onreadystatechange = function () {
   if (document.readyState == "complete") {
