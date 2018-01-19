@@ -22,8 +22,6 @@ function sha256(data) {
   return hash
 }
 
-// signing uses elleptical curve
-
 document.onreadystatechange = function () {
   if (document.readyState == "complete") {
     // Close Buttons
