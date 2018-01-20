@@ -43,8 +43,9 @@ document.onreadystatechange = function () {
     })
 
     // Changing pages
-    // Default is overview
-    changePage("overview")
+    
+    // this opens the initial page
+    changePage("testing")
 
     document.getElementById("overview").addEventListener("click", function () {
       changePage("overview")

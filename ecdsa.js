@@ -1,4 +1,5 @@
 const crypt = require('crypto')
+const random = require('random-number-csprng')
 
 // elliptic curve secp256k1
 const curve = {
@@ -14,7 +15,7 @@ const curve = {
 
 function sha256(data) {
     // creates a sha256 hash, updates it with data, and turns it into a hexadecimal string
-    var hash = crypto.createHash('sha256').update(data).toString("hex")
+    var hash = crypto.createHash('sha256').update(data).toString('hex')
     return hash
 }
 
@@ -22,7 +23,7 @@ function onCurve(point) {
     // sees if point is on the curve y^2 = x^3 + ax + b
     if (point !== Infinity) {
         if ((point.y**2 - point.x**3 - curve.a*point.x - curve.b) % curve.p !== 0) {
-            throw new Error("not on curve")
+            throw new Error('not on curve')
         }
     }
 }
@@ -81,10 +82,10 @@ function multiPoints(n,P) {
     if (P === Infinity) {
         return P
     }
-    var total = "Infinity"
+    var total = Infinity
     var binary = (n >>> 0).toString(2)
     // reversed binary
-    var yranib = binary.split("").reverse()
+    var yranib = binary.split('').reverse()
     // see documentation if confused, it's a bit mathsy
     // to explain in comments
     yranib.foreach(function(bit){
@@ -98,20 +99,20 @@ function multiPoints(n,P) {
     return total
 }
 
-function createKeys() {
-    var rand = parseInt(crypto.randomBytes(256).toString("hex"),16)
-    // make sure it's less than n
-    var private = rand % curve.n
+function createKeys(callback) {
+    var private = random(1,curve.n)
     // don't need to catch here because if
     // the generator is not on the curve, something
     // is definitly wrong
     var public = multiPoints(private,curve.g)
-    return {private = private, public = public}
+    callback(public,private)
 }
 
 function signMsg(msg,w) {
-    var rand = crypto.randomBytes(256).toString(10)
-    // make sure it's less than n
-    var k = rand % curve.n
-    var z = parseInt(sha256(msg),16)
+    var rand = random(1,curve.n, function(rand){
+        var k = rand % curve.n
+        var z = parseInt(sha256(msg),16)
+    })
 }
+
+exports.createKeys = createKeys()
