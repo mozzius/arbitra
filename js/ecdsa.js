@@ -3,14 +3,22 @@ const bigInt = require('big-integer')
 
 // elliptic curve secp256k1
 const curve = {
-    a: bigInt("0"),
-    b: bigInt("7"),
-    p: bigInt("115792089237316195423570985008687907853269984665640564039457584007908834671663"),
+    a: bigInt('0'),
+    b: bigInt('7'),
+    p: bigInt('115792089237316195423570985008687907853269984665640564039457584007908834671663'),
     g: {
-        x: bigInt("55066263022277343669578718895168534326250603453777594175500187360389116729240"),
-        y: bigInt("32670510020758816978083085130507043184471273380659243275938904335757337482424")
+        x: bigInt('55066263022277343669578718895168534326250603453777594175500187360389116729240'),
+        y: bigInt('32670510020758816978083085130507043184471273380659243275938904335757337482424')
     },
-    n: bigInt("115792089237316195423570985008687907852837564279074904382605163141518161494337")
+    n: bigInt('115792089237316195423570985008687907852837564279074904382605163141518161494337')
+}
+
+function randomNum(min=1,max=curve.n) {
+    var randomValue = max.add(1)
+    while (randomValue.compare(max) === -1 || randomValue.compare(min) === 1) {
+        randomValue = bigInt(crypto.randomBytes(256).toString('hex'),16)
+    }
+    return randomValue.toString()
 }
 
 function sha256(data) {
@@ -22,31 +30,12 @@ function sha256(data) {
 function onCurve(point) {
     // sees if point is on the curve y^2 = x^3 + ax + b
     if (point !== Infinity) {
-        if ((point.y ** 2 - point.x ** 3 - curve.a * point.x - curve.b) % curve.p !== 0) {
+        ysq = point.y.square()
+        xcu = point.x.pow(3)
+        ax = curve.a.multiply(point.x)
+        if (ysq.minus(xcu).minus(ax).minus(curve.b).isZero()) {
             throw new Error('not on curve')
         }
-    }
-}
-
-function invMod(a, p) {
-    // finds the inverse modulus using the
-    // Extended Eucelidean Algorithm
-    var x = 0, y = 1
-    var oldx = 1, oldy = 0
-    var r = p, oldr = a
-    while (r !== 0) {
-        quot = Math.floor(oldr / r)
-        oldr = r
-        r = oldr - quot * r
-        oldx = x
-        x = oldx - quot * x
-        oldy = y
-        y = oldy - quot * y
-    }
-    if (oldr === 1) {
-        return x % p
-    } else {
-        throw new Error("a is 0, or p isn't prime")
     }
 }
 
@@ -116,4 +105,4 @@ function signMsg(msg, w) {
     })
 }
 
-exports.createKeys = createKeys
+exports.randomNum = randomNum

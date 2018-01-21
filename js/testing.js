@@ -1,10 +1,7 @@
 const ecdsa = require('./ecdsa.js')
 
 function init() {
-    ecdsa.createKeys(function(public,private) {
-        console.log(public)
-        console.log(private)
-    })
+    console.log(ecdsa.randomNum())
 }
 
 exports.init = init
