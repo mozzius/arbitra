@@ -3,14 +3,14 @@ const random = require('random-number-csprng')
 
 // elliptic curve secp256k1
 const curve = {
-    a = 0,
-    b = 7,
-    p = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f,
-    g = {
-        x = 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
-        y = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8
+    a: 0,
+    b: 7,
+    p: 115792089237316195423570985008687907853269984665640564039457584007908834671663,
+    g: {
+        x: 55066263022277343669578718895168534326250603453777594175500187360389116729240,
+        y: 32670510020758816978083085130507043184471273380659243275938904335757337482424
     },
-    n = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+    n: 115792089237316195423570985008687907852837564279074904382605163141518161494337
 }
 
 function sha256(data) {
@@ -63,7 +63,7 @@ function addPoints(P1,P2) {
             return Infinity
         } else {
             // finding gradient of tangent
-            var m = ((3*(P1.x**2)+curve.a)*invMod(2*P1y,curve.p))
+            var m = ((3*(P1.x**2)+curve.a)*invMod(2*P1.y,curve.p))
         }
     } else {
         // finding gradient of line between 2 points
@@ -71,8 +71,8 @@ function addPoints(P1,P2) {
     }
     // calculating other interception point
     var P3 = {
-        x = ((m**2 - P1.x - P2.x) % curve.p),
-        y = (-(P1.y + m*P3.x - m*P1.x) % curve.p)
+        x: ((m**2 - P1.x - P2.x) % curve.p),
+        y: (-(P1.y + m*P3.x - m*P1.x) % curve.p)
     }
     onCurve(P3)
     return P3
@@ -88,7 +88,7 @@ function multiPoints(n,P) {
     var yranib = binary.split('').reverse()
     // see documentation if confused, it's a bit mathsy
     // to explain in comments
-    yranib.foreach(function(bit){
+    yranib.forEach(function(bit){
         if (bit == 1) {
             total = addPoints(total,P)
         }
@@ -100,12 +100,13 @@ function multiPoints(n,P) {
 }
 
 function createKeys(callback) {
-    var private = random(1,curve.n)
-    // don't need to catch here because if
-    // the generator is not on the curve, something
-    // is definitly wrong
-    var public = multiPoints(private,curve.g)
-    callback(public,private)
+    try{
+        var private = random(1,curve.n)
+        var public = multiPoints(private,curve.g)
+    } catch(e) {
+        callback(0,0,err=true)
+    }
+    callback(public,private,err=null)
 }
 
 function signMsg(msg,w) {
