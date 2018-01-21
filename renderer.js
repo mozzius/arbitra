@@ -3,16 +3,16 @@ const fs = require("fs")
 const net = require("net")
 
 function changePage(name) {
-    var path = "pages\\"+name+".html"
+    var path = "pages\\" + name + ".html"
     fs.readFile(path, 'utf-8', (err, data) => {
         if (err) {
             alert("An error ocurred reading the file :" + err.message)
             console.warn("An error ocurred reading the file :" + err.message)
             return
         }
-        console.log("Page change: "+name)
+        console.log("Page change: " + name)
         document.getElementById("body").innerHTML = data
-        const pageJS = require("./js/"+name+".js")
+        const pageJS = require("./js/" + name + ".js")
         pageJS.init()
     })
 }
@@ -29,14 +29,14 @@ document.onreadystatechange = function () {
                 window.unmaximize()
             } else {
                 window.maximize()
-            }	
+            }
         })
         document.getElementById("close").addEventListener("click", function (e) {
             window.close()
         })
 
         // Changing pages
-    
+
         // this opens the initial page
         changePage("testing")
 
