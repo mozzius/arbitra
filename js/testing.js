@@ -25,6 +25,9 @@ function init() {
             })
         }
     })
+    var P = ecdsa.multiPoints(bigInt("104057963477977915030379767348304416025737651037435593583054022610344706852134"),ecdsa.curve.g)
+    console.log(P.x.toString())
+    console.log(P.y.toString())
 }
 
 exports.init = init

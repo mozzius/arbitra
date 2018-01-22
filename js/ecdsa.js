@@ -75,6 +75,7 @@ function multiPoints(n,P) {
     var binary = n.toString(2)
     // reversed binary
     var yranib = binary.split('').reverse()
+    console.log(yranib)
     // see documentation if confused, it's a bit mathsy
     // to explain in comments
     yranib.forEach(function(bit) {
@@ -112,7 +113,7 @@ function signMsg(msg,w,callback) {
             var P = multiPoints(k,curve.g)
         } catch(e) {
             err = e
-            callback(0,0,e)
+            callback(0,0,err)
             return
         }
         r = P.x.mod(curve.n)
@@ -124,8 +125,8 @@ function signMsg(msg,w,callback) {
 function verifyMsg(msg,r,s,q,callback) {
     var result = false
     var z = hash.sha256(msg)
-    u1 = bigInt(z.times(s.modInv(curve.p))).mod(curve.n)
-    u2 = bigInt(r.times(s.modInv(curve.p))).mod(curve.n)
+    u1 = bigInt(z.times(s.modInv(curve.n))).mod(curve.n)
+    u2 = bigInt(r.times(s.modInv(curve.n))).mod(curve.n)
     try {
         P = addPoints(multiPoints(u1,curve.g),multiPoints(u2,q))
     } catch(e) {
@@ -136,7 +137,9 @@ function verifyMsg(msg,r,s,q,callback) {
     callback(result)
 }
 
+exports.curve = curve
 exports.randomNum = randomNum
 exports.createKeys = createKeys
 exports.signMsg = signMsg
 exports.verifyMsg = verifyMsg
+exports.multiPoints = multiPoints
