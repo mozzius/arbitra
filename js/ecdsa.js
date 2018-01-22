@@ -1,5 +1,6 @@
-const crypt = require('crypto')
+const crypto = require('crypto')
 const bigInt = require('big-integer')
+const hash = require('./hashing.js')
 
 // elliptic curve secp256k1
 const curve = {
@@ -15,16 +16,12 @@ const curve = {
 
 function randomNum(min=1,max=curve.n) {
     var randomValue = max.add(1)
-    while (randomValue.compare(max) === -1 || randomValue.compare(min) === 1) {
-        randomValue = bigInt(crypto.randomBytes(256).toString('hex'),16)
+    while (randomValue.greater(max) || randomValue.lesser(min)) {
+        // 32 bytes = 256 bits
+        var buffer = crypto.randomBytes(32).toString('hex')
+        randomValue = bigInt(buffer,16)
     }
-    return randomValue.toString()
-}
-
-function sha256(data) {
-    // creates a sha256 hash, updates it with data, and turns it into a bigint
-    var hash = crypto.createHash('sha256').update(data).toString(10)
-    return bigInt(hash)
+    return randomValue
 }
 
 function onCurve(point) {
@@ -39,9 +36,10 @@ function onCurve(point) {
     }
 }
 
-function addPoints(P1, P2) {
+function addPoints(P1,P2) {
     onCurve(P1)
     onCurve(P2)
+    // Point + Infinity = Point
     if (P1 === Infinity) {
         return P2
     } else if (P2 === Infinity) {
@@ -52,32 +50,34 @@ function addPoints(P1, P2) {
             return Infinity
         } else {
             // finding gradient of tangent
-            var m = ((3 * (P1.x ** 2) + curve.a) * invMod(2 * P1.y, curve.p))
+            var m = bigInt(bigInt(bigInt("3").times(P1.x.square()).plus(curve.a)).times(bigInt(bigInt(2).times(P1.y)))).modInv(curve.p)
         }
     } else {
         // finding gradient of line between 2 points
-        var m = ((P2.y - P1.y) * invMod(P2.x - P1.x, curve.p))
+        var m = bigInt(P2.y.minus(P1.y)).times(P2.x.minus(P1.x)).modInv(curve.p)
     }
     // calculating other interception point
+    var x = m.square().minus(P1.x).minus(P2.x).mod(curve.p)
+    var y = curve.p.minus(bigInt(bigInt(P1.y.plus(m)).times(x.minus(m.times(P1.x)))).mod(curve.p))
     var P3 = {
-        x: ((m ** 2 - P1.x - P2.x) % curve.p),
-        y: (-(P1.y + m * P3.x - m * P1.x) % curve.p)
+        x: x,
+        y: y
     }
     onCurve(P3)
     return P3
 }
 
-function multiPoints(n, P) {
+function multiPoints(n,P) {
     if (P === Infinity) {
         return P
     }
     var total = Infinity
-    var binary = (n >>> 0).toString(2)
+    var binary = n.toString(2)
     // reversed binary
     var yranib = binary.split('').reverse()
     // see documentation if confused, it's a bit mathsy
     // to explain in comments
-    yranib.forEach(function (bit) {
+    yranib.forEach(function(bit) {
         if (bit == 1) {
             total = addPoints(total, P)
         }
@@ -89,20 +89,54 @@ function multiPoints(n, P) {
 }
 
 function createKeys(callback) {
+    var err
     try {
-        var private = random(1, curve.n)
+        var private = randomNum(1, curve.n)
         var public = multiPoints(private, curve.g)
     } catch (e) {
-        callback(0, 0, err = true)
+        err = e
+    } finally {
+        callback(public, private, err)
     }
-    callback(public, private, err = null)
 }
 
-function signMsg(msg, w) {
-    var rand = random(1, curve.n, function (rand) {
-        var k = rand % curve.n
-        var z = parseInt(sha256(msg), 16)
-    })
+function signMsg(msg,w,callback) {
+    var err
+    console.log("Signing: "+msg)
+    var z = hash.sha256(msg)
+    var r,s
+    r = s = bigInt.zero
+    while (r.isZero() && s.isZero()) {
+        var k = randomNum(1, curve.n)
+        try {
+            var P = multiPoints(k,curve.g)
+        } catch(e) {
+            err = e
+            callback(0,0,e)
+            return
+        }
+        r = P.x.mod(curve.n)
+        s = bigInt(bigInt(w.times(r).plus(z)).times(k.modInv(curve.n))).mod(curve.n)
+    }
+    callback(r,s,err)
+}
+
+function verifyMsg(msg,r,s,q,callback) {
+    var result = false
+    var z = hash.sha256(msg)
+    u1 = bigInt(z.times(s.modInv(curve.p))).mod(curve.n)
+    u2 = bigInt(r.times(s.modInv(curve.p))).mod(curve.n)
+    try {
+        P = addPoints(multiPoints(u1,curve.g),multiPoints(u2,q))
+    } catch(e) {
+        callback(result)
+        return
+    }
+    result = bigInt(r.mod(curve.n)).equals(P.x.mod(curve.n))
+    callback(result)
 }
 
 exports.randomNum = randomNum
+exports.createKeys = createKeys
+exports.signMsg = signMsg
+exports.verifyMsg = verifyMsg
