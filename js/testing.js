@@ -25,9 +25,6 @@ function init() {
             })
         }
     })
-    var P = ecdsa.multiPoints(bigInt("104057963477977915030379767348304416025737651037435593583054022610344706852134"),ecdsa.curve.g)
-    console.log(P.x.toString())
-    console.log(P.y.toString())
 }
 
 exports.init = init
@@ -84,28 +81,4 @@ function parseMessage(message) {
 
 parseMessage(JSON.stringify(message))
 
-var server = net.createServer(function (socket) {
-    console.log("Server created")
-    socket.on("data", function (data) {
-        console.log("Server received: " + data)
-        var hashed = sha256(data)
-        socket.write(hashed)
-    })
-    socket.on("end", socket.end)
-})
-
-server.listen(80, "127.0.0.1")
-
-function sendMsg(message, ip) {
-    var client = new net.Socket()
-    client.connect(80, ip, function () {
-        client.write("Hash this string please")
-        client.on("data", function (data) {
-            console.log("Client received: " + data)
-            client.destroy()
-        })
-        client.on("close", function () {
-            console.log("Connection closed")
-        })
-    })
-}*/
+*/

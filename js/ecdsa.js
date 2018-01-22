@@ -39,6 +39,7 @@ function onCurve(point) {
 function addPoints(P1,P2) {
     onCurve(P1)
     onCurve(P2)
+    var m,x,y
     // Point + Infinity = Point
     if (P1 === Infinity) {
         return P2
@@ -50,15 +51,19 @@ function addPoints(P1,P2) {
             return Infinity
         } else {
             // finding gradient of tangent
-            var m = bigInt(bigInt(bigInt("3").times(P1.x.square()).plus(curve.a)).times(bigInt(bigInt(2).times(P1.y)))).modInv(curve.p)
+            var t1 = bigInt(3).times(P1.x.square())
+            var t2 = bigInt(2).times(P1.y)
+            m = bigInt(t1.plus(curve.a)).times(t2.modInv(curve.p))
         }
     } else {
         // finding gradient of line between 2 points
-        var m = bigInt(P2.y.minus(P1.y)).times(P2.x.minus(P1.x)).modInv(curve.p)
+        var t1 = P2.y.minus(P1.y)
+        var t2 = P2.x.minus(P1.x)
+        m = t1.times(t2.modInv(curve.p))
     }
     // calculating other interception point
-    var x = m.square().minus(P1.x).minus(P2.x).mod(curve.p)
-    var y = curve.p.minus(bigInt(bigInt(P1.y.plus(m)).times(x.minus(m.times(P1.x)))).mod(curve.p))
+    x = bigInt(m.square().minus(P1.x).minus(P2.x)).mod(curve.p)
+    y = bigInt(bigInt(m.times(P1.x)).minus(P1.y).minus(m.times(x))).mod(curve.p)
     var P3 = {
         x: x,
         y: y
@@ -75,7 +80,6 @@ function multiPoints(n,P) {
     var binary = n.toString(2)
     // reversed binary
     var yranib = binary.split('').reverse()
-    console.log(yranib)
     // see documentation if confused, it's a bit mathsy
     // to explain in comments
     yranib.forEach(function(bit) {
@@ -138,8 +142,6 @@ function verifyMsg(msg,r,s,q,callback) {
 }
 
 exports.curve = curve
-exports.randomNum = randomNum
 exports.createKeys = createKeys
 exports.signMsg = signMsg
 exports.verifyMsg = verifyMsg
-exports.multiPoints = multiPoints
