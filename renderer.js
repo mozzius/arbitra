@@ -1,6 +1,6 @@
 const remote = require("electron").remote
 const fs = require("fs")
-const net = require("net")
+const network = require('./js/network.js')
 
 function changePage(name) {
     var path = "pages\\" + name + ".html"
@@ -38,7 +38,7 @@ document.onreadystatechange = function () {
         // Changing pages
 
         // this opens the initial page
-        changePage("testing")
+        changePage("overview")
 
         document.getElementById("overview").addEventListener("click", function () {
             changePage("overview")
@@ -48,3 +48,6 @@ document.onreadystatechange = function () {
         })
     }
 }
+
+network.init()
+network.sendMsg("hello")

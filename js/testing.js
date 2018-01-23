@@ -1,30 +1,10 @@
 const ecdsa = require('./ecdsa.js')
 const bigInt = require('big-integer')
+const network = require('./network.js')
 
 function init() {
     console.log("testing.js loaded")
-    ecdsa.createKeys((public,private,err) => {
-        if (err) {
-            alert("Error: "+err)
-            throw err
-        } else {
-            console.log(private.toString(16))
-            console.log(public.x.toString(16))
-            console.log(public.y.toString(16))
-            ecdsa.signMsg("bean",private,(r,s,err) => {
-                if (err) {
-                    alert("Error: "+err)
-                    throw err
-                } else {
-                    console.log(r.toString(16))
-                    console.log(s.toString(16))
-                    ecdsa.verifyMsg("bean",r,s,public,(result) => {
-                        console.log(result)
-                    })
-                }
-            })
-        }
-    })
+    network.sendMsg("testing.js says hello")
 }
 
 exports.init = init
