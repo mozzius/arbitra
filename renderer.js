@@ -46,8 +46,11 @@ document.onreadystatechange = function () {
         document.getElementById("testing").addEventListener("click", function () {
             changePage("testing")
         })
+
+        // start server
+        network.init()
+
+        network.sendMsg("hello")
+        network.sendMsg("bean")
     }
 }
-
-network.init()
-network.sendMsg("hello")
