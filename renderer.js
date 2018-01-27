@@ -49,8 +49,5 @@ document.onreadystatechange = function () {
 
         // start server
         network.init()
-
-        network.sendMsg('hello')
-        network.sendMsg('bean')
     }
 }

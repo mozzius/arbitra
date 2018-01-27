@@ -4,8 +4,8 @@ const remote = require('electron').remote
 const fs = require('fs')
 
 var Jason = [{
-    "b3fa55f98fcfcaf6a15a7c4eb7cdd1b593693d3fef2fb7aec3b6768fd7c6a4ce": ["168.12.143.1","168.991.125.6"],
-    "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824": ["localhost"]
+    'b3fa55f98fcfcaf6a15a7c4eb7cdd1b593693d3fef2fb7aec3b6768fd7c6a4ce': ['168.12.143.1','168.991.125.6'],
+    '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824': ['localhost']
 }]
 
 function init() {
@@ -46,7 +46,7 @@ function parseMsg(data,callback) {
 function parseMsg2(data,callback) {
     try{
         if (data.type === 'tx') {
-            console.log("transaction")
+            console.log('transaction')
         }
     } catch(e) {
         throw e
