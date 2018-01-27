@@ -107,7 +107,7 @@ function createKeys(callback) {
 
 function signMsg(msg,w,callback) {
     var err
-    console.log("Signing: "+msg)
+    console.log('Signing: '+msg)
     var z = hash.sha256(msg)
     var r,s
     r = s = bigInt.zero

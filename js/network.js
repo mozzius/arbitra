@@ -3,17 +3,17 @@ const hash = require('./hashing.js')
 
 function init() {
     var server = net.createServer((socket) => {
-        console.log("Server created")
-        socket.on("data",(data) => {
-            console.log("Server received: "+data)
+        console.log('Server created')
+        socket.on('data',(data) => {
+            console.log('Server received: '+data)
             parseMsg(data,(reply) => {
                 socket.write(reply)
             })
         })
-        socket.on("end",socket.end)
+        socket.on('end',socket.end)
     })
     
-    server.listen(80,"127.0.0.1")
+    server.listen(80,'127.0.0.1')
 }
 
 function parseMsg(data,callback) {
@@ -24,12 +24,12 @@ function sendMsg(message,ip) {
     var client = new net.Socket()
     client.connect(80,ip,() => {
         client.write(message)
-        client.on("data",(data) => {
-            console.log("Client received: "+data)
+        client.on('data',(data) => {
+            console.log('Client received: '+data)
             client.destroy()
         })
-        client.on("close",() => {
-            console.log("Connection closed")
+        client.on('close',() => {
+            console.log('Connection closed')
         })
     })
 }
