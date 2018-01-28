@@ -3,8 +3,8 @@ const bigInt = require('big-integer')
 const network = require('./network.js')
 
 function init() {
-    console.log("testing.js loaded")
-    network.sendMsg("testing.js says hello")
+    console.log('testing.js loaded')
+    network.sendMsg('testing.js says hello')
 }
 
 exports.init = init
@@ -18,16 +18,16 @@ function sha256(data) {
 }
 
 var message = {
-    "header": {
-        "type": "transaction",
-        "hash": "",
-        "from": "127.0.0.1"
+    'header': {
+        'type': 'transaction',
+        'hash': '',
+        'from': '127.0.0.1'
     },
-    "body": {
-        "sender": "me",
-        "reciever": "also me",
-        "amount": 12,
-        "time": Date.now()
+    'body': {
+        'sender': 'me',
+        'reciever': 'also me',
+        'amount': 12,
+        'time': Date.now()
     }
 }
 
@@ -42,20 +42,20 @@ function parseMessage(message) {
     try {
         msgjson = JSON.parse(message)
     } catch (e) {
-        console.log("Message does not parse as JSON")
+        console.log('Message does not parse as JSON')
         // should send back error to the person who sent it.
         return
     }
-    if (msgjson.header.type == "transaction") {
-        console.log("It's a transaction")
+    if (msgjson.header.type == 'transaction') {
+        console.log('It's a transaction')
     } else {
-        console.log("Message type unknown")
+        console.log('Message type unknown')
     }
     var msghash = hashBody(msgjson)
     if (msgjson.header.hash === msghash) {
-        console.log("hash matches")
+        console.log('hash matches')
     } else {
-        console.log("hash does not match")
+        console.log('hash does not match')
     }
 }
 
