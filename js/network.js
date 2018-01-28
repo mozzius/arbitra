@@ -28,14 +28,34 @@ function init() {
 
 function store(data) {
     // put data in file
-    var path = remote.app.getPath('appData')
-    file = fs.readFile(path+'send.json')    
+    var path = remote.app.getPath('appData')+'sent.json'
+    fs.readFile(path,'utf-8',(err,content) => {
+        if (err) {
+            if (err.code === 'ENOENT') {
+                console.log('Creatinng sent.json')
+                var content = []
+                content.push(data)
+                fs.writeFile(path,content,'utf-8',(error) => {
+                    if (error) throw error
+                })
+            } else {
+                throw err
+            }
+        } else {
+            var jsondata = JSON.parse(content)
+            jsondata.push(data)
+            content = JSON.stringify(jsondata)
+            fs.writeFile(path,content,'utf-8',(err) => {
+                if (err) throw err
+            })
+        }
+    })
 }
 
 function retrieve(hash) {
     // get file
     var path = remote.app.getPath('appData')
-    file = fs.readFile(path+'send.json')
+    fs.readFile(path+'send.json','utf-8')
     return file[hash]
 }
 
@@ -69,3 +89,4 @@ function sendMsg(message,ip) {
 
 exports.init = init
 exports.sendMsg = sendMsg
+exports.store = store
