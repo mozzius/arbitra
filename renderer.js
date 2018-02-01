@@ -43,8 +43,37 @@ document.onreadystatechange = function () {
         document.getElementById('overview').addEventListener('click', function () {
             changePage('overview')
         })
+        document.getElementById('make').addEventListener('click', function () {
+            changePage('make')
+        })
+        document.getElementById('receive').addEventListener('click', function () {
+            changePage('receive')
+        })
+        document.getElementById('history').addEventListener('click', function () {
+            changePage('history')
+        })
+        document.getElementById('view').addEventListener('click', function () {
+            changePage('view')
+        })
+        document.getElementById('mine').addEventListener('click', function () {
+            changePage('mine')
+        })
+        document.getElementById('network').addEventListener('click', function () {
+            changePage('network')
+        })
+        document.getElementById('app').addEventListener('click', function () {
+            changePage('app')
+        })
         document.getElementById('testing').addEventListener('click', function () {
             changePage('testing')
+        })
+        document.getElementById('dev').addEventListener('click', function () {
+            var webcontents = remote.getCurrentWebContents()
+            if (webcontents.isDevToolsOpened()) {
+                webcontents.closeDevTools()
+            } else {
+                webcontents.openDevTools()
+            }
         })
 
         // start server

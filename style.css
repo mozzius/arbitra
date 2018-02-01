@@ -39,8 +39,8 @@ input[type=text], input[type=number] {
 	font-weight: 400;
 	margin: 2px 0;
 	width: calc(100% - 20px);
-	max-width: 278px;
-	padding: 3px 10px;
+	max-width: 300px;
+	padding: 4px 10px;
 	border: 1px solid #333;
 	border-radius: 5px;
 	outline: none;

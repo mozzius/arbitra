@@ -3,17 +3,11 @@ const hash = require('./hashing.js')
 const remote = require('electron').remote
 const fs = require('fs')
 
-var Jason = [{
-    'b3fa55f98fcfcaf6a15a7c4eb7cdd1b593693d3fef2fb7aec3b6768fd7c6a4ce': ['168.12.143.1','168.991.125.6'],
-    '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824': ['localhost']
-}]
-
 function init() {
     // creates a server that will receive all the messages
     // when it receives data, it will pass it to parseMsg
     // and reply with whatever it sends back
     var server = net.createServer((socket) => {
-        console.log('Server started')
         socket.on('data',(data) => {
             console.log('Server received: '+data)
             parseMsg(data,(reply) => {
@@ -24,37 +18,46 @@ function init() {
     })
     
     server.listen(2018)
+    console.log('Server started')
+
+    //var Jason = {'b3fa55f98fcfcaf6a15a7c4eb7cdd1b593693d3fef2fb7aec3b6768fd7c6a4ce': ['168.12.143.1','168.991.125.6']}
+    //store(Jason)
 }
 
 function store(data) {
     // put data in file
-    var path = remote.app.getPath('appData')+'sent.json'
+    var path = remote.app.getPath('appData')+'\\arbitra-client\\sent.json'
     fs.readFile(path,'utf-8',(err,content) => {
         if (err) {
+            // if the file doesn't exist, it sets content to an array
+            // it will then continue on and create the file later
             if (err.code === 'ENOENT') {
-                console.log('Creatinng sent.json')
-                var content = []
-                content.push(data)
-                fs.writeFile(path,content,'utf-8',(error) => {
-                    if (error) throw error
-                })
+                content = '[]'
             } else {
+                alert('Error opening sent.json')
                 throw err
             }
-        } else {
+        }
+        // try to parse content to js then push the data
+        try {
             var jsondata = JSON.parse(content)
             jsondata.push(data)
-            content = JSON.stringify(jsondata)
-            fs.writeFile(path,content,'utf-8',(err) => {
-                if (err) throw err
-            })
+        } catch(e) {
+            console.warn(e)
+            var jsondata = [data]
         }
+        // writes the contents back to the file
+        // or makes the file if it doesn't exist yet
+        content = JSON.stringify(jsondata)
+        fs.writeFile(path,content,'utf-8',(err) => {
+            if (err) throw err
+        })
     })
 }
 
 function retrieve(hash) {
     // get file
-    var path = remote.app.getPath('appData')
+    var path = remote.app.getPath('appData')+'\\arbitra-client\\sent.json'
     fs.readFile(path+'send.json','utf-8')
     return file[hash]
 }
