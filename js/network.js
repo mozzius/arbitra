@@ -28,27 +28,32 @@ function init() {
 
 function store(data) {
     // put data in file
-    var path = remote.app.getPath('appData')+'sent.json'
+    var path = remote.app.getPath('appData')+'\\arbitra-client\\sent.json'
     fs.readFile(path,'utf-8',(err,content) => {
         if (err) {
+            // if the file doesn't exist, it sets content to an array
+            // it will then continue on and create the file later
             if (err.code === 'ENOENT') {
-                console.log('Creatinng sent.json')
-                var content = []
-                content.push(data)
-                fs.writeFile(path,content,'utf-8',(error) => {
-                    if (error) throw error
-                })
+                content = '[]'
             } else {
+                alert('Error opening sent.json')
                 throw err
             }
-        } else {
+        }
+        // try to parse content to js then push the data
+        try {
             var jsondata = JSON.parse(content)
             jsondata.push(data)
-            content = JSON.stringify(jsondata)
-            fs.writeFile(path,content,'utf-8',(err) => {
-                if (err) throw err
-            })
+        } catch(e) {
+            console.warn(e)
+            var jsondata = [data]
         }
+        // writes the contents back to the file
+        // or makes the file if it doesn't exist yet
+        content = JSON.stringify(jsondata)
+        fs.writeFile(path,content,'utf-8',(err) => {
+            if (err) throw err
+        })
     })
 }
 
