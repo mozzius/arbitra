@@ -48,8 +48,8 @@ document.onreadystatechange = function () {
         document.getElementById('make').addEventListener('click', function () {
             changePage('make')
         })
-        document.getElementById('receive').addEventListener('click', function () {
-            changePage('receive')
+        document.getElementById('wallets').addEventListener('click', function () {
+            changePage('wallets')
         })
         document.getElementById('history').addEventListener('click', function () {
             changePage('history')
