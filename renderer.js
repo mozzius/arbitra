@@ -40,6 +40,8 @@ document.onreadystatechange = function () {
         // this opens the initial page
         changePage('overview')
 
+        // event listeners for each button
+        // there is probably a better way of doing this
         document.getElementById('overview').addEventListener('click', function () {
             changePage('overview')
         })
@@ -68,6 +70,7 @@ document.onreadystatechange = function () {
             changePage('testing')
         })
         document.getElementById('dev').addEventListener('click', function () {
+            // toggle dev tools
             var webcontents = remote.getCurrentWebContents()
             if (webcontents.isDevToolsOpened()) {
                 webcontents.closeDevTools()
