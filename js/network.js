@@ -1,7 +1,6 @@
 const net = require('net')
 const hash = require('./hashing.js')
-const remote = require('electron').remote
-const fs = require('fs')
+const file = require('./file.js')
 
 function init() {
     // creates a server that will receive all the messages
@@ -21,38 +20,7 @@ function init() {
     console.log('Server started')
 
     //var Jason = {'b3fa55f98fcfcaf6a15a7c4eb7cdd1b593693d3fef2fb7aec3b6768fd7c6a4ce': ['168.12.143.1','168.991.125.6']}
-    //store(Jason)
-}
-
-function store(data) {
-    // put data in file
-    var path = remote.app.getPath('appData')+'\\arbitra-client\\sent.json'
-    fs.readFile(path,'utf-8',(err,content) => {
-        if (err) {
-            // if the file doesn't exist, it sets content to an array
-            // it will then continue on and create the file later
-            if (err.code === 'ENOENT') {
-                content = '[]'
-            } else {
-                alert('Error opening sent.json')
-                throw err
-            }
-        }
-        // try to parse content to js then push the data
-        try {
-            var jsondata = JSON.parse(content)
-            jsondata.push(data)
-        } catch(e) {
-            console.warn(e)
-            var jsondata = [data]
-        }
-        // writes the contents back to the file
-        // or makes the file if it doesn't exist yet
-        content = JSON.stringify(jsondata)
-        fs.writeFile(path,content,'utf-8',(err) => {
-            if (err) throw err
-        })
-    })
+    //file.store(Jason,'sent')
 }
 
 function retrieve(hash) {
