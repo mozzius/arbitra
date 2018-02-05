@@ -19,18 +19,21 @@ function store(key,data,file) {
         // try to parse content to js then push the data
         try {
             var jsondata = JSON.parse(content)
-            if (jsondata.hasOwnProperty(key)) {
+            console.log(jsondata)
+            if (jsondata.hasOwnProperty(key) && Array.isArray(data)) {
                 // if the key exists it concatenates the two arrays, creates a new set
                 // which removes duplicates, then turns it back to an array
                 // https://gist.github.com/telekosmos/3b62a31a5c43f40849bb#gistcomment-1826809
-                jsondata[key] = new Set(jsondata[key].concat(data)).toJSON()
+                var set = new Set(jsondata[key].concat(data))
+                jsondata[key] = Array.from(set)
             } else {
                 // otherwise sets the key to the data
                 jsondata[key] = data
             }
         } catch(e) {
             console.warn(e)
-            var jsondata = {key:data}
+            var jsondata = {}
+            jsondata[key] = data
         } finally {
             // writes the contents back to the file
             // or makes the file if it doesn't exist yet

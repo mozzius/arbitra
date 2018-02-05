@@ -35,12 +35,45 @@ function parseMsg(data,callback) {
 }
 
 function parseMsg2(data,callback) {
-    try{
-        if (data.type === 'tx') {
-            console.log('transaction')
+    var reply
+    function tx (data) {
+        return 'hello'
+    }
+    try {
+        var msg = JSON.parse(data)
+        if (msg.header.type === 'tx') {
+            reply = tx(msg)
+        } else if (msg.header.type === 'bk') {
+            reply = bk(msg)
+        } else if (msg.header.type === 'hr') {
+            reply = hr(msg)
+        } else if (msg.header.type === 'br') {
+            reply = br(msg)
+        } else if (msg.header.type === 'pg') {
+            reply = pg(msg)
+        } else if (msg.header.type === 'nr') {
+            reply = nr(msg)
         }
     } catch(e) {
-        throw e
+        if (e.name === 'SyntaxError') {
+            console.warn(e)
+            reply = {
+                "header": {
+                    "type": "er",
+                },
+                "body": {
+                    "error": e
+                }
+            }
+            reply.time = Date.now()
+            reply.hash = hash.sha256hex(JSON.stringify(reply.body))
+        } else {
+            throw e
+        }
+    } finally {
+        var replystr = JSON.stringify(reply)
+        callback(replystr)
+        return
     }
 }
 
@@ -60,4 +93,3 @@ function sendMsg(message,ip) {
 
 exports.init = init
 exports.sendMsg = sendMsg
-exports.store = store
