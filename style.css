@@ -98,12 +98,17 @@ font-size: 0.65em;
     float: left;
     padding-top: 20px;
     background-color: #333;
+    /*background-image: url(https://i.redd.it/xqiqn0pd5ud01.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    box-shadow: inset -10px 0 10px -10px #333;*/
 }
 
 .left > * {
     color: #fdfdfd;
     list-style: none;
     padding-left: 25px;
+    /*text-shadow: 1px 1px 1px #333;*/
 }
 
 .link:hover {

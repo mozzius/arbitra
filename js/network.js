@@ -1,6 +1,7 @@
 const net = require('net')
 const hash = require('./hashing.js')
 const file = require('./file.js')
+const ecdsa = require('./ecdsa.js')
 
 function init() {
     // creates a server that will receive all the messages
@@ -30,50 +31,64 @@ function retrieve(hash) {
     return file[hash]
 }
 
+
 function parseMsg(data,callback) {
     callback(hash.sha256hex(data))
 }
 
 function parseMsg2(data,callback) {
-    var reply
-    function tx (data) {
-        return 'hello'
+    function tx(msg) {
+        var body = JSON.stringify(msg.body)
+        ecdsa.verifyMsg(body,msg.body.sign,msg.body.from,(result) => {
+            if (!result) {
+                throw 'signature'
+            } else {
+                //verifyAmount(msg.body.from)
+                throw 'dunno'
+            }
+        })
+    }
+    var reply = {
+        "header": {
+        },
+        "body": {
+        }
     }
     try {
         var msg = JSON.parse(data)
-        if (msg.header.type === 'tx') {
-            reply = tx(msg)
-        } else if (msg.header.type === 'bk') {
-            reply = bk(msg)
-        } else if (msg.header.type === 'hr') {
-            reply = hr(msg)
-        } else if (msg.header.type === 'br') {
-            reply = br(msg)
-        } else if (msg.header.type === 'pg') {
-            reply = pg(msg)
-        } else if (msg.header.type === 'nr') {
-            reply = nr(msg)
+        if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
+            if (msg.header.type === 'tx') {
+                tx(msg)
+            } else if (msg.header.type === 'bk') {
+                bk(msg)
+            } else if (msg.header.type === 'hr') {
+                hr(msg)
+            } else if (msg.header.type === 'br') {
+                br(msg)
+            } else if (msg.header.type === 'pg') {
+                pg(msg)
+            } else if (msg.header.type === 'nr') {
+                nr(msg)
+            } else {
+                throw 'type'
+            }
+        } else {
+            throw 'hash'
         }
     } catch(e) {
+        console.warn(e)
+        reply.header.type = 'er'
         if (e.name === 'SyntaxError') {
-            console.warn(e)
-            reply = {
-                "header": {
-                    "type": "er",
-                },
-                "body": {
-                    "error": e
-                }
-            }
-            reply.time = Date.now()
-            reply.hash = hash.sha256hex(JSON.stringify(reply.body))
+            reply.body.err = 'parse'
         } else {
-            throw e
+            reply.body.err = e
         }
     } finally {
+        reply.header.time = Date.now()
+        reply.header.hash = hash.sha256hex(JSON.stringify(reply.body))
+        reply.header.size = Buffer.byteLength(JSON.stringify(reply.body,'utf8'))
         var replystr = JSON.stringify(reply)
         callback(replystr)
-        return
     }
 }
 
