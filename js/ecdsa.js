@@ -98,6 +98,10 @@ function createKeys(callback) {
     try {
         var private = randomNum(1, curve.n)
         var public = multiPoints(private, curve.g)
+        var x = public.x.toString(16)
+        var y = public.y.toString(16)
+        public = x+y
+        private = private.toString(16)
     } catch (e) {
         err = e
     } finally {
@@ -105,8 +109,9 @@ function createKeys(callback) {
     }
 }
 
-function signMsg(msg,w,callback) {
+function signMsg(msg,signature,callback) {
     var err
+    var w = bigInt(signature,16)
     console.log('Signing: '+msg)
     var z = hash.sha256(msg)
     var r,s
@@ -123,7 +128,8 @@ function signMsg(msg,w,callback) {
         r = P.x.mod(curve.n)
         s = bigInt(bigInt(w.times(r).plus(z)).times(k.modInv(curve.n))).mod(curve.n)
     }
-    callback(r,s,err)
+    var signature = r.toString(16)+s.toString(16)
+    callback(signature,err)
 }
 
 function verifyMsg(msg,r,s,q,callback) {

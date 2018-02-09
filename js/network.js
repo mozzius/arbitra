@@ -1,7 +1,7 @@
 const net = require('net')
 const hash = require('./hashing.js')
 const file = require('./file.js')
-const ecdsa = require('./ecdsa.js')
+const verify = require('./verify.js')
 
 function init() {
     // creates a server that will receive all the messages
@@ -19,56 +19,29 @@ function init() {
     
     server.listen(2018)
     console.log('Server started')
-
-    //var Jason = {'b3fa55f98fcfcaf6a15a7c4eb7cdd1b593693d3fef2fb7aec3b6768fd7c6a4ce': ['168.12.143.1','168.991.125.6']}
-    //file.store(Jason,'sent')
 }
-
-function retrieve(hash) {
-    // get file
-    var path = remote.app.getPath('appData')+'\\arbitra-client\\sent.json'
-    fs.readFile(path+'send.json','utf-8')
-    return file[hash]
-}
-
 
 function parseMsg(data,callback) {
     callback(hash.sha256hex(data))
 }
 
 function parseMsg2(data,callback) {
-    function tx(msg) {
-        var body = JSON.stringify(msg.body)
-        ecdsa.verifyMsg(body,msg.body.sign,msg.body.from,(result) => {
-            if (!result) {
-                throw 'signature'
-            } else {
-                //need to check that they have enough au
-                //blockchain.verifyAmount(msg.body.from,msg.body.amount)
-            }
-        })
-    }
-    var reply = {
-        "header": {
-        },
-        "body": {
-        }
-    }
+    var reply
     try {
         var msg = JSON.parse(data)
         if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body)+msg.header.time)) {
             if (msg.header.type === 'tx') {
-                tx(msg)
+                reply = verify.tx(msg)
             } else if (msg.header.type === 'bk') {
-                bk(msg)
+                reply = verify.bk(msg)
             } else if (msg.header.type === 'hr') {
-                hr(msg)
+                reply = verify.hr(msg)
             } else if (msg.header.type === 'br') {
-                br(msg)
+                reply = verify.br(msg)
             } else if (msg.header.type === 'pg') {
-                pg(msg)
+                reply = verify.pg(msg)
             } else if (msg.header.type === 'nr') {
-                nr(msg)
+                reply = verify.nr(msg)
             } else {
                 throw 'type'
             }
@@ -103,6 +76,10 @@ function sendMsg(message,ip) {
         })
         client.on('close',() => {
             console.log('Connection closed')
+        })
+        client.on('timeout',() => {
+            console.warn('Client timed out')
+            client.destroy()
         })
     })
 }
