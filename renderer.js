@@ -6,8 +6,8 @@ function changePage(name) {
     var path = 'pages\\' + name + '.html'
     fs.readFile(path, 'utf-8', (err, data) => {
         if (err) {
-            alert('An error ocurred reading the file :' + err.message)
-            console.warn('An error ocurred reading the file :' + err.message)
+            alert('An error ocurred reading the file: ' + err.message)
+            console.warn('An error ocurred reading the file: ' + err.message)
             return
         }
         console.log('Page change: ' + name)

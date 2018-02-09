@@ -1,6 +1,20 @@
+const file = require('./file.js')
+
 function init() {
     console.log('wallets.js loaded')
+    file.getAll('wallets',(data) => {
+        wallets = JSON.parse(data)
+        var walletList = document.getElementById('wallet-list')
+        var listItem
+        if (wallets) {
+            wallets.forEach((wallet) => {
+                listItem = document.createElement('div')
+                listItem.classList.add('list-item')
+                listItem.innerHTML = '<p><b>Name:</b> '+wallet.name+'</p><p><b>Public:</b> '+wallet.public+'</p><p><b>Amount:</b> <span class="money">'+wallet.amount+'</span></p>'
+                walletList.appendChild(listItem)
+            })
+        }
+    })
 }
 
 exports.init = init
-

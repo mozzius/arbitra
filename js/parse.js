@@ -24,7 +24,7 @@ function tx(msg) {
     }
 }
 
-function bl(msg) {
+function bk(msg) {
     if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
         var txlist = msg.body.transactions
         var len = txlist.length
@@ -37,5 +37,20 @@ function bl(msg) {
     }
 }
 
+function hr(msg) {
+
+}
+
+function br(msg) {
+    
+}
+
+function nr(msg) {
+    
+}
+
+function pg(msg) {
+    
+}
 
 exports.tx = tx

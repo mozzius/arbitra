@@ -51,6 +51,7 @@ function get(key,file,callback) {
         if (err) {
             // if the file doesn't exist, return null
             if (err.code === 'ENOENT') {
+                console.warn(file+'.json not found')
                 callback(null)
                 return
             } else {
@@ -73,5 +74,26 @@ function get(key,file,callback) {
     })
 }
 
+function getAll(file,callback) {
+    var path = remote.app.getPath('appData')+'\\arbitra-client\\'+file+'.json'
+    fs.readFile(path,'utf-8',(err,content) => {
+        console.log('Opening: '+path)
+        if (err) {
+            // if the file doesn't exist, return null
+            if (err.code === 'ENOENT') {
+                console.warn(file+'.json not found')
+                content = null
+                return
+            } else {
+                alert('Error opening '+file+'.json')
+                console.error('Error opening '+file+'.json')
+                throw err
+            }
+        }
+        callback(content)
+    })
+}
+
 exports.store = store
 exports.get = get
+exports.getAll = getAll

@@ -1,7 +1,7 @@
 const net = require('net')
 const hash = require('./hashing.js')
 const file = require('./file.js')
-const verify = require('./verify.js')
+const parse = require('./parse.js')
 const version = require('../package.json').version
 
 function init() {
@@ -34,17 +34,17 @@ function parseMsg2(data,callback) {
         var msg = JSON.parse(data)
         if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body)+msg.header.time)) {
             if (msg.header.type === 'tx') {
-                reply = verify.tx(msg)
+                reply = parse.tx(msg)
             } else if (msg.header.type === 'bk') {
-                reply = verify.bk(msg)
+                reply = parse.bk(msg)
             } else if (msg.header.type === 'hr') {
-                reply = verify.hr(msg)
+                reply = parse.hr(msg)
             } else if (msg.header.type === 'br') {
-                reply = verify.br(msg)
+                reply = parse.br(msg)
             } else if (msg.header.type === 'pg') {
-                reply = verify.pg(msg)
+                reply = parse.pg(msg)
             } else if (msg.header.type === 'nr') {
-                reply = verify.nr(msg)
+                reply = parse.nr(msg)
             } else {
                 throw 'type'
             }
