@@ -2,7 +2,7 @@ const net = require('net')
 const hash = require('./hashing.js')
 const file = require('./file.js')
 const verify = require('./verify.js')
-const version = require('package.json').version
+const version = require('../package.json').version
 
 function init() {
     // creates a server that will receive all the messages

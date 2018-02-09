@@ -7,7 +7,7 @@ function tx(msg) {
         body: {}
     }
     var body = JSON.stringify(msg.body)
-    if (msg.header.hash === hash.sha256hex(body)) { {
+    if (msg.header.hash === hash.sha256hex(body)) {
         if (!result) {
             throw 'signature'
         } else {
@@ -21,7 +21,7 @@ function tx(msg) {
 
             }
         }
-    })
+    }
 }
 
 function bl(msg) {
