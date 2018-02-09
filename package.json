@@ -1,6 +1,6 @@
 {
     "name": "arbitra-client",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "main": "main.js",
     "dependencies": {
         "big-integer": "^1.6.26",

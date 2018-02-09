@@ -2,6 +2,7 @@ const net = require('net')
 const hash = require('./hashing.js')
 const file = require('./file.js')
 const verify = require('./verify.js')
+const version = require('package.json').version
 
 function init() {
     // creates a server that will receive all the messages
@@ -17,6 +18,8 @@ function init() {
         socket.on('end',socket.end)
     })
     
+    // server listens on this port
+    // should be 2018
     server.listen(2018)
     console.log('Server started')
 }
@@ -50,17 +53,23 @@ function parseMsg2(data,callback) {
         }
     } catch(e) {
         console.warn(e)
-        reply.header.type = 'er'
+        reply = {
+            'header': {
+                'type': 'er'
+            },
+            'body': {}
+        }
         if (e.name === 'SyntaxError') {
-            reply.body.err = 'parse'
+            reply.body['error'] = 'parse'
         } else {
-            reply.body.err = e
+            reply.body['error'] = e
         }
     } finally {
         reply.header.time = Date.now()
         reply.header.hash = hash.sha256hex(JSON.stringify(reply.body)+reply.header.time)
         reply.header.size = Buffer.byteLength(JSON.stringify(reply.body,'utf8'))
         var replystr = JSON.stringify(reply)
+        console.log('Reply: '+replystr)
         callback(replystr)
     }
 }

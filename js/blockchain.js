@@ -8,18 +8,6 @@ function getBlock(hash,callback) {
     })
 }
 
-function verify(block) {
-    if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
-        var txlist = msg.body.transactions
-        var len = txlist.length
-        var tx
-        for (var i; i < len; ++i) {
-            tx = txlist[i]
-            ecdsa.verifyMsg()
-        }
-    }
-}
-
 function addBlock(msg) {
     if (msg.header.hash === "") {
         return false
