@@ -1,7 +1,10 @@
 const file = require('./file.js')
+const changePage = require('./changepage').changePage
 
 function init() {
-    console.log('wallets.js loaded')
+    document.getElementById('create').addEventListener('click', function () {
+        changePage('wallets-create')
+    })
     file.getAll('wallets',(data) => {
         wallets = JSON.parse(data)
         var walletList = document.getElementById('wallet-list')

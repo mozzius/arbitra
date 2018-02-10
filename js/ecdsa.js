@@ -109,9 +109,9 @@ function createKeys(callback) {
     }
 }
 
-function signMsg(msg,signature,callback) {
+function signMsg(msg,private,callback) {
     var err
-    var w = bigInt(signature,16)
+    var w = bigInt(private,16)
     console.log('Signing: '+msg)
     var z = hash.sha256(msg)
     var r,s
@@ -132,7 +132,17 @@ function signMsg(msg,signature,callback) {
     callback(signature,err)
 }
 
-function verifyMsg(msg,r,s,q,callback) {
+function verifyMsg(msg,signature,public,callback) {
+    // we need to convert signature and public to the right format
+    // q is public key
+    var mid = public.length/2
+    var q = {
+        'x': bigInt(public.slice(0,mid),16),
+        'y': bigInt(public.slice(mid),16)
+    }
+    // r and s is the signature
+    var r = bigInt(signature.slice(0,mid),16)
+    var s = bigInt(signature.slice(mid),16)
     var result = false
     var z = hash.sha256(msg)
     u1 = bigInt(z.times(s.modInv(curve.n))).mod(curve.n)

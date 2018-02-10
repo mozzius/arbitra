@@ -1,37 +1,22 @@
 const remote = require('electron').remote
-const fs = require('fs')
+const changePage = require('./js/changepage.js').changePage
 const network = require('./js/network.js')
-
-function changePage(name) {
-    var path = 'pages\\' + name + '.html'
-    fs.readFile(path, 'utf-8', (err, data) => {
-        if (err) {
-            alert('An error ocurred reading the file: ' + err.message)
-            console.warn('An error ocurred reading the file: ' + err.message)
-            return
-        }
-        console.log('Page change: ' + name)
-        document.getElementById('body').innerHTML = data
-        const pageJS = require('./js/' + name + '.js')
-        pageJS.init()
-    })
-}
 
 document.onreadystatechange = function () {
     if (document.readyState == 'complete') {
         const window = remote.getCurrentWindow()
         // Close Buttons
-        document.getElementById('min').addEventListener('click', function (e) {
+        document.getElementById('min').addEventListener('click',() => {
             window.minimize()
         })
-        document.getElementById('max').addEventListener('click', function (e) {
+        document.getElementById('max').addEventListener('click',() => {
             if (window.isMaximized()) {
                 window.unmaximize()
             } else {
                 window.maximize()
             }
         })
-        document.getElementById('close').addEventListener('click', function (e) {
+        document.getElementById('close').addEventListener('click',() => {
             window.close()
         })
 
@@ -42,34 +27,34 @@ document.onreadystatechange = function () {
 
         // event listeners for each button
         // there is probably a better way of doing this
-        document.getElementById('overview').addEventListener('click', function () {
+        document.getElementById('overview').addEventListener('click',() => {
             changePage('overview')
         })
-        document.getElementById('make').addEventListener('click', function () {
+        document.getElementById('make').addEventListener('click',() => {
             changePage('make')
         })
-        document.getElementById('wallets').addEventListener('click', function () {
+        document.getElementById('wallets').addEventListener('click',() => {
             changePage('wallets')
         })
-        document.getElementById('history').addEventListener('click', function () {
+        document.getElementById('history').addEventListener('click',() => {
             changePage('history')
         })
-        document.getElementById('view').addEventListener('click', function () {
+        document.getElementById('view').addEventListener('click',() => {
             changePage('view')
         })
-        document.getElementById('mine').addEventListener('click', function () {
+        document.getElementById('mine').addEventListener('click',() => {
             changePage('mine')
         })
-        document.getElementById('network').addEventListener('click', function () {
+        document.getElementById('network').addEventListener('click',() => {
             changePage('network')
         })
-        document.getElementById('app').addEventListener('click', function () {
+        document.getElementById('app').addEventListener('click',() => {
             changePage('app')
         })
-        document.getElementById('testing').addEventListener('click', function () {
+        document.getElementById('testing').addEventListener('click',() => {
             changePage('testing')
         })
-        document.getElementById('dev').addEventListener('click', function () {
+        document.getElementById('dev').addEventListener('click',() => {
             // toggle dev tools
             var webcontents = remote.getCurrentWebContents()
             if (webcontents.isDevToolsOpened()) {
