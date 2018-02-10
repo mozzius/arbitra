@@ -1,19 +1,14 @@
 const net = require('net')
 const hash = require('./hashing.js')
-const remote = require('electron').remote
-const fs = require('fs')
-
-var Jason = [{
-    'b3fa55f98fcfcaf6a15a7c4eb7cdd1b593693d3fef2fb7aec3b6768fd7c6a4ce': ['168.12.143.1','168.991.125.6'],
-    '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824': ['localhost']
-}]
+const file = require('./file.js')
+const parse = require('./parse.js')
+const version = require('../package.json').version
 
 function init() {
     // creates a server that will receive all the messages
     // when it receives data, it will pass it to parseMsg
     // and reply with whatever it sends back
     var server = net.createServer((socket) => {
-        console.log('Server started')
         socket.on('data',(data) => {
             console.log('Server received: '+data)
             parseMsg(data,(reply) => {
@@ -23,45 +18,10 @@ function init() {
         socket.on('end',socket.end)
     })
     
+    // server listens on this port
+    // should be 2018
     server.listen(2018)
-}
-
-function store(data) {
-    // put data in file
-    var path = remote.app.getPath('appData')+'\\arbitra-client\\sent.json'
-    fs.readFile(path,'utf-8',(err,content) => {
-        if (err) {
-            // if the file doesn't exist, it sets content to an array
-            // it will then continue on and create the file later
-            if (err.code === 'ENOENT') {
-                content = '[]'
-            } else {
-                alert('Error opening sent.json')
-                throw err
-            }
-        }
-        // try to parse content to js then push the data
-        try {
-            var jsondata = JSON.parse(content)
-            jsondata.push(data)
-        } catch(e) {
-            console.warn(e)
-            var jsondata = [data]
-        }
-        // writes the contents back to the file
-        // or makes the file if it doesn't exist yet
-        content = JSON.stringify(jsondata)
-        fs.writeFile(path,content,'utf-8',(err) => {
-            if (err) throw err
-        })
-    })
-}
-
-function retrieve(hash) {
-    // get file
-    var path = remote.app.getPath('appData')
-    fs.readFile(path+'send.json','utf-8')
-    return file[hash]
+    console.log('Server started')
 }
 
 function parseMsg(data,callback) {
@@ -69,18 +29,55 @@ function parseMsg(data,callback) {
 }
 
 function parseMsg2(data,callback) {
-    try{
-        if (data.type === 'tx') {
-            console.log('transaction')
+    var reply
+    try {
+        var msg = JSON.parse(data)
+        if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body)+msg.header.time)) {
+            if (msg.header.type === 'tx') {
+                reply = parse.tx(msg)
+            } else if (msg.header.type === 'bk') {
+                reply = parse.bk(msg)
+            } else if (msg.header.type === 'hr') {
+                reply = parse.hr(msg)
+            } else if (msg.header.type === 'br') {
+                reply = parse.br(msg)
+            } else if (msg.header.type === 'pg') {
+                reply = parse.pg(msg)
+            } else if (msg.header.type === 'nr') {
+                reply = parse.nr(msg)
+            } else {
+                throw 'type'
+            }
+        } else {
+            throw 'hash'
         }
     } catch(e) {
-        throw e
+        console.warn(e)
+        reply = {
+            'header': {
+                'type': 'er'
+            },
+            'body': {}
+        }
+        if (e.name === 'SyntaxError') {
+            reply.body['error'] = 'parse'
+        } else {
+            reply.body['error'] = e
+        }
+    } finally {
+        reply.header.time = Date.now()
+        reply.header.hash = hash.sha256hex(JSON.stringify(reply.body)+reply.header.time)
+        reply.header.size = Buffer.byteLength(JSON.stringify(reply.body,'utf8'))
+        var replystr = JSON.stringify(reply)
+        console.log('Reply: '+replystr)
+        callback(replystr)
     }
 }
 
 function sendMsg(message,ip) {
     var client = new net.Socket()
     client.connect(2018,ip,() => {
+        console.log('Connected to: '+ip)
         client.write(message)
         client.on('data',(data) => {
             console.log('Client received: '+data)
@@ -89,9 +86,12 @@ function sendMsg(message,ip) {
         client.on('close',() => {
             console.log('Connection closed')
         })
+        client.on('timeout',() => {
+            console.warn('Client timed out')
+            client.destroy()
+        })
     })
 }
 
 exports.init = init
 exports.sendMsg = sendMsg
-exports.store = store
