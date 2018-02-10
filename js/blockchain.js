@@ -19,11 +19,51 @@ function checkBalance(key,amount,callback) {
 
 function calcBalances() {
     file.getAll('blockchain',(data) => {
-        for (var i = 0, len = arr.length; i < len; i++) {
-            // sum the "to" fields and add it to the recipients total
-
-            // deduct the inputs
+        var balances = {}
+        var block
+        for (var i = 0, len = data.length; i < len; i++) {
+            block = data[i]
+            tx = block.transactions
+            // iterate through each transacton
+            for (var i = 0, len = tx.from.length; i < len; i++) {
+                // deduct amounts from the inputs
+                if (balances.hasOwnProperty(tx.from[i].wallet)) {
+                    balances[tx.from[i].wallet] -= tx.from[i].amount
+                } else {
+                    balances[tx.from[i].wallet] = -tx.from[i].amount
+                }
+                // add amount to the recipient's balance
+                if (balances.hasOwnProperty(block.to)) {
+                    balances[block.to] += tx.from[i].amount
+                } else {
+                    balances[block.to] = tx.from[i].amount
+                }
+            }
         }
+    })
+}
+
+function updateBalances(block) {
+    tx = block.body.transactions
+    file.getAll('balances',(balances) => {
+        // set the most recent block hash
+        balance['latest'] = block.header.hash
+        // iterate through each transacton
+        for (var i = 0, len = tx.from.length; i < len; i++) {
+            // deduct amounts from the inputs
+            if (balances.hasOwnProperty(tx.from[i].wallet)) {
+                balances[tx.from[i].wallet] -= tx.from[i].amount
+            } else {
+                balances[tx.from[i].wallet] = -tx.from[i].amount
+            }
+            // add amount to the recipient's balance
+            if (balances.hasOwnProperty(block.to)) {
+                balances[block.to] += tx.from[i].amount
+            } else {
+                balances[block.to] = tx.from[i].amount
+            }
+        }
+        file.storeAll('balances',balances)
     })
 }
 

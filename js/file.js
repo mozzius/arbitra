@@ -94,6 +94,14 @@ function getAll(file,callback) {
     })
 }
 
+function storeAll(file,data) {
+    var path = remote.app.getPath('appData')+'\\arbitra-client\\'+file+'.json'
+    content = JSON.stringify(jsondata)
+    fs.writeFile(path,content,'utf-8',(err) => {
+        if (err) throw err
+    })
+}
+
 function append(file,data,callback) {
     // write data to a file, but where the file is an array so no key
     var path = remote.app.getPath('appData')+'\\arbitra-client\\'+file+'.json'
