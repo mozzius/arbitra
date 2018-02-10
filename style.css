@@ -1,90 +1,90 @@
 * {
-font-family: Segoe UI, Helvetica, sans-serif;
-margin: 0;
-	transition: background-color 0.5s ease;
-	transition: color 0.2s ease;
+    font-family: Segoe UI, Helvetica, sans-serif;
+    margin: 0;
+    transition: background-color 0.5s ease;
+    transition: color 0.2s ease;
 }
 
 body {
-	height: 100vh;
-	overflow: hidden;
+    height: 100vh;
+    overflow: auto;
 }
 
 h1 {
-	margin-bottom: 8px;
+    margin-bottom: 8px;
 }
 
 p {
-	margin-top: 2px;
-	margin-bottom: 5px;
+    margin-top: 2px;
+    margin-bottom: 5px;
 }
 
 button, input[type=submit] {
-	background-color: #fdfdfd;
-	font-weight: 400;
-	margin: 2px 0;
-	min-width: 70px;
-	padding: 3px 10px;
-	border: 1px solid #333;
-	border-radius: 15px;
+    background-color: #fdfdfd;
+    font-weight: 400;
+    margin: 2px 0;
+    min-width: 70px;
+    padding: 4px 10px;
+    border: 1px solid #333;
+    border-radius: 15px;
 }
 
 button:hover, input[type=submit]:hover {
-	background-color: #333;
-	color: #fdfdfd;
+    background-color: #333;
+    color: #fdfdfd;
 }
 
 input[type=text], input[type=number] {
-	background-color: #fdfdfd;
-	font-weight: 400;
-	margin: 2px 0;
-	width: calc(100% - 20px);
-	max-width: 278px;
-	padding: 3px 10px;
-	border: 1px solid #333;
-	border-radius: 5px;
-	outline: none;
+    background-color: #fdfdfd;
+    font-weight: 400;
+    margin: 2px 0;
+    width: calc(100% - 20px);
+    max-width: 300px;
+    padding: 4px 10px;
+    border: 1px solid #333;
+    border-radius: 5px;
+    outline: none;
 }
 
 input[type=text]:focus, input[type=number]:focus {
-	border-radius: 5px;
+    border-radius: 5px;
 }
 
 select {
-	background-color: #fdfdfd;
-	font-weight: 400;
-	margin: 2px 0;
-	width: calc(100% - 20px);
-	max-width: 300px;
-	padding: 3px 5px;
-	border: 1px solid #333;
-	border-radius: 5px;
-	outline: none;
+    background-color: #fdfdfd;
+    font-weight: 400;
+    margin: 2px 0;
+    width: calc(100% - 20px);
+    max-width: 300px;
+    padding: 3px 5px;
+    border: 1px solid #333;
+    border-radius: 5px;
+    outline: none;
 }
 
 .highlight {
-	background-color: #333;
-	display: inline;
-	color: #fdfdfd;
-	border-radius: 3px;
-	padding: 1px 3px 3px;	
+    background-color: #333;
+    display: inline;
+    color: #fdfdfd;
+    border-radius: 3px;
+    padding: 1px 3px 3px;	
 }
 
 a {
-	text-decoration: none;
+    text-decoration: none;
 }
 
 p > a {
-	color: #666;
+    color: #666;
 }
 
 p > a:hover {
-	color: #fdfdfd;
-	background-color: #333;
-	padding: 0 2px 2px;
-	margin: 0 -2px -2px;
-	text-decoration: none;
-	border-radius: 3px;
+    color: #fdfdfd;
+    background-color: #333;
+    padding: 0 2px 2px;
+    margin: 0 -2px -2px;
+    text-decoration: none;
+    border-radius: 3px;
 }
 
 .money::after {
@@ -93,81 +93,126 @@ font-size: 0.65em;
 }
 
 .left {
-	width: 300px;
-	height: 100%;
-	float: left;
-	padding-top: 20px;
-	background-color: #333;
+    width: 300px;
+    min-height: calc(100% - 20px);
+    float: left;
+    padding-top: 20px;
+    background-color: #333;
+    /*background-image: url(https://i.redd.it/xqiqn0pd5ud01.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    box-shadow: inset -10px 0 10px -10px #333;*/
 }
 
 .left > * {
-	color: #fdfdfd;
-	list-style: none;
-	padding-left: 25px;
+    color: #fdfdfd;
+    list-style: none;
+    padding-left: 25px;
+    /*text-shadow: 1px 1px 1px #333;*/
 }
 
 .link:hover {
-	background-color: rgba(43, 43, 43, 0.5);
-	cursor: pointer;
+    background-color: rgba(43, 43, 43, 0.5);
+    cursor: pointer;
 }
 
 .left > h1 {
-	font-size: 3em;
+    font-size: 2.4em;
 }
 
 .subsec {
-	font-size: 1.5em;
-	padding: 3px;
-	padding-left: 25px;
-	margin-top: 15px;
-	cursor: default;
+    font-size: 1.5em;
+    padding: 3px;
+    padding-left: 25px;
+    margin-top: 15px;
+    cursor: default;
 }
 
 .items {
-	font-size: 1.2em;
-	padding: 3px;
-	padding-left: 35px;
+    font-size: 1.2em;
+    padding: 3px;
+    padding-left: 35px;
 }
 
 .right {
-	width: calc(100vw - 300px);
-	height: 100vh;
-	background-color: #fdfdfd;
-	float: left;
+    width: calc(100vw - 300px);
+    height: 100vh;
+    background-color: #fdfdfd;
+    position: fixed;
+    top: 0;
+    right: 0;
 }
 
 .dragbar {
-	width: calc(100% - 150px);
-	height: 50px;
-	float: left;
-	-webkit-app-region: drag;
+    width: calc(100% - 150px);
+    height: 50px;
+    float: left;
+    -webkit-app-region: drag;
 }
 
 .closebox {
-	width: 140px;
-	height: 40px;
-	float: left;
-	padding: 5px;
+    width: 140px;
+    height: 40px;
+    float: left;
+    padding: 5px;
 }
 
 .closebox > i {
-	font-size: 2em;
-	padding-left: 10px;
-	color: #333;
-	cursor: pointer;
+    font-size: 2em;
+    padding-left: 10px;
+    color: #333;
+    cursor: pointer;
 }
 
 #close:hover {
-	color: red;
+    color: red;
 }
 
 #body {
-	width: calc(100% - 20px);
-	padding: 10px;
-	color: #333;
+    width: calc(100% - 20px);
+    padding: 10px;
+    color: #333;
 }
 
 #body > h1 {
-	font-size: 2.5em;
-	border-bottom: 2px solid #333;
+    font-size: 2.2em;
+    border-bottom: 2px solid #333;
+}
+
+.td {
+    max-width: 100px;
+    overflow-x: scroll;
+}
+
+.highlight-box {
+    margin-top: 20px;
+    width: calc(100% - 20px);
+    position: relative;
+    border-radius: 5px;
+    padding: 10px 10px 5px;
+    max-height: 70vh;
+    background-color: #ececec;
+    border: 1px solid #333;
+}
+
+.highlight-box > button {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+}
+
+.list {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.list-item {
+    overflow-x: auto;
+    width: calc(100% - 12px);
+    background-color: white;
+    margin: 5px 0;
+    padding: 5px;
+    border: 1px solid #333;
+    border-radius: 5px;
+    white-space: nowrap;
 }

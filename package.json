@@ -1,8 +1,10 @@
 {
-  "name": "arbitra-client",
-  "version": "0.1.1",
-  "main": "main.js",
-  "dependencies": {
-    "electron": "^1.7.8"
-  }
+    "name": "arbitra-client",
+    "version": "0.1.3",
+    "main": "main.js",
+    "dependencies": {
+        "big-integer": "^1.6.26",
+        "electron": "^1.7.8",
+        "random-number-csprng": "^1.0.2"
+    }
 }
