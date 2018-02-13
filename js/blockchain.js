@@ -18,6 +18,9 @@ function checkBalance(key,amount,callback) {
 }
 
 function calcBalances() {
+    //////////////////////////
+    // TODO: MINING REWARDS //
+    //////////////////////////
     file.getAll('blockchain',(data) => {
         var balances = {}
         var block
@@ -44,6 +47,9 @@ function calcBalances() {
 }
 
 function updateBalances(block) {
+    //////////////////////////
+    // TODO: MINING REWARDS //
+    //////////////////////////
     tx = block.body.transactions
     file.getAll('balances',(balances) => {
         // set the most recent block hash
@@ -74,3 +80,6 @@ function addBlock(msg) {
 }
 
 exports.get = getBlock
+exports.checkBalance = checkBalance
+exports.calcBalances = calcBalances
+exports.updateBalances = updateBalances

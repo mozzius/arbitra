@@ -26,7 +26,7 @@ button, input[type=submit] {
     min-width: 70px;
     padding: 4px 10px;
     border: 1px solid #333;
-    border-radius: 15px;
+    border-radius: 5px;
 }
 
 button:hover, input[type=submit]:hover {
@@ -215,4 +215,21 @@ font-size: 0.65em;
     border: 1px solid #333;
     border-radius: 5px;
     white-space: nowrap;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #333; 
 }

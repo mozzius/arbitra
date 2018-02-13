@@ -1,13 +1,9 @@
 const hash = require('./hashing.js')
 const ecdsa = require('./ecdsa.js')
+const blockchain = require('./blockchain.js')
 
-function tx(msg) {
-    var result = {
-        header: {},
-        body: {}
-    }
-    var body = JSON.stringify(msg.body)
-    var from = msg.body.transactions
+function transaction(tx) {
+    var from = tx.transactions
     var len = from.length
     var input
     var concat
@@ -15,10 +11,15 @@ function tx(msg) {
     // and checks that they're all valid
     for (var i; i < len; ++i) {
         input = from[i]
-        concat = input.amount+body.to+msg.header.time
-        ecdsa.verifyMsg(concat,input.signature,input.from,(result) => {
+        concat = input.amount+tx.to+tx.time
+        console.log(concat)
+        ecdsa.verifyMsg(concat,input.signature,input.person,(result) => {
             if (result) {
-                // check amounts here
+                blockchain.checkBalance(input.person,input.amount,(balanceCheck) => {
+                    if (!balanceCheck) {
+                        throw 'amount'
+                    }
+                })
             } else {
                 throw 'signature'
             }
@@ -26,13 +27,39 @@ function tx(msg) {
     }
 }
 
+function tx(msg) {
+    var reply = {
+        "header": {
+            "type": "ok"
+        },
+        "body": {}
+    }
+    transaction(msg.body)
+    return reply
+}
+
 function bk(msg) {
+    var reply = {
+        "header": {
+            "type": "ok"
+        }
+    }
     var txlist = msg.body.transactions
     var len = txlist.length
     var tx
+    // verify all the transactions
     for (var i; i < len; ++i) {
         tx = txlist[i]
+        try {
+            transaction(tx)
+        } catch(e) {
+            if (e === 'signature' || e === 'amount') {
+                throw 'transaction'
+            }
+        }
     }
+    // if nothing has been thrown, set reply to ok msg
+    return reply
 }
 
 function hr(msg) {
@@ -40,7 +67,22 @@ function hr(msg) {
 }
 
 function br(msg) {
-    file.get('blockchain',msg)
+    file.get('blockchain',msg.body.hash,(result) => {
+        if (result !== null) {
+            var reply = {
+                "header": {
+                    "type": "bl"
+                },
+                "body": {
+                    "hash": msg.body.hash,
+                    "body": result
+                }
+            }
+            return reply
+        } else {
+            throw 'notfound'
+        }
+    })
 }
 
 function nr(msg) {

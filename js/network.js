@@ -25,18 +25,25 @@ function init() {
 }
 
 function parseMsg(data,callback) {
+    // temporary function
     callback(hash.sha256hex(data))
 }
 
 function parseMsg2(data,callback) {
+    // parse incoming messages and crafts a reply
+    // by calling parse functions
     var reply
     try {
         var msg = JSON.parse(data)
-        if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body)+msg.header.time)) {
+        if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
             if (msg.header.type === 'tx') {
                 reply = parse.tx(msg)
+                // send on to other nodes
+                file.append('sent',msg.header.hash,() => {})
             } else if (msg.header.type === 'bk') {
                 reply = parse.bk(msg)
+                // send on to other nodes
+                file.append('sent',msg.header.hash,() => {})
             } else if (msg.header.type === 'hr') {
                 reply = parse.hr(msg)
             } else if (msg.header.type === 'br') {
@@ -65,9 +72,12 @@ function parseMsg2(data,callback) {
             reply.body['error'] = e
         }
     } finally {
-        reply.header.time = Date.now()
-        reply.header.hash = hash.sha256hex(JSON.stringify(reply.body)+reply.header.time)
-        reply.header.size = Buffer.byteLength(JSON.stringify(reply.body,'utf8'))
+        reply.body['time'] = Date.now()
+        reply.header['version'] = version
+        if (reply.header.type !== 'ok') {
+            reply.header['hash'] = hash.sha256hex(JSON.stringify(reply.body)+reply.header.time)
+            reply.header['size'] = Buffer.byteLength(JSON.stringify(reply.body,'utf8'))
+        }
         var replystr = JSON.stringify(reply)
         console.log('Reply: '+replystr)
         callback(replystr)
