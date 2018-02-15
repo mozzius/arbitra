@@ -1,6 +1,7 @@
 const hash = require('./hashing.js')
 const ecdsa = require('./ecdsa.js')
 const blockchain = require('./blockchain.js')
+const file = require('./file.js')
 
 function transaction(tx) {
     var from = tx.transactions
@@ -90,7 +91,25 @@ function nr(msg) {
 }
 
 function pg(msg) {
-    
+    pgreply(msg)
+    var reply = {
+        "header": {
+            "type": "pg"
+        },
+        "body": {
+            "advertise": true
+        }
+    }
+    return reply
+}
+
+function pgreply(msg) {
+    var store = {}
+    store["ip"] = ip
+    store["advertise"] = msg.body.advertise
+    file.append('connections',store,() => {
+        console.log('Connection added: '+ip)
+    })
 }
 
 exports.tx = tx

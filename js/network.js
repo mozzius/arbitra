@@ -36,8 +36,10 @@ function init() {
             var advertise = JSON.parse(data)
             ping.body['advertise'] = advertise
             connections.forEach((node) => {
-                sendMsg(ping,node.ip,() => {
-                    
+                sendMsg(ping,node.ip,(type) => {
+                    if (type === 'ping') {
+
+                    }
                 })
             })
         })
@@ -56,10 +58,10 @@ function sendMsg(msg,ip,callback) {
         client.write(msg)
         client.on('data',(data) => {
             console.log('Client received: '+data)
-            parseReply(data,() => {
-                // call the callback, if it exists
-                typeof callback === 'function' && callback()
+            parseReply(data,ip,(type) => {
                 client.destroy()
+                // call the callback, if it exists
+                typeof callback === 'function' && callback(type)
             })
         })
         client.on('close',() => {
@@ -128,21 +130,24 @@ function parseMsg2(data,callback) {
     }
 }
 
-function parseReply(data) {
-    // parse incoming messages and crafts a reply
+function parseReply(data,ip) {
+    // parse incoming replies
     // by calling parse functions
-    var reply
+    var type
     try {
         var msg = JSON.parse(data)
         if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
             if (msg.header.type === 'bl') {
-                reply = parse.bl(msg)
+                parse.bl(msg)
             } else if (msg.header.type === 'bh') {
-                reply = parse.bh(msg)
+                parse.bh(msg)
             } else if (msg.header.type === 'nr') {
-                reply = parse.nr(msg)
+                parse.nr(msg)
             } else if (msg.header.type === 'nd') {
-                reply = parse.nd(msg)
+                parse.nd(msg)
+            } else if (msg.header.type === 'pg') {
+                parse.pgreply(msg,ip)
+                type = 'ping'
             } else if (msg.header.type === 'ok') {
                 console.info('message recieved ok')
             } else {
@@ -154,7 +159,9 @@ function parseReply(data) {
     } catch(e) {
         console.warn('Reply error: '+e)
     } finally {
-        callback(replystr)
+        // call the callback, if it exists
+        // callbacks are to calculate the number of connections
+        typeof callback === 'function' && callback(type)
     }
 }
 
