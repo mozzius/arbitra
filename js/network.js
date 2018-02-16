@@ -29,7 +29,7 @@ function init() {
     
     // server listens on this port
     // should be 2018
-    server.listen(80,'0.0.0.0')
+    server.listen(port,'0.0.0.0')
 
     // start trying to connect to other nodes
     var connections = 0
@@ -74,7 +74,7 @@ function sendMsg(msg,ip,callback) {
     msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
     var sendMe = JSON.stringify(msg)
     var client = new net.Socket()
-    client.connect(80,ip,() => {
+    client.connect(port,ip,() => {
         console.log('Connected to: '+ip)
         client.write(sendMe)
         client.on('data',(data) => {
