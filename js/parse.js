@@ -106,16 +106,30 @@ function pg(msg,ip) {
             var advertise = JSON.parse(data)
         }
         reply.body['advertise'] = advertise
-        return reply
     })
+    return reply
 }
 
 function pgreply(msg,ip) {
     var store = {}
     store["ip"] = ip
     store["advertise"] = msg.body.advertise
-    file.append('connections',store,() => {
-        console.log('Connection added: '+ip)
+    file.getAll('connections',(data) => {
+        var repeat = false
+        // checks to see if the ip is already in connections.json
+        if (data !== null) {
+            nodes = JSON.parse(data)
+            nodes.forEach((node) => {
+                if (node.ip === ip) {
+                    repeat = true
+                }
+            })
+        }
+        if (!repeat) {
+            file.append('connections',store,() => {
+                console.log('Connection added: '+ip)
+            })
+        }
     })
 }
 

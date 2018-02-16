@@ -3,7 +3,9 @@ const file = require('./file.js')
 function init() {
     addInput()
     var add = document.getElementById('addInput')
+    var send = document.getElementById('send')
     add.addEventListener('click',addInput)
+    send.addEventListener('click',sendTx)
 }
 
 function addInput() {
@@ -44,6 +46,21 @@ function populateDropdown(select) {
             option.text = wallet.amount+"au - "+wallet.name
             select.add(option)
         })
+    })
+}
+
+function sendTx() {
+    var to = document.getElementById('to')
+    document.getElementsByClassName('input-group').forEach((group) => {
+        var children = group.childNodes
+        var wallet = children[0].value
+        var amount = children[1].value
+        if (wallet && amount) {
+            // carry on
+        } else {
+            document.getElementById('error').classList.remove('hidden')
+            return
+        }
     })
 }
 

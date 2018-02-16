@@ -70,8 +70,8 @@ function init() {
 function sendMsg(msg,ip,callback) {
     msg.body['time'] = Date.now()
     msg.header['version'] = version
-    msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
     msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
+    msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
     var sendMe = JSON.stringify(msg)
     var client = new net.Socket()
     client.connect(port,ip,() => {
@@ -101,7 +101,6 @@ function parseMsgTemp(data,callback) {
 }
 
 function parseMsg(data,ip,callback) {
-    console.log(ip)
     // parse incoming messages and crafts a reply
     // by calling parse functions
     var reply
@@ -159,7 +158,7 @@ function parseReply(data,ip) {
     var type
     try {
         var msg = JSON.parse(data)
-        if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
+        if (msg.header.hash == hash.sha256hex(JSON.stringify(msg.body))) {
             if (msg.header.type === 'bl') {
                 parse.bl(msg)
             } else if (msg.header.type === 'bh') {
@@ -186,6 +185,19 @@ function parseReply(data,ip) {
         // callbacks are to calculate the number of connections
         typeof callback === 'function' && callback(type)
     }
+}
+
+function sendOn(msg) {
+    file.getAll('connections',(data) => {
+        // doesn't do anything if there's no connections
+        if (data !== null) {
+            nodes = JSON.parse(data)
+            // go through connections and send a message to each
+            nodes.forEach((node) => {
+                sendMsg(msg,node.ip,() => {})
+            })
+        }
+    })
 }
 
 exports.init = init

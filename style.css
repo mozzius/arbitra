@@ -217,6 +217,10 @@ font-size: 0.65em;
     white-space: nowrap;
 }
 
+.hidden {
+    display: none;
+}
+
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
