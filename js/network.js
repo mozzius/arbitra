@@ -27,7 +27,10 @@ function init() {
     // server listens on this port
     // should be 2018
     server.listen(port,'0.0.0.0')
+<<<<<<< HEAD
     console.log('server started')
+=======
+>>>>>>> bdca2bbb9e6579e7bf7daca91fd664cbbe05cc86
 
     // start trying to connect to other nodes
     var connections = 0
