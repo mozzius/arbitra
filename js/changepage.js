@@ -9,7 +9,6 @@ function changePage(name) {
             console.warn('An error ocurred reading the file: '+err.message)
             return
         }
-        console.info('Page change: '+name)
         document.getElementById('body').innerHTML = data
         try {
             const pageJS = require('./'+name+'.js')

@@ -1,8 +1,17 @@
 const network = require('./network.js')
 
 function init() {
-    var ip = '8.8.8.8'
-    //network.sendMsg('hello world',ip)
+    var ip = 'localhost'
+    var msg = {
+        "header": {
+            "type": "pg",
+
+        },
+        "body": {
+            "advertise": true
+        }
+    }
+    network.sendMsg(msg,ip)
 }
 
 exports.init = init

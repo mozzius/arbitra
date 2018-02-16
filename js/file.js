@@ -140,3 +140,4 @@ exports.store = store
 exports.get = get
 exports.getAll = getAll
 exports.append = append
+exports.storeAll = storeAll

@@ -9,19 +9,25 @@ function init() {
     // when it receives data, it will pass it to parseMsg
     // and reply with whatever it sends back
     var server = net.createServer((socket) => {
+        var ip = socket.remoteAddress
+        socket.setEncoding('utf8')
+        // when it receives data, send to parseMsg()
         socket.on('data',(data) => {
+            console.log('Connected: '+ip)
             console.log('Server received: '+data)
-            parseMsg(data,(reply) => {
+            parseMsg(data,socket.ip,(reply) => {
                 socket.write(reply)
             })
         })
         socket.on('end',socket.end)
+        server.listen(() => {
+            console.log('Server started: ', server.address().address);
+        })
     })
     
     // server listens on this port
     // should be 2018
     server.listen(2018)
-    console.log('Server started')
 
     // start trying to connect to other nodes
     var connections = 0
@@ -46,6 +52,7 @@ function init() {
                 })
             })
             if (connections === 0) {
+                console.warn('no connections found!')
                 const backup = "http://samuelnewman.uk/arbitra/nodes.json"
                 //////////////////////////////
                 //           TODO           // 
@@ -65,7 +72,7 @@ function sendMsg(msg,ip,callback) {
     var client = new net.Socket()
     client.connect(2018,ip,() => {
         console.log('Connected to: '+ip)
-        client.write(msg)
+        client.write(sendMe)
         client.on('data',(data) => {
             console.log('Client received: '+data)
             parseReply(data,ip,(type) => {
@@ -84,12 +91,12 @@ function sendMsg(msg,ip,callback) {
     })
 }
 
-function parseMsg(data,callback) {
+function parseMsgTemp(data,callback) {
     // temporary function
     callback(hash.sha256hex(data))
 }
 
-function parseMsg2(data,callback) {
+function parseMsg(data,ip,callback) {
     // parse incoming messages and crafts a reply
     // by calling parse functions
     var reply
@@ -111,7 +118,7 @@ function parseMsg2(data,callback) {
             } else if (msg.header.type === 'br') {
                 reply = parse.br(msg)
             } else if (msg.header.type === 'pg') {
-                reply = parse.pg(msg)
+                reply = parse.pg(msg,ip)
             } else if (msg.header.type === 'nr') {
                 reply = parse.nr(msg)
             } else {
@@ -135,7 +142,8 @@ function parseMsg2(data,callback) {
         }
     } finally {
         // replies with something, even if its an error
-        console.log('Reply: '+JSON.stringify(reply))
+        var replystr = JSON.stringify(reply)
+        console.log('Reply: '+replystr)
         callback(replystr)
     }
 }

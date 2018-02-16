@@ -43,7 +43,8 @@ function bk(msg) {
     var reply = {
         "header": {
             "type": "ok"
-        }
+        },
+        "body": {}
     }
     var txlist = msg.body.transactions
     var len = txlist.length
@@ -90,8 +91,9 @@ function nr(msg) {
     
 }
 
-function pg(msg) {
-    pgreply(msg)
+function pg(msg,ip) {
+    console.log(ip)
+    pgreply(msg,ip)
     var reply = {
         "header": {
             "type": "pg"
@@ -105,7 +107,7 @@ function pg(msg) {
     })
 }
 
-function pgreply(msg) {
+function pgreply(msg,ip) {
     var store = {}
     store["ip"] = ip
     store["advertise"] = msg.body.advertise

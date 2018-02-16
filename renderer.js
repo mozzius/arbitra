@@ -1,6 +1,7 @@
 const remote = require('electron').remote
 const changePage = require('./js/changepage.js').changePage
 const network = require('./js/network.js')
+const blockchain = require('./js/blockchain.js')
 
 document.onreadystatechange = function () {
     if (document.readyState == 'complete') {
@@ -66,5 +67,8 @@ document.onreadystatechange = function () {
 
         // start server
         network.init()
+
+        // update total amount in the top corner
+        
     }
 }

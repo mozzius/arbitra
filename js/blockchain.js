@@ -18,56 +18,72 @@ function checkBalance(key,amount,callback) {
 }
 
 function calcBalances() {
-    //////////////////////////
-    // TODO: MINING REWARDS //
-    //////////////////////////
+    const miningreward = 50
     file.getAll('blockchain',(data) => {
         var balances = {}
         var block
+        // iterate through the blocks
         for (var i = 0, len = data.length; i < len; i++) {
             block = data[i]
-            tx = block.transactions
-            // iterate through each transacton
-            for (var i = 0, len = tx.from.length; i < len; i++) {
-                // deduct amounts from the inputs
-                if (balances.hasOwnProperty(tx.from[i].wallet)) {
-                    balances[tx.from[i].wallet] -= tx.from[i].amount
-                } else {
-                    balances[tx.from[i].wallet] = -tx.from[i].amount
-                }
-                // add amount to the recipient's balance
-                if (balances.hasOwnProperty(block.to)) {
-                    balances[block.to] += tx.from[i].amount
-                } else {
-                    balances[block.to] = tx.from[i].amount
+            txs = block.transactions
+            // iterate through each block to find each transaction
+            for (var i = 0, len = txs.length; i < len; i++) {
+                var from = tx[i].from
+                for (var i = 0, len = tx.length; i < len; i++) {
+                    // deduct amounts from the inputs
+                    if (balances.hasOwnProperty(from.wallet)) {
+                        balances[from.wallet] -= from.amount
+                    } else {
+                        balances[from.wallet] = -from.amount
+                    }
+                    // add amount to the recipient's balance
+                    if (balances.hasOwnProperty(tx[i].to)) {
+                        balances[tx[i].to] += from.amount
+                    } else {
+                        balances[tx[i].to] = from.amount
+                    }
                 }
             }
+            // mining rewards
+            if (balances.hasOwnProperty(block.miner)) {
+                balances[block.to] += miningreward
+            } else {
+                balances[block.to] = miningreward
+            }
         }
+        var data = JSON.stringify(balances)
+        file.storeAll('balances',data)
     })
 }
 
 function updateBalances(block) {
-    //////////////////////////
-    // TODO: MINING REWARDS //
-    //////////////////////////
-    tx = block.body.transactions
+    const miningreward = 50
+    txs = block.body.transactions
     file.getAll('balances',(balances) => {
         // set the most recent block hash
         balance['latest'] = block.header.hash
-        // iterate through each transacton
-        for (var i = 0, len = tx.from.length; i < len; i++) {
-            // deduct amounts from the inputs
-            if (balances.hasOwnProperty(tx.from[i].wallet)) {
-                balances[tx.from[i].wallet] -= tx.from[i].amount
-            } else {
-                balances[tx.from[i].wallet] = -tx.from[i].amount
+        for (var i = 0, len = txs.length; i < len; i++) {
+            var from = tx[i].from
+            for (var i = 0, len = tx.length; i < len; i++) {
+                // deduct amounts from the inputs
+                if (balances.hasOwnProperty(from.wallet)) {
+                    balances[from.wallet] -= from.amount
+                } else {
+                    balances[from.wallet] = -from.amount
+                }
+                // add amount to the recipient's balance
+                if (balances.hasOwnProperty(tx[i].to)) {
+                    balances[tx[i].to] += from.amount
+                } else {
+                    balances[tx[i].to] = from.amount
+                }
             }
-            // add amount to the recipient's balance
-            if (balances.hasOwnProperty(block.to)) {
-                balances[block.to] += tx.from[i].amount
-            } else {
-                balances[block.to] = tx.from[i].amount
-            }
+        }
+        // mining rewards
+        if (balances.hasOwnProperty(block.miner)) {
+            balances[block.to] += miningreward
+        } else {
+            balances[block.to] = miningreward
         }
         file.storeAll('balances',balances)
     })
@@ -78,6 +94,8 @@ function addBlock(msg) {
         return false
     }
 }
+
+
 
 exports.get = getBlock
 exports.checkBalance = checkBalance
