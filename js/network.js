@@ -24,6 +24,8 @@ function init() {
     console.log('Server started')
 
     // start trying to connect to other nodes
+    var connections = 0
+    document.getElementById('connections').textContent = connections
     file.getAll('connections',(data) => {
         var connections = JSON.parse(data)
         var ping = {
@@ -38,10 +40,18 @@ function init() {
             connections.forEach((node) => {
                 sendMsg(ping,node.ip,(type) => {
                     if (type === 'ping') {
-
+                        connections++
+                        document.getElementById('connections').textContent = connections
                     }
                 })
             })
+            if (connections === 0) {
+                const backup = "http://samuelnewman.uk/arbitra/nodes.json"
+                //////////////////////////////
+                //           TODO           // 
+                // Connect to backup server //
+                //////////////////////////////
+            }
         })
     })
 }

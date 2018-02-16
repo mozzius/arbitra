@@ -96,11 +96,13 @@ function pg(msg) {
         "header": {
             "type": "pg"
         },
-        "body": {
-            "advertise": true
-        }
+        "body": {}
     }
-    return reply
+    file.get('advertise','network-settings',(data) => {
+        var advertise = JSON.parse(data)
+        reply.body['advertise'] = advertise
+        return reply
+    })
 }
 
 function pgreply(msg) {
