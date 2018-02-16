@@ -22,14 +22,12 @@ function init() {
             })
         })
         socket.on('end',socket.end)
-        server.listen(() => {
-            console.log('Server started: ', server.address().address);
-        })
     })
     
     // server listens on this port
     // should be 2018
-    server.listen(80,'0.0.0.0')
+    server.listen(port,'0.0.0.0')
+    console.log('server started')
 
     // start trying to connect to other nodes
     var connections = 0
@@ -43,21 +41,23 @@ function init() {
             "body": {}
         }
         file.get('advertise','network-settings',(data) => {
-            if (data) {
+            if (data === null) {
+                var advertise = false
+            } else {
                 var advertise = JSON.parse(data)
-                ping.body['advertise'] = advertise
-                connections.forEach((node) => {
-                    sendMsg(ping,node.ip,(type) => {
-                        if (type === 'ping') {
-                            connections++
-                            document.getElementById('connections').textContent = connections
-                        }
-                    })
-                })
             }
+            ping.body['advertise'] = advertise
+            connections.forEach((node) => {
+                sendMsg(ping,node.ip,(type) => {
+                    if (type === 'ping') {
+                        connections++
+                        document.getElementById('connections').textContent = connections
+                    }
+                })
+            })
             if (connections === 0) {
                 console.warn('no connections found!')
-                const backup = "http://samuelnewman.uk/arbitra/nodes.json"
+                const backup = 'http://samuelnewman.uk/arbitra/nodes.json'
                 //////////////////////////////
                 //           TODO           // 
                 // Connect to backup server //
@@ -74,7 +74,7 @@ function sendMsg(msg,ip,callback) {
     msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
     var sendMe = JSON.stringify(msg)
     var client = new net.Socket()
-    client.connect(80,ip,() => {
+    client.connect(port,ip,() => {
         console.log('Connected to: '+ip)
         client.write(sendMe)
         client.on('data',(data) => {

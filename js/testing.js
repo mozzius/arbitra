@@ -1,7 +1,7 @@
 const network = require('./network.js')
 
 function init() {
-    var ip = '85.255.237.191'
+    var ip = 'localhost'
     var msg = {
         "header": {
             "type": "pg",
