@@ -17,7 +17,7 @@ function init() {
         socket.on('data',(data) => {
             console.log('Connected: '+ip)
             console.log('Server received: '+data)
-            parseMsg(data,socket.ip,(reply) => {
+            parseMsg(data,ip,(reply) => {
                 socket.write(reply)
             })
         })
@@ -42,7 +42,7 @@ function init() {
         }
         file.get('advertise','network-settings',(data) => {
             if (data === null) {
-                var advertise = false
+                var advertise = true
             } else {
                 var advertise = JSON.parse(data)
             }
@@ -101,6 +101,7 @@ function parseMsgTemp(data,callback) {
 }
 
 function parseMsg(data,ip,callback) {
+    console.log(ip)
     // parse incoming messages and crafts a reply
     // by calling parse functions
     var reply

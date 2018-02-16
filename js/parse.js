@@ -92,7 +92,6 @@ function nr(msg) {
 }
 
 function pg(msg,ip) {
-    console.log(ip)
     pgreply(msg,ip)
     var reply = {
         "header": {
@@ -101,7 +100,11 @@ function pg(msg,ip) {
         "body": {}
     }
     file.get('advertise','network-settings',(data) => {
-        var advertise = JSON.parse(data)
+        if (data === null) {
+            var advertise = true
+        } else {
+            var advertise = JSON.parse(data)
+        }
         reply.body['advertise'] = advertise
         return reply
     })
