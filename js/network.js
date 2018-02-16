@@ -4,6 +4,8 @@ const file = require('./file.js')
 const parse = require('./parse.js')
 const version = require('../package.json').version
 
+const port = 80
+
 function init() {
     // creates a server that will receive all the messages
     // when it receives data, it will pass it to parseMsg
@@ -27,7 +29,7 @@ function init() {
     
     // server listens on this port
     // should be 2018
-    server.listen(2018)
+    server.listen(80,'0.0.0.0')
 
     // start trying to connect to other nodes
     var connections = 0
@@ -41,16 +43,18 @@ function init() {
             "body": {}
         }
         file.get('advertise','network-settings',(data) => {
-            var advertise = JSON.parse(data)
-            ping.body['advertise'] = advertise
-            connections.forEach((node) => {
-                sendMsg(ping,node.ip,(type) => {
-                    if (type === 'ping') {
-                        connections++
-                        document.getElementById('connections').textContent = connections
-                    }
+            if (data) {
+                var advertise = JSON.parse(data)
+                ping.body['advertise'] = advertise
+                connections.forEach((node) => {
+                    sendMsg(ping,node.ip,(type) => {
+                        if (type === 'ping') {
+                            connections++
+                            document.getElementById('connections').textContent = connections
+                        }
+                    })
                 })
-            })
+            }
             if (connections === 0) {
                 console.warn('no connections found!')
                 const backup = "http://samuelnewman.uk/arbitra/nodes.json"
@@ -70,7 +74,7 @@ function sendMsg(msg,ip,callback) {
     msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
     var sendMe = JSON.stringify(msg)
     var client = new net.Socket()
-    client.connect(2018,ip,() => {
+    client.connect(80,ip,() => {
         console.log('Connected to: '+ip)
         client.write(sendMe)
         client.on('data',(data) => {
