@@ -50,13 +50,20 @@ function populateDropdown(select) {
 }
 
 function sendTx() {
+    console.log('send button clicked')
     var to = document.getElementById('to')
-    document.getElementsByClassName('input-group').forEach((group) => {
-        var children = group.childNodes
-        var wallet = children[0].value
-        var amount = children[1].value
+    // this isn't an array for some reason
+    // we can make it one using Array.from
+    // https://stackoverflow.com/a/37941811/5453419
+    var groups = Array.from(document.getElementsByClassName('input-group'))
+    groups.forEach((group) => {
+        var child = group.childNodes
+        var wallet = child[0].value
+        var amount = child[1].value
         if (wallet && amount) {
             // carry on
+            console.log(wallet)
+            console.log(amount)
         } else {
             document.getElementById('error').classList.remove('hidden')
             return

@@ -221,6 +221,10 @@ font-size: 0.65em;
     display: none;
 }
 
+#error {
+    color: red;
+}
+
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
