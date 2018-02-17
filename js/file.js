@@ -99,6 +99,7 @@ function storeAll(file,data) {
     content = JSON.stringify(jsondata)
     fs.writeFile(path,content,'utf-8',(err) => {
         if (err) throw err
+        typeof callback === 'function' && callback()
     })
 }
 
@@ -129,11 +130,10 @@ function append(file,data,callback) {
             content = JSON.stringify(jsondata)
             fs.writeFile(path,content,'utf-8',(err) => {
                 if (err) throw err
+                else typeof callback === 'function' && callback()
             })
-            callback()
         }
     })
-    
 }
 
 exports.store = store

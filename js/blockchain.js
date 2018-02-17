@@ -90,9 +90,11 @@ function updateBalances(block) {
 }
 
 function addBlock(msg) {
-    if (msg.header.hash === "") {
-        return false
+    // doublecheck the hash
+    if (msg.header.hash == hash.sha256hex(JSON.stringify(msg.body))) {
+        file.store(msg.header.hash,msg.body,'blockchain')
     }
+    updateBalances(msg)
 }
 
 
@@ -101,3 +103,4 @@ exports.get = getBlock
 exports.checkBalance = checkBalance
 exports.calcBalances = calcBalances
 exports.updateBalances = updateBalances
+exports.addBlock = addBlock

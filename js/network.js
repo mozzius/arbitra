@@ -3,6 +3,7 @@ const hash = require('./hashing.js')
 const file = require('./file.js')
 const parse = require('./parse.js')
 const version = require('../package.json').version
+const blockchain = require('./blockchain.js')
 
 const port = 80
 
@@ -17,7 +18,12 @@ function init() {
         socket.on('data',(data) => {
             console.log('Connected: '+ip)
             console.log('Server received: '+data)
-            parseMsg(data,ip,(reply) => {
+            parseMsg(data,ip,(msg) => {
+                msg.body['time'] = Date.now()
+                msg.header['version'] = version
+                msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
+                msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
+                var reply = JSON.stringify(msg)
                 socket.write(reply)
             })
         })
@@ -81,8 +87,6 @@ function sendMsg(msg,ip,callback) {
             console.log('Client received: '+data)
             parseReply(data,ip,(type) => {
                 client.destroy()
-                // call the callback, if it exists
-                typeof callback === 'function' && callback(type)
             })
         })
         client.on('close',() => {
@@ -110,13 +114,16 @@ function parseMsg(data,ip,callback) {
             if (msg.header.type === 'tx') {
                 reply = parse.tx(msg)
                 // send on to other nodes
+                // if it's not valid, an error will have
+                // already been thrown
                 sendOn(msg)
                 file.append('sent',msg.header.hash,() => {})
             } else if (msg.header.type === 'bk') {
                 reply = parse.bk(msg)
                 // send on to other nodes
                 sendOn(msg)
-                file.append('sent',msg.header.hash,() => {})
+                // add to blockchain
+                blockchain.addBlock(msg)
             } else if (msg.header.type === 'hr') {
                 reply = parse.hr(msg)
             } else if (msg.header.type === 'br') {
@@ -145,14 +152,12 @@ function parseMsg(data,ip,callback) {
             reply.body['error'] = e
         }
     } finally {
-        // replies with something, even if its an error
-        var replystr = JSON.stringify(reply)
-        console.log('Reply: '+replystr)
-        callback(replystr)
+        // replies with something, even if its an error msg
+        callback(reply)
     }
 }
 
-function parseReply(data,ip) {
+function parseReply(data,ip,callback) {
     // parse incoming replies
     // by calling parse functions
     var type
@@ -194,7 +199,9 @@ function sendOn(msg) {
             nodes = JSON.parse(data)
             // go through connections and send a message to each
             nodes.forEach((node) => {
-                sendMsg(msg,node.ip,() => {})
+                sendMsg(msg,node.ip,() => {
+                    file.append('sent',msg.header.hash)
+                })
             })
         }
     })

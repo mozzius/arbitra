@@ -60,7 +60,7 @@ function bk(msg) {
             }
         }
     }
-    // if nothing has been thrown, set reply to ok msg
+    // if nothing has been thrown, add to local blockchain
     return reply
 }
 
@@ -125,6 +125,7 @@ function pgreply(msg,ip) {
                 }
             })
         }
+        // stores it if not
         if (!repeat) {
             file.append('connections',store,() => {
                 console.log('Connection added: '+ip)
@@ -138,3 +139,4 @@ exports.hr = hr
 exports.br = br
 exports.nr = nr
 exports.pg = pg
+exports.pgreply = pgreply
