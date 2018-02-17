@@ -2,7 +2,7 @@ const file = require('./file.js')
 const changePage = require('./changepage').changePage
 
 function init() {
-    document.getElementById('create').addEventListener('click', function () {
+    document.getElementById('create').addEventListener('click',() => {
         changePage('wallets-create')
     })
     file.getAll('wallets',(data) => {
