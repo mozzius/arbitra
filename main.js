@@ -13,7 +13,7 @@ function createWindow() {
         width: 1280,
         height: 720,
         frame: false,
-        icon: 'au-icon.png'
+        icon: 'static/au-icon.png'
     })
 
     // and load the index.html of the app.

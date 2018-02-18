@@ -44,6 +44,7 @@ function init() {
                 miner.terminate()
                 miner = null
             }
+            pre.innerHTML += 'Mining stopped<br>'
             button.textContent = 'Start'
         }
     })
