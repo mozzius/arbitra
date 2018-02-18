@@ -1,4 +1,4 @@
-const network = require('./network.js')
+const network = require('../network.js')
 
 function init() {
     // '85.255.237.191'

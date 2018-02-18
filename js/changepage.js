@@ -11,7 +11,7 @@ function changePage(name) {
         }
         document.getElementById('body').innerHTML = data
         try {
-            const pageJS = require('./'+name+'.js')
+            const pageJS = require('./pages/'+name+'.js')
             pageJS.init()
         } catch(e) {
             console.error(e)

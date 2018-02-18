@@ -1,5 +1,5 @@
-const file = require('./file.js')
-const changePage = require('./changepage').changePage
+const file = require('../file.js')
+const changePage = require('../changepage').changePage
 
 function init() {
     document.getElementById('create').addEventListener('click', function () {

@@ -1,4 +1,4 @@
-const file = require('./file.js')
+const file = require('../file.js')
 
 function init() {
     addInput()
