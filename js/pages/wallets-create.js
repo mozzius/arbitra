@@ -1,6 +1,6 @@
-const ecdsa = require('./ecdsa.js')
-const changePage = require('./changepage').changePage
-const file = require('./file.js')
+const ecdsa = require('../ecdsa.js')
+const changePage = require('../changepage').changePage
+const file = require('../file.js')
 
 function init() {
     ecdsa.createKeys((public, private, err) => {
