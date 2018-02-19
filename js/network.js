@@ -74,7 +74,11 @@ function init() {
 }
 
 function sendMsg(msg,ip,callback) {
-    msg.body['time'] = Date.now()
+    if (msg.header.type !== 'bl') {
+        // don't want to affect the body of a block
+        // as it will throw off the hash
+        msg.body['time'] = Date.now()
+    }
     msg.header['version'] = version
     msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
     msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))

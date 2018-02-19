@@ -8,7 +8,7 @@ onmessage = (block) => {
     var dhash = 0
     // total number of hashes
     var hashes = 0
-    var body = block.data.body
+    var body = block.data
     var t1, t2, tt
     t1 = Date.now()
     t2 = Date.now()
@@ -32,7 +32,8 @@ onmessage = (block) => {
                 if (pass) {
                     postMessage('Hash found! Nonce: '+nonce)
                     postMessage(hash)
-                    postMessage(nonce)
+                    postMessage(body)
+                    return
                 } else {
                     // printing for the console
                     t2 = Date.now()

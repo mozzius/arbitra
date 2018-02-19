@@ -97,10 +97,44 @@ function addBlock(msg) {
     updateBalances(msg)
 }
 
+function createBlock(callback) {
+    file.getAll('txpool',(data) => {
+        var block = {
+            "header": {
+                "type": "bl"
+            },
+            "body": {}
+        }
+        if (data !== null) {
+            var transactions = JSON.parse(data)
+            block.body['transactions'] = transactions
+        } else {
+            block.body['transactions'] = []
+        }
+        ////////////////////
+        // NEEDS CHANGING //
+        ////////////////////
+        block.body['difficulty'] = 5
+        // gets first wallet, should probably change too
+        file.getAll('wallets',(data2) => {
+            var wallets = JSON.parse(data2)
+            block.body['miner'] = wallets[0]
 
+            // gets the parent block
+            file.get('latest','blockchain',(data3) => {
+                var latest = JSON.parse(data3)
+                block.body['parent'] = latest
+
+                // return the block
+                callback(block)
+            })
+        })
+    })
+}
 
 exports.get = getBlock
 exports.checkBalance = checkBalance
 exports.calcBalances = calcBalances
 exports.updateBalances = updateBalances
 exports.addBlock = addBlock
+exports.createBlock = createBlock
