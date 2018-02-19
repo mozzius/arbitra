@@ -1,4 +1,6 @@
 const Worker = require('tiny-worker')
+const blockchain = require('../blockchain.js')
+const network = require('../network.js')
 
 function init() {
     var miner = null
@@ -21,7 +23,8 @@ function init() {
                             console.log(msg.data)
                             pre.innerHTML += msg.data+'<br>'
                         } else {
-                            alert(msg.data)
+                            console.warn(msg.data)
+                            blockchain.addBlock()
                         }
                     }
                     // change this
@@ -31,7 +34,7 @@ function init() {
                         },
                         "body": {
                             "transactions": "tx goes here",
-                            "difficulty": 4
+                            "difficulty": 5
                         }
                     }
                     // send new block

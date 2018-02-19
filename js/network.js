@@ -116,12 +116,12 @@ function parseMsg(data,ip,callback) {
                 // send on to other nodes
                 // if it's not valid, an error will have
                 // already been thrown
-                sendOn(msg)
+                sendToAll(msg)
                 file.append('sent',msg.header.hash,() => {})
             } else if (msg.header.type === 'bk') {
                 reply = parse.bk(msg)
                 // send on to other nodes
-                sendOn(msg)
+                sendToAll(msg)
                 // add to blockchain
                 blockchain.addBlock(msg)
             } else if (msg.header.type === 'hr') {
@@ -192,7 +192,7 @@ function parseReply(data,ip,callback) {
     }
 }
 
-function sendOn(msg) {
+function sendToAll(msg) {
     file.getAll('connections',(data) => {
         // doesn't do anything if there's no connections
         if (data !== null) {
@@ -209,3 +209,4 @@ function sendOn(msg) {
 
 exports.init = init
 exports.sendMsg = sendMsg
+exports.sendToAll = sendToAll
