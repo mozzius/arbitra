@@ -9,20 +9,22 @@ onmessage = (block) => {
     // total number of hashes
     var hashes = 0
     // the nonce
-    var nonce
+    var nonce = 0
     var t1, t2
     t1 = Date.now()
-    tt = Date.now()
+    t2 = Date.now()
     while (true) {
-        block['nonce'] = nonce
-        hashBlock(block,(hash) => {
-            // generates a random integer as the nonce
-            // iterating produces a race between clients
-            // that only the fastest computer will win
-            // so you're better off guessing
-            nonce = Math.floor(10000000000000000*Math.random())
+        body = block.body
+        postMessage('hi')
+        // why does this break it?!
+        body['nonce'] = nonce
+        postMessage('bonjour')
+        // t2 is updated every loop
+        body['time'] = t2
+        postMessage('hello')
+        hashBlock(body,(hash) => {
             // checks difficulty
-            for (var i = 0; i < block.body.difficulty; i++) {
+            for (var i = 0; i < body.difficulty; i++) {
                 if (hash.charAt(i) == '0') {
                     postMessage('Hash found! Nonce: '+nonce)
                     postMessage(nonce)
@@ -30,6 +32,7 @@ onmessage = (block) => {
             }
             hashes++
             dhash++
+            nonce++
             // printing for the console
             t2 = Date.now()
             if ((t2-t1) > 1000) {
@@ -42,6 +45,10 @@ onmessage = (block) => {
             }
         })
     }
+}
+
+function rand() {
+    return Math.floor(10000000000000000*Math.random())
 }
 
 function hashBlock(block,callback) {

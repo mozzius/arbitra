@@ -3,7 +3,12 @@ const Worker = require('tiny-worker')
 function init() {
     var miner = null
     var button = document.getElementById('toggle')
+    var clear = document.getElementById('clear')
     var pre = document.getElementById('console')
+
+    clear.addEventListener('click',() => {
+        pre.textContent = ''
+    })
 
     button.addEventListener('click',() => {
         if (button.textContent == 'Start') {
@@ -12,26 +17,23 @@ function init() {
                 try {
                     miner = new Worker('js/mining-script.js')
                     miner.onmessage = (msg) => {
-                        pre.innerHTML += msg.data+'<br>'
-                        /*
                         if(typeof msg.data == 'string') {
                             console.log(msg.data)
                             pre.innerHTML += msg.data+'<br>'
                         } else {
                             alert(msg.data)
-                        }*/
+                        }
                     }
                     // change this
-                    var time = Date.now()
                     var tempBlock = {
                         "header": {
                             "type": "bl"
                         },
                         "body": {
-                            "transactions": "tx goes here"
+                            "transactions": "tx goes here",
+                            "difficulty": 4
                         }
                     }
-                    tempBlock['time'] = time
                     // send new block
                     miner.postMessage(tempBlock)
                 } catch(e) {
