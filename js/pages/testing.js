@@ -1,10 +1,10 @@
 const network = require('../network.js')
 const net = require('net')
-const ip = require('ip')
 
 function init() {
 
-    document.getElementById('body').textContent = ip.address()
+    const address = require('ip').address
+    document.getElementById('body').textContent = address()
 
     var server = net.createServer((socket) => {
         socket.write('Echo server\r\n')
