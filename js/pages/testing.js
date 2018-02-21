@@ -6,15 +6,15 @@ function init() {
     const address = require('ip').address
     document.getElementById('body').textContent = address()
 
-    var server = net.createServer((socket) => {
-        socket.write('Echo server\r\n')
-        socket.pipe(socket)
-    });
-
-    server.listen(1337);
+    //var server = net.createServer((socket) => {
+    //    socket.write('Echo server\r\n')
+    //    socket.pipe(socket)
+    //});
+    //
+    //server.listen(1337);
 
     var client = new net.Socket();
-    client.connect(1337, '127.0.0.1', function() {
+    client.connect(1337, '192.168.1.236',() => {
         console.log('Connected');
         client.write('Hello, server! Love, Client.');
     });

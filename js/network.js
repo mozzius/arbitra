@@ -25,9 +25,9 @@ function init() {
                 msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
                 var reply = JSON.stringify(msg)
                 socket.write(reply)
+                socket.end()
             })
         })
-        socket.on('end',socket.end)
     })
     
     // server listens on this port
@@ -83,7 +83,7 @@ function sendMsg(msg,ip,callback) {
     msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
     msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
     var sendMe = JSON.stringify(msg)
-    
+
     var client = new net.Socket()
     client.connect(port,ip,() => {
         console.log('Connected to: '+ip)
