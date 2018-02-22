@@ -5,7 +5,7 @@ function init() {
 
     const address = require('ip').address
     document.getElementById('body').textContent = address()
-
+/*
     var server = net.createServer((socket) => {
         socket.write('Echo server\r\n')
         socket.pipe(socket)
@@ -30,11 +30,11 @@ function init() {
         console.log('Connection closed');
     });
 
-
+*/
 
     // '85.255.237.191'
-    var ip = 'localhost'
-    /*var msg = {
+    var ip = '192.168.1.93'
+    var msg = {
         "header": {
             "type": "pg",
         },
@@ -42,7 +42,7 @@ function init() {
             "advertise": true
         }
     }
-    network.sendMsg(msg,ip)*/
+    network.sendMsg(msg,ip)
 }
 
 exports.init = init

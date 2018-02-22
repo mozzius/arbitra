@@ -5,7 +5,7 @@ const parse = require('./parse.js')
 const version = require('../package.json').version
 const blockchain = require('./blockchain.js')
 
-const port = 80
+const port = 2018
 
 function init() {
     // creates a server that will receive all the messages
