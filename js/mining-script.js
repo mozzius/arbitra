@@ -1,4 +1,5 @@
 const hash = require(__dirname+'/js/hashing.js')
+const network = require(__dirname+'/js/network.js')
 const file = require(__dirname+'/js/file.js')
 
 class Miner {
@@ -6,10 +7,21 @@ class Miner {
         this.block = block
         this.hashes = 0
         this.dhash = 0
-        this.txhash
         this.t1 = Date.now()
         this.t2 = Date.now()
         this.tt = Date.now()
+        file.getAll('txpool',(data) => {
+            if (data === null) {
+                this.block['transactions'] = []
+            } else {
+                var transactions = JSON.parse(data)
+                this.block['transactions'] = transactions
+            }
+            // hash the transactions to see if there's any difference later
+            hash.sha256hex(this.block.transactions,(hashed) => {
+                this.txhash = hashed
+            })
+        }
     }
 
     mine() {
@@ -34,6 +46,7 @@ class Miner {
                         postMessage(hash)
                         // do stuff
                         file.storeAll('txpool','[]')
+                        network.sendToAll(this.block)
                     } else {
                         // printing for the console
                         t2 = Date.now()
@@ -58,6 +71,7 @@ class Miner {
             })
         }
     }
+
     rand(callback) {
         callback(Math.floor(10000000000000000*Math.random()))
     }
@@ -68,12 +82,15 @@ class Miner {
     }
 }
 
-onmessage = (block) => {
-    postMessage('New block received, initiating mining')
+var blockTemplate = {
+    "header": {
+        "type": "bl"
+    },
+    "body": {}
 }
 
-function mine(body,callback) {
-}
+var miner = new Miner(blockTemplate)
+miner.mine(blockTemplate)
 
 /* 
 
