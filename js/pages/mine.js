@@ -9,29 +9,21 @@ function init() {
     var clear = document.getElementById('clear')
     var pre = document.getElementById('console')
 
+    miner = new Worker('js/mining-script.js')
+    miner.onmessage = (msg) => {
+        pre.innerHTML += msg.data+'<br>'
+    }
+
     clear.addEventListener('click',() => {
         pre.textContent = ''
     })
 
     button.addEventListener('click',() => {
         if (button.textContent == 'Start') {
-            if (miner === null) {
-                try {
-                    miner = new Worker('js/mining-script.js')
-                    miner.onmessage = (msg) => {
-                        pre.innerHTML += msg.data+'<br>'
-                    }
-                } catch(e) {
-                    pre.innerHTML = 'Problem starting mining script, sorry :/'
-                }
-            }
+            miner.postMessage('start')
             button.textContent = 'Stop'
         } else {
-            if (miner !== null) {
-                miner.terminate()
-                miner = null
-            }
-            pre.innerHTML += 'Mining stopped<br>'
+            miner.postMessage('stop')
             button.textContent = 'Start'
         }
     })

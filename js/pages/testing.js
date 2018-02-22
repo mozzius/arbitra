@@ -4,7 +4,7 @@ const net = require('net')
 function init() {
 
     const address = require('ip').address
-    document.getElementById('body').textContent = address()
+    document.getElementById('body').textContent = '<h1>'+address()+'</h1>'
 
     //var server = net.createServer((socket) => {
     //    socket.write('Echo server\r\n')
