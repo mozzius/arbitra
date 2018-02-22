@@ -1,9 +1,11 @@
 const hash = require(__dirname+'/js/hashing.js')
 const network = require(__dirname+'/js/network.js')
 const file = require(__dirname+'/js/file.js')
+const remote = require('electron').remote
 
 class Miner {
     constructor(block) {
+        this.go = false
         this.block = block
         this.hashes = 0
         this.dhash = 0
@@ -21,11 +23,11 @@ class Miner {
             hash.sha256hex(this.block.transactions,(hashed) => {
                 this.txhash = hashed
             })
-        }
+        })
     }
 
     mine() {
-        while (true) {
+        while (this.go) {
             var body = this.block.body
             this.rand((nonce) => {
                 body['nonce'] = nonce
@@ -80,6 +82,14 @@ class Miner {
         hashed = hash.sha256hex(JSON.stringify(block))
         callback(hashed)
     }
+
+    switch(to) {
+        if (to === "start") {
+            this.go = true
+        } else {
+            this.go = false
+        }
+    }
 }
 
 var blockTemplate = {
@@ -92,50 +102,6 @@ var blockTemplate = {
 var miner = new Miner(blockTemplate)
 miner.mine(blockTemplate)
 
-/* 
-
-OLD CODE FROM MINE.JS
-
-var blockTemplate = {
-    "header": {
-        "type": "bl"
-    },
-    "body": {}
+onmessage = (msg) => {
+    miner.toggle(msg.data)
 }
-
-var currentBlock
-blockchain.createBlock((block) => {
-    currentBlock = block
-    // creates a webworker, which runs independently
-    // TODO: run from renderer.js so it truely runs in the background
-    miner = new Worker('js/mining-script.js')
-    miner.onmessage = (msg) => {
-        if (typeof msg.data == 'string') {
-            console.log(msg.data)
-            pre.innerHTML += msg.data+'<br>'
-            // checks that the block hasn't changed
-            // and updates the worker if necessary
-            blockchain.createBlock((updateBlock) => {
-                if (currentBlock !== updateBlock) {
-                    miner.postMessage(updateBlock.body)
-                    currentBlock = updateBlock
-                }
-            })
-        } else {
-            var sendMe = blockTemplate
-            sendMe.body = msg.data
-            console.warn('Block mined!')
-            blockchain.addBlock(sendMe)
-            network.sendToAll(sendMe)
-            // start hashing the next block
-            blockchain.createBlock((newBlock) => {
-                miner.postMessage(newBlock.body)
-                currentBlock = newBlock
-            })
-        }
-    }
-
-    // send first block
-    miner.postMessage(block.body)
-})
-*/

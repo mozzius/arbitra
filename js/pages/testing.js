@@ -4,9 +4,6 @@ const net = require('net')
 function init() {
 
     const address = require('ip').address
-<<<<<<< HEAD
-    document.getElementById('body').textContent = '<h1>'+address()+'</h1>'
-=======
     document.getElementById('body').textContent = address()
 /*
     var server = net.createServer((socket) => {
@@ -15,7 +12,6 @@ function init() {
     })
     
     server.listen(1337);
->>>>>>> 6369bc002ff4a23028619fef1eefac6d04790870
 
     //192.168.1.236
 
