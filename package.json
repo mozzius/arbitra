@@ -1,7 +1,12 @@
 {
   "name": "arbitra-client",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "main": "main.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Mozzius/arbitra.git"
+  },
   "dependencies": {
     "big-integer": "^1.6.26",
     "electron": "^1.7.8",
