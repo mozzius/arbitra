@@ -2,9 +2,20 @@ const network = require('../network.js')
 const net = require('net')
 
 function init() {
-
+    var msg = {
+        "header": {
+            "type": "pg",
+        },
+        "body": {
+            "advertise": true
+        }
+    }
     const address = require('ip').address
-    document.getElementById('body').textContent = address()
+    document.getElementById('ip').innerHTML = '<h2>'+address()+'</h2>'
+    document.getElementById('send').addEventListener('click',() => {
+        network.sendMsg(msg,document.getElementById('sendto').value)
+    })
+
 /*
     var server = net.createServer((socket) => {
         socket.write('Echo server\r\n')
@@ -31,18 +42,6 @@ function init() {
     });
 
 */
-
-    // '85.255.237.191'
-    var ip = '192.168.1.93'
-    var msg = {
-        "header": {
-            "type": "pg",
-        },
-        "body": {
-            "advertise": true
-        }
-    }
-    network.sendMsg(msg,ip)
 }
 
 exports.init = init

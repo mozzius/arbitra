@@ -13,6 +13,23 @@ class Miner {
                 "difficulty": 5
             }
         }
+        /*
+        // need to add this but without depending on file
+        file.getAll('wallets',(data2) => {
+            var wallets = JSON.parse(data2)
+            block.body['miner'] = wallets[0]
+
+            // gets the parent block
+            file.get('latest','blockchain',(data3) => {
+                var latest = JSON.parse(data3)
+                block.body['parent'] = latest
+
+                // return the block
+                callback(block)
+            })
+        })
+        */
+        // this is for the printing later
         this.hashes = 0
         this.dhash = 0
         this.t1 = Date.now()

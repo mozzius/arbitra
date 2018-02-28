@@ -93,10 +93,11 @@ function addBlock(msg) {
     // doublecheck the hash
     if (msg.header.hash == hash.sha256hex(JSON.stringify(msg.body))) {
         file.store(msg.header.hash,msg.body,'blockchain')
+        updateBalances(msg)
     }
-    updateBalances(msg)
 }
 
+// redundant
 function createBlock(callback) {
     file.getAll('txpool',(data) => {
         var block = {
