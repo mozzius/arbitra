@@ -2,6 +2,7 @@ const Worker = require('tiny-worker')
 const blockchain = require('../blockchain.js')
 const network = require('../network.js')
 const file = require('../file.js')
+const remote = require('electron').remote
 
 function init() {
     var miner = null
@@ -19,8 +20,16 @@ function init() {
                 try {
                     miner = new Worker('js/mining-script.js')
                     miner.onmessage = (msg) => {
-                        pre.innerHTML += msg.data+'<br>'
+                        if(typeof msg.data !== 'object') {
+                            pre.innerHTML += msg.data+'<br>'
+                        } else {
+                            blockchain.addBlock(msg.data)
+                            network.sendToAll(msg.data)
+                        }
                     }
+                    // Workers can't get remote so we need to send them the path manually
+                    var path = remote.app.getPath('appData')+'\\arbitra-client\\txpool.json'
+                    miner.postMessage(path)
                 } catch(e) {
                     pre.innerHTML = 'Problem starting mining script, sorry :/'
                 }
