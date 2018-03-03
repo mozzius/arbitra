@@ -19,7 +19,9 @@ function checkBalance(key,amount,callback) {
 
 function calcBalances() {
     const miningreward = 50
-    file.getAll('blockchain',(data) => {
+    // mainChain gets the longest chain, as only the blocks under the highest
+    // actually count
+    mainChain((data) => {
         var balances = {}
         var block
         // iterate through the blocks
@@ -130,6 +132,46 @@ function createBlock(callback) {
                 callback(block)
             })
         })
+    })
+}
+
+function mainChain(callback) {
+    var mainchain = {}
+    file.getAll('blockchain',(fullchain) => {
+        // assume that the file exists
+        var blockchain = JSON.parse(data)
+        getTopBlock(fullchain,(top) => {
+            mainchain[top] = fullchain[top]
+            var current = top
+            var parent
+            while (fullchain[current].height != 1) {
+                parent = fullchain[current].parent
+                mainchain[parent] = fullchain[parent]
+                current = parent
+            }
+        })
+    })
+}
+
+function getTopBlock(blockchain,callback) {
+    file.getAll('blockchain',(data) => {
+        // assume that the file exists
+        var blockchain = JSON.parse(data)
+        // get the first key in the object
+        // doesn't matter if it's best it just needs to be valid
+        var best = Object.keys(ahash)[0]
+        for (var key in blockchain) {
+            // larger height the better
+            if (blockchain[key].height > blockchain[best].height) {
+                best = key
+            // otherwise, if they're the same pick the oldest one
+            } else if (blockchain[key].height === blockchain[best].height) {
+                if (blockchain[key].time < blockchain[best].time) {
+                    best = key
+                }
+            } 
+        }
+        callback(best)
     })
 }
 

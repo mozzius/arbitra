@@ -9,10 +9,37 @@ class Miner {
             "header": {
                 "type": "bl"
             },
-            "body": {
-                "difficulty": 5
-            }
+            "body": {}
         }
+        fs.readFile(this.path+'blockchain.json','utf-8',(err,data) => {
+            if (err) {
+                // real problem if this doesn't exist, so throw error
+                throw err.message
+            }
+            var blockchain = JSON.parse(data)
+            
+
+            // this is for the printing later
+            this.hashes = 0
+            this.dhash = 0
+            this.t1 = Date.now()
+            this.t2 = Date.now()
+            this.tt = Date.now()
+            fs.readFile(this.path+'txpool.json','utf-8',(err,data) => {
+                if (err) {
+                    // if the file doesn't exist, set content to []
+                    if (err.code === 'ENOENT') {
+                        data = '[]'
+                    } else {
+                        alert('Error opening file')
+                        throw err
+                    }
+                }
+                var transactions = JSON.parse(data)
+                this.block['transactions'] = transactions
+                postMessage('Block formed, mining initiated')
+            })
+        })
         /*
         // need to add this but without depending on file
         file.getAll('wallets',(data2) => {
@@ -29,30 +56,6 @@ class Miner {
             })
         })
         */
-        // this is for the printing later
-        this.hashes = 0
-        this.dhash = 0
-        this.t1 = Date.now()
-        this.t2 = Date.now()
-        this.tt = Date.now()
-        fs.readFile(this.path,'utf-8',(err,data) => {
-            if (err) {
-                // if the file doesn't exist, set content to []
-                if (err.code === 'ENOENT') {
-                    data = '[]'
-                } else {
-                    alert('Error opening file')
-                    throw err
-                }
-            }
-            var transactions = JSON.parse(data)
-            this.block['transactions'] = transactions
-            postMessage('Transactions found, mining initiated')
-            // hash the transactions to see if there's any difference later
-            this.hashBlock(this.block.transactions,(hashed) => {
-                this.txhash = hashed
-            })
-        })
     }
 
     mine() {
@@ -74,11 +77,13 @@ class Miner {
                                 pass = false
                             }
                         }
+
+                        // this triggers if the block has passed the difficulty test
                         if (pass) {
                             postMessage('Hash found! Nonce: '+nonce)
                             postMessage(hash)
                             // get rid of the pending transactions
-                            fs.writeFile(this.path,'[]','utf-8',(err) => {
+                            fs.writeFile(this.path+'txpool.json','[]','utf-8',(err) => {
                                 if (err) throw err
                                 network.sendToAll(this.block)
                             })
@@ -93,7 +98,7 @@ class Miner {
                                 this.t1 = Date.now()
                                 postMessage('Hashing at '+hs.toFixed(3)+' hashes/sec - '+this.hashes+' hashes in '+Math.floor((this.t1-this.tt)/1000)+' seconds')
                                 // check to see if the block has updated
-                                fs.readFile(this.path,'utf-8',(err,content) => {
+                                fs.readFile(this.path+'txpool.json','utf-8',(err,content) => {
                                     if (err) {
                                         // if the file doesn't exist, set content to []
                                         if (err.code === 'ENOENT') {
@@ -104,6 +109,7 @@ class Miner {
                                         }
                                     }
                                     var current = JSON.stringify(this.block.body.transactions)
+                                    // change the transactions if they are different
                                     if (current !== content) {
                                         var newtx = JSON.parse(content)
                                         this.block.body['transactions'] = newtx
@@ -128,10 +134,52 @@ class Miner {
         var hashed = hash.sha256hex(JSON.stringify(block))
         callback(hashed)
     }
+
+    getDifficulty(blockhash,callback) {
+        var difficulty
+        fs.readFile(this.path+'blockchain.json',(err,data) => {
+            // even if file is empty throw as that's a problem
+            if (err) throw err
+            var blockchain = JSON.parse(data)
+            var oldtime = blockchain[blockhash].time
+            if (Date.now - oldtime < 60000) {
+                difficulty = blockchain[blockhash].difficulty + 1
+            } else {
+                difficulty = blockchain[blockhash].difficulty
+            }
+            callback(difficulty)
+        })
+    }
+
+    getTopBlock() {
+        fs.readFile(this.path+'blockchain.json',(err,data) => {
+            if (err) throw err
+            var blockchain = JSON.parse(data)
+            // get the first key in the object
+            // doesn't matter if it's best it just needs to be valid
+            var best = Object.keys(ahash)[0]
+            for (var key in blockchain) {
+                // larger height the better
+                if (blockchain[key].height > blockchain[best].height) {
+                    best = key
+                // otherwise, if they're the same pick the oldest one
+                } else if (blockchain[key].height === blockchain[best].height) {
+                    if (blockchain[key].time < blockchain[best].time) {
+                        best = key
+                    }
+                } 
+            }
+            callback(best)
+        })
+    }
 }
 
 onmessage = (path) => {
     postMessage('Path recieved')
-    var miner = new Miner(path.data)
-    miner.mine()
+    try {
+        var miner = new Miner(path.data)
+        miner.mine()
+    } catch(e) {
+        postMessage(e)
+    }
 }

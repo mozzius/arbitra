@@ -28,7 +28,7 @@ function init() {
                         }
                     }
                     // Workers can't get remote so we need to send them the path manually
-                    var path = remote.app.getPath('appData')+'\\arbitra-client\\txpool.json'
+                    var path = remote.app.getPath('appData')+'\\arbitra-client\\'
                     miner.postMessage(path)
                 } catch(e) {
                     pre.innerHTML = 'Problem starting mining script, sorry :/'
