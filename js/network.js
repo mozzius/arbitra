@@ -36,42 +36,8 @@ function init() {
         console.log('server listening to ',server.address().address)
     })
 
-    // start trying to connect to other nodes
-    var connections = 0
-    document.getElementById('connections').textContent = connections
-    file.getAll('connections',(data) => {
-        var connections = JSON.parse(data)
-        var ping = {
-            "header": {
-                "type": "pg"
-            },
-            "body": {}
-        }
-        file.get('advertise','network-settings',(data) => {
-            if (data === null) {
-                var advertise = true
-            } else {
-                var advertise = JSON.parse(data)
-            }
-            ping.body['advertise'] = advertise
-            connections.forEach((node) => {
-                sendMsg(ping,node.ip,(type) => {
-                    if (type === 'ping') {
-                        connections++
-                        document.getElementById('connections').textContent = connections
-                    }
-                })
-            })
-            if (connections === 0) {
-                console.warn('no connections found!')
-                const backup = 'http://samuelnewman.uk/arbitra/nodes.json'
-                //////////////////////////////
-                //           TODO           // 
-                // Connect to backup server //
-                //////////////////////////////
-            }
-        })
-    })
+    // try to connect to nodes
+    connect()
 }
 
 function sendMsg(msg,ip,callback) {
@@ -213,6 +179,46 @@ function sendToAll(msg) {
     })
 }
 
+function connect() {
+    // start trying to connect to other nodes
+    var connections = 0
+    document.getElementById('connections').textContent = connections
+    file.getAll('connections',(data) => {
+        var connections = JSON.parse(data)
+        var ping = {
+            "header": {
+                "type": "pg"
+            },
+            "body": {}
+        }
+        file.get('advertise','network-settings',(data) => {
+            if (data === null) {
+                var advertise = true
+            } else {
+                var advertise = data
+            }
+            ping.body['advertise'] = advertise
+            connections.forEach((node) => {
+                sendMsg(ping,node.ip,(type) => {
+                    if (type === 'ping') {
+                        connections++
+                        document.getElementById('connections').textContent = connections
+                    }
+                })
+            })
+            if (connections === 0) {
+                console.warn('no connections found!')
+                const backup = 'http://samuelnewman.uk/arbitra/nodes.json'
+                //////////////////////////////
+                //           TODO           // 
+                // Connect to backup server //
+                //////////////////////////////
+            }
+        })
+    })
+}
+
 exports.init = init
 exports.sendMsg = sendMsg
 exports.sendToAll = sendToAll
+exports.connect = connect

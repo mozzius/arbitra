@@ -46,11 +46,11 @@ document.onreadystatechange = function () {
         document.getElementById('mine').addEventListener('click',() => {
             changePage('mine')
         })
-        document.getElementById('network').addEventListener('click',() => {
-            changePage('network')
+        document.getElementById('network-settings').addEventListener('click',() => {
+            changePage('network-settings')
         })
-        document.getElementById('app').addEventListener('click',() => {
-            changePage('app')
+        document.getElementById('app-settings').addEventListener('click',() => {
+            changePage('app-settings')
         })
         document.getElementById('testing').addEventListener('click',() => {
             changePage('testing')

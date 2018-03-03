@@ -1,0 +1,24 @@
+<h1>Settings</h1>
+
+<h2>Network Settings</h2>
+
+<h3>Add node</h3>
+<p>Enter an IP address, and it will attempt to connect.</p>
+<input type="text" id="sendto"/>
+<button id="send">Send ping</button>
+<p id="pg-save" class="hidden">Option saved</p>
+
+<h3>Advertise</h3>
+<p>Sometimes, clients will ask others to send a list of clients that they are in contact with. Your IP will only be sent if this setting is turned on.</p>
+<select id="advertise">
+    <option value="on">On</option>
+    <option value="off">Off</option>
+</select>
+<button id="save">Save</button>
+<p id="ad-save" class="hidden">Option saved</p>
+
+
+<h3>Refresh connections</h3>
+<p>Refresh this client's connections to other nodes.</p>
+<button id="refresh">Refresh</button>
+<p id="re-save" class="hidden">Option saved</p>

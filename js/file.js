@@ -52,6 +52,7 @@ function get(key,file,callback) {
             // if the file doesn't exist, return null
             if (err.code === 'ENOENT') {
                 console.warn(file+'.json not found')
+                console.trace()
                 callback(null)
                 return
             } else {
