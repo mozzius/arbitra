@@ -119,25 +119,26 @@ function mainChain(callback) {
 }
 
 function getTopBlock(blockchain,callback) {
-    file.getAll('blockchain',(data) => {
-        // assume that the file exists
-        var blockchain = JSON.parse(data)
-        // get the first key in the object
-        // doesn't matter if it's best it just needs to be valid
-        var best = Object.keys(ahash)[0]
-        for (var key in blockchain) {
-            // larger height the better
-            if (blockchain[key].height > blockchain[best].height) {
+    // get the first key in the object
+    // doesn't matter if it's best it just needs to be valid
+    for (var best in blockchain) {
+        // this is the fastest way of getting the first key
+        // even if it's kind of messy looking
+        break
+    }
+    // iterates through the blockchain
+    for (var key in blockchain) {
+        // larger height the better
+        if (blockchain[key].height > blockchain[best].height) {
+            best = key
+        // otherwise, if they're the same pick the oldest one
+        } else if (blockchain[key].height === blockchain[best].height) {
+            if (blockchain[key].time < blockchain[best].time) {
                 best = key
-            // otherwise, if they're the same pick the oldest one
-            } else if (blockchain[key].height === blockchain[best].height) {
-                if (blockchain[key].time < blockchain[best].time) {
-                    best = key
-                }
-            } 
-        }
-        callback(best)
-    })
+            }
+        } 
+    }
+    callback(best)
 }
 
 exports.get = getBlock
@@ -145,3 +146,4 @@ exports.checkBalance = checkBalance
 exports.calcBalances = calcBalances
 exports.updateBalances = updateBalances
 exports.addBlock = addBlock
+exports.getTopBlock = getTopBlock

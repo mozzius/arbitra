@@ -65,7 +65,21 @@ function bk(msg) {
 }
 
 function hr(msg) {
-
+    var reply = {
+        "header": {
+            "type": "bh"
+        },
+        "body": {}
+    }
+    file.getAll('blockchain',(data) => {
+        if (data === null) {
+            throw 'notfound'
+        } else {
+            blockchain.getTopBlock(JSON.parse(data),(top) => {
+                return top
+            })
+        }
+    })
 }
 
 function br(msg) {
@@ -88,7 +102,27 @@ function br(msg) {
 }
 
 function nr(msg) {
-    
+    var reply = {
+        "header": {
+            "type": "nd"
+        },
+        "body": {
+            "nodes": []
+        }
+    }
+    file.getAll('connections',(data) => {
+        if (data === null) {
+            throw 'notfound'
+        } else {
+            var connections = JSON.parse(connections)
+            connections.forEach((connection) => {
+                if (connection.advertise == "true") {
+                    reply.body.nodes.push(connection.ip)
+                }
+            })
+            return reply
+        }
+    })
 }
 
 function pg(msg,ip) {
