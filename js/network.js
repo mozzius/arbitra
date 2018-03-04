@@ -36,8 +36,14 @@ function init() {
         console.log('server listening to ',server.address().address)
     })
 
-    // try to connect to nodes
-    connect()
+    var connections
+    // this goes on forever, every 30 seconds
+    setInterval(() => {
+        // first check that we have enough connections
+        if (connections === 0) {
+            connect(connections)
+        }
+    },30000)
 }
 
 function sendMsg(msg,ip,callback) {
@@ -69,11 +75,6 @@ function sendMsg(msg,ip,callback) {
             client.destroy()
         })
     })
-}
-
-function parseMsgTemp(data,callback) {
-    // temporary function
-    callback(hash.sha256hex(data))
 }
 
 function parseMsg(data,ip,callback) {
@@ -149,6 +150,9 @@ function parseReply(data,ip,callback) {
                 type = 'ping'
             } else if (msg.header.type === 'ok') {
                 console.info('message recieved ok')
+            } else if (msg.hedaer.type === 'er') {
+                console.warn('We recieved an error')
+                parse.er(msg)
             } else {
                 throw 'type'
             }
@@ -159,7 +163,7 @@ function parseReply(data,ip,callback) {
         console.warn('Reply error: '+e)
     } finally {
         // call the callback, if it exists
-        // callbacks are to calculate the number of connections
+        // callback is to calculate the number of connections
         typeof callback === 'function' && callback(type)
     }
 }
@@ -179,9 +183,8 @@ function sendToAll(msg) {
     })
 }
 
-function connect() {
+function connect(connections) {
     // start trying to connect to other nodes
-    var connections = 0
     document.getElementById('connections').textContent = connections
     file.getAll('connections',(data) => {
         var connections = JSON.parse(data)

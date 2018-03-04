@@ -135,7 +135,7 @@ function pg(msg,ip) {
     }
     file.get('advertise','network-settings',(data) => {
         if (data === null) {
-            var advertise = true
+            var advertise = "true"
         } else {
             var advertise = JSON.parse(data)
         }
@@ -167,6 +167,27 @@ function pgreply(msg,ip) {
         }
     })
 }
+
+function bl(msg) {
+
+}
+
+function bh(msg) {
+
+}
+
+function nr(msg) {
+    
+}
+
+function nd(msg) {
+    ad
+}
+
+function bh(msg) {
+    
+}
+
 
 exports.tx = tx
 exports.hr = hr

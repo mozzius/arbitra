@@ -67,8 +67,5 @@ document.onreadystatechange = function () {
 
         // start server
         network.init()
-
-        // update total amount in the top corner
-        
     }
 }
