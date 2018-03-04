@@ -40,9 +40,21 @@ function init() {
     // this goes on forever, every 30 seconds
     setInterval(() => {
         // first check that we have enough connections
-        if (connections === 0) {
-            connect(connections)
+        // 5 is an arbitrary number, but seems enough
+        if (connections < 5) {
+            connections = connect(connections)
         }
+        file.getAll('blockchain',(data) => {
+            if (data === null) {
+                data = '{}'
+            }
+            var chain = JSON.parse(data)
+            blockchain.getTopBlock(chain,(top) => {
+                file.getAll('connections',(data) => {
+
+                })
+            })
+        })
     },30000)
 }
 
@@ -217,6 +229,7 @@ function connect(connections) {
                 // Connect to backup server //
                 //////////////////////////////
             }
+            return connections
         })
     })
 }
