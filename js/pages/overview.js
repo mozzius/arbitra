@@ -3,12 +3,12 @@ const file = require('../file')
 function init() {
     // since it runs when you start the program
     // might as well check all the files exist
-    file.get('txpool',(data) => {
+    file.getAll('txpool',(data) => {
         if (data === null) {
             file.storeAll('txpool','[]')
         }
     })
-    file.get('network-settings',(data) => {
+    file.getAll('network-settings',(data) => {
         if (data === null) {
             var defaults = {
                 "advertise": true,
