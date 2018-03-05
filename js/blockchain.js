@@ -124,6 +124,7 @@ function getTopBlock(blockchain,callback) {
     for (var best in blockchain) {
         // this is the fastest way of getting the first key
         // even if it's kind of messy looking
+        // Object.keys(blockchain)[0] puts the whole object into memory
         break
     }
     // iterates through the blockchain

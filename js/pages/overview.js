@@ -11,9 +11,14 @@ function init() {
     file.getAll('network-settings',(data) => {
         if (data === null) {
             var defaults = {
-                "advertise": true,
+                "advertise": "true",
             }
             file.storeAll('txpool',JSON.parse(defaults))
+        }
+    })
+    file.getAll('blockchain',(data) => {
+        if (data === null) {
+            file.storeAll('txpool','[]')
         }
     })
 }

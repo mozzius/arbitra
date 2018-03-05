@@ -4,7 +4,7 @@ const fs = require('fs')
 function store(key,data,file) {
     // put data in file
     // no callbacks because it's a subroutine
-    var path = remote.app.getPath('appData')+'\\arbitra-client\\'+file+'.json'
+    var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
     fs.readFile(path,'utf-8',(err,content) => {
         if (err) {
             // if the file doesn't exist, it creates an empty object literal
@@ -46,7 +46,7 @@ function store(key,data,file) {
 }
 
 function get(key,file,callback) {
-    var path = remote.app.getPath('appData')+'\\arbitra-client\\'+file+'.json'
+    var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
     fs.readFile(path,'utf-8',(err,content) => {
         if (err) {
             // if the file doesn't exist, return null
@@ -76,7 +76,7 @@ function get(key,file,callback) {
 }
 
 function getAll(file,callback) {
-    var path = remote.app.getPath('appData')+'\\arbitra-client\\'+file+'.json'
+    var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
     fs.readFile(path,'utf-8',(err,content) => {
         console.log('Opening: '+path)
         if (err) {
@@ -96,7 +96,7 @@ function getAll(file,callback) {
 }
 
 function storeAll(file,data) {
-    var path = remote.app.getPath('appData')+'\\arbitra-client\\'+file+'.json'
+    var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
     content = JSON.stringify(jsondata)
     fs.writeFile(path,content,'utf-8',(err) => {
         if (err) throw err
@@ -106,7 +106,7 @@ function storeAll(file,data) {
 
 function append(file,data,callback) {
     // write data to a file, but where the file is an array so no key
-    var path = remote.app.getPath('appData')+'\\arbitra-client\\'+file+'.json'
+    var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
     fs.readFile(path,'utf-8',(err,content) => {
         if (err) {
             // if the file doesn't exist, it creates an empty object literal

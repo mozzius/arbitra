@@ -2,7 +2,7 @@ const remote = require('electron').remote
 const fs = require('fs')
 
 function changePage(name) {
-    var path = 'pages\\' + name + '.html'
+    var path = 'pages/' + name + '.html'
     fs.readFile(path,'utf-8',(err, data) => {
         if (err) {
             alert('An error ocurred reading the file: '+name)

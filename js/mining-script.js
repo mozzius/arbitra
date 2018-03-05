@@ -17,7 +17,6 @@ class Miner {
                 throw err.message
             }
             var blockchain = JSON.parse(data)
-            
 
             // this is for the printing later
             this.hashes = 0

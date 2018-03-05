@@ -137,7 +137,7 @@ function pg(msg,ip) {
         if (data === null) {
             var advertise = "true"
         } else {
-            var advertise = JSON.parse(data)
+            var advertise = data
         }
         reply.body['advertise'] = advertise
     })
