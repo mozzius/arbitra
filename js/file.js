@@ -78,7 +78,6 @@ function get(key,file,callback) {
 function getAll(file,callback) {
     var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
     fs.readFile(path,'utf-8',(err,content) => {
-        console.log('Opening: '+path)
         if (err) {
             // if the file doesn't exist, return null
             if (err.code === 'ENOENT') {

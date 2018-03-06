@@ -9,7 +9,7 @@ const port = 2018
 
 function init() {
     // creates a server that will receive all the messages
-    // when it receives data, it will pass it to parseMsg
+    // when it receives data, it will pass it to parseMsg()
     // and reply with whatever it sends back
     var server = net.createServer((socket) => {
         var ip = socket.remoteAddress
@@ -33,11 +33,11 @@ function init() {
     // server listens on this port
     // should be 2018
     server.listen(port,'0.0.0.0',() => {  
-        console.log('server listening to ',server.address().address)
+        console.log('Server listening on port',port)
     })
 
     var connections
-    // this goes on forever, every 30 seconds
+    // this goes on forever, every minute
     setInterval(() => {
         // first check that we have enough connections
         file.get('target-connections','network-settings',(target) => {
@@ -60,7 +60,7 @@ function init() {
                 
             }        
         })
-    },30000)
+    },60000)
 }
 
 function sendMsg(msg,ip,callback) {
@@ -164,7 +164,6 @@ function parseReply(data,ip,callback) {
                 parse.nd(msg)
             } else if (msg.header.type === 'pg') {
                 parse.pgreply(msg,ip)
-                type = 'ping'
             } else if (msg.header.type === 'ok') {
                 console.info('message recieved ok')
             } else if (msg.hedaer.type === 'er') {
@@ -181,7 +180,7 @@ function parseReply(data,ip,callback) {
     } finally {
         // call the callback, if it exists
         // callback is to calculate the number of connections
-        typeof callback === 'function' && callback(type)
+        typeof callback === 'function' && callback(msg.header.type)
     }
 }
 
@@ -201,7 +200,7 @@ function sendToAll(msg) {
 }
 
 function connect(connections) {
-    // start trying to connect to other nodes
+    // try to connect to other nodes
     document.getElementById('connections').textContent = connections
     file.getAll('connections',(data) => {
         var connections = JSON.parse(data)
@@ -213,14 +212,14 @@ function connect(connections) {
         }
         file.get('advertise','network-settings',(data) => {
             if (data === null) {
-                var advertise = true
+                var advertise = "true"
             } else {
                 var advertise = data
             }
             ping.body['advertise'] = advertise
             connections.forEach((node) => {
                 sendMsg(ping,node.ip,(type) => {
-                    if (type === 'ping') {
+                    if (type === 'pg') {
                         connections++
                         document.getElementById('connections').textContent = connections
                     }
@@ -228,11 +227,13 @@ function connect(connections) {
             })
             if (connections === 0) {
                 console.warn('no connections found!')
-                const backup = 'http://samuelnewman.uk/arbitra/nodes.json'
+                document.getElementById('nonodes').classList.remove('hidden')
                 //////////////////////////////
                 //           TODO           // 
                 // Connect to backup server //
                 //////////////////////////////
+            } else {
+                document.getElementById('nonodes').classList.add('hidden')
             }
             return connections
         })

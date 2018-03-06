@@ -1,4 +1,5 @@
 const file = require('../file.js')
+const parse = require('../parse.js')
 
 function init() {
     addInput()
@@ -56,18 +57,41 @@ function sendTx() {
     // we can make it one using Array.from
     // https://stackoverflow.com/a/37941811/5453419
     var groups = Array.from(document.getElementsByClassName('input-group'))
-    groups.forEach((group) => {
-        var child = group.childNodes
-        var wallet = child[0].value
-        var amount = child[1].value
-        if (wallet && amount) {
-            // carry on
-            console.log(wallet)
-            console.log(amount)
-        } else {
+    var message = {
+        "header": {
+            "type": "tx"
+        },
+        "body": {
+            "from": []
+        }
+    }
+    message.body['to'] = document.getElementById('to').value
+    file.getAll('wallets',(data) => {
+        if (data === null) {
             document.getElementById('error').classList.remove('hidden')
             return
+        } else {
+            var wallets = JSON.parse(data)
+            var public, private
+            wallets.forEach((wallet) => {
+                public = wallet.public
+                private = wallet.private
+            })
         }
+        groups.forEach((group) => {
+            var child = group.childNodes
+            var wallet = child[0].value
+            var amount = child[1].value
+            if (wallet && amount) {
+                // carry on
+                console.log(wallet)
+                console.log(amount)
+
+            } else {
+                document.getElementById('error').classList.remove('hidden')
+                return
+            }
+        })
     })
 }
 
