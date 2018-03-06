@@ -40,20 +40,25 @@ function init() {
     // this goes on forever, every 30 seconds
     setInterval(() => {
         // first check that we have enough connections
-        // 5 is an arbitrary number, but seems enough
-        if (connections < 5) {
-            connections = connect(connections)
-        }
-        file.getAll('blockchain',(data) => {
-            if (data === null) {
-                data = '{}'
+        file.get('target-connections','network-settings',(target) => {
+            // if the current number of of connections is less than the minimum
+            // as defined by user settings, connect
+            if (connections < target) {
+                connections = connect(connections)
+                // if it's still not enough, send node requests
+                if (connections < target) {
+                    var nr = {
+                        "header": {
+                            "type": "nr"
+                        },
+                        "body": {}
+                    }
+                    sendToAll(nr)
+                }
             }
-            var chain = JSON.parse(data)
-            blockchain.getTopBlock(chain,(top) => {
-                file.getAll('connections',(data) => {
-
-                })
-            })
+            if (connections === 0) {
+                
+            }        
         })
     },30000)
 }
