@@ -94,8 +94,19 @@ function updateBalances(block) {
 function addBlock(msg) {
     // doublecheck the hash
     if (msg.header.hash == hash.sha256hex(JSON.stringify(msg.body))) {
-        file.store(msg.header.hash,msg.body,'blockchain')
-        updateBalances(msg)
+        try {
+            block(msg)
+            // if it failed the test, an error will have been thrown
+            file.get(msg.header.hash,'blockchain',(data) => {
+                // only store the block if it doesn't already exist
+                if (data === null) {
+                    file.store(msg.header.hash,msg.body,'blockchain')
+                    updateBalances(msg)
+                }
+            })
+        } catch(e) {
+            console.warn('Block failed:',JSON.stringify(block))
+        }
     }
 }
 

@@ -1,3 +1,4 @@
+const network = require('./network.js')
 const hash = require('./hashing.js')
 const ecdsa = require('./ecdsa.js')
 const blockchain = require('./blockchain.js')
@@ -8,10 +9,16 @@ function transaction(tx) {
     var len = from.length
     var input
     var concat
+    var repeats = []
     // goes through the transaction inputs
     // and checks that they're all valid
     for (var i; i < len; ++i) {
         input = from[i]
+        if (repeats.contains(input)) {
+            // wallets in a transaction must be unique
+            throw 'parse'
+        }
+        // this is the "message" for the ecdsa function
         concat = input.amount+tx.to+tx.time
         console.log(concat)
         ecdsa.verifyMsg(concat,input.signature,input.person,(result) => {
@@ -19,12 +26,37 @@ function transaction(tx) {
                 blockchain.checkBalance(input.person,input.amount,(balanceCheck) => {
                     if (!balanceCheck) {
                         throw 'amount'
+                    } else {
+                        repeaets.push(input)
                     }
                 })
             } else {
                 throw 'signature'
             }
         })
+    }
+}
+
+function block(body) {
+    var txlist = body.transactions
+    var len = txlist.length
+    var tx
+    // verify all the transactions
+    for (var i; i < len; ++i) {
+        tx = txlist[i]
+        try {
+            transaction(tx)
+        } catch(e) {
+            if (e === 'signature' || e === 'amount') {
+                throw 'transaction'
+            }
+        }
+    }
+}
+
+function chain(chain) {
+    for(var hash in chain) {
+        block(chain[hash])
     }
 }
 
@@ -46,20 +78,7 @@ function bk(msg) {
         },
         "body": {}
     }
-    var txlist = msg.body.transactions
-    var len = txlist.length
-    var tx
-    // verify all the transactions
-    for (var i; i < len; ++i) {
-        tx = txlist[i]
-        try {
-            transaction(tx)
-        } catch(e) {
-            if (e === 'signature' || e === 'amount') {
-                throw 'transaction'
-            }
-        }
-    }
+    block(msg.body)
     // if nothing has been thrown, add to local blockchain
     return reply
 }
@@ -169,11 +188,28 @@ function pgreply(msg,ip) {
 }
 
 function bl(msg) {
-
+    blockchain.addBlock(msg)
 }
 
 function bh(msg) {
-
+    file.getAll('blockchain',(data) => {
+        var mainchain = JSON.parse(data)
+        blockchain.getTopBlock(mainchain,(top) => {
+            if (top !== msg.body.hash && !mainchain.includes(msg.body.hash)) {
+                // if the received top hash is not equal to the one on disk
+                // and it's not in the blockchain, then send out the block request
+                var blockrequest = {
+                    "header": {
+                        "type": "br"
+                    },
+                    "body": {
+                        "hash": msg.body.hash
+                    }
+                }
+                network.sendToAll(blockrequest)
+            }
+        })
+    })
 }
 
 function nr(msg) {
@@ -181,7 +217,7 @@ function nr(msg) {
 }
 
 function nd(msg) {
-    ad
+
 }
 
 function bh(msg) {
@@ -195,3 +231,4 @@ exports.br = br
 exports.nr = nr
 exports.pg = pg
 exports.pgreply = pgreply
+exports.block = block
