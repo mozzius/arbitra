@@ -57,8 +57,18 @@ function init() {
                 }
             }
             if (connections === 0) {
-                
-            }        
+                document.getElementById('nonodes').classList.remove('hidden')
+            } else {
+                document.getElementById('nonodes').classList.add('hidden')
+                // check that the chain is up to date
+                var hr = {
+                    "header": {
+                        "type": "hr"
+                    },
+                    "body": {}
+                }
+                sendToAll(hr)
+            }
         })
     },60000)
 }
