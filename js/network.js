@@ -218,7 +218,7 @@ function sendToAll(msg) {
 function connect(connections) {
     // try to connect to other nodes
     document.getElementById('connections').textContent = connections
-    file.getAll('connections',(data) => {
+    file.getAll('recent-connections',(data) => {
         var connections = JSON.parse(data)
         var ping = {
             "header": {
@@ -244,10 +244,9 @@ function connect(connections) {
             if (connections === 0) {
                 console.warn('no connections found!')
                 document.getElementById('nonodes').classList.remove('hidden')
-                //////////////////////////////
-                //           TODO           //
-                // Connect to backup server //
-                //////////////////////////////
+                console.warn('Connecting to backup server')
+                // wavecalcs.com is friend's server, and should be online for the purposes of this project
+                sendMsg(ping,'wavecalcs.com')
             } else {
                 document.getElementById('nonodes').classList.add('hidden')
             }
