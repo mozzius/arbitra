@@ -239,6 +239,12 @@ p > a:hover {
     color: red;
 }
 
+#nonodes {
+    padding-left: 25px;
+    margin-top: 10px;
+    margin-bottom: -10px;
+}
+
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
