@@ -22,16 +22,20 @@ function init() {
         })
     })
 
-    document.getElementById('min-save').addEventListener('click',() => {
-        var min = document.getElementById('min')
-        file.store('target-connections',min.value,'network-settings')
-        document.getElementById('ad-save').classList -= 'hidden'
+    document.getElementById('target-save').addEventListener('click',() => {
+        var min = document.getElementById('min').value
+        console.error(min)
+        file.store('target-connections',min,'network-settings',() => {
+            document.getElementById('curr').textContent = min
+            document.getElementById('min-save').classList -= 'hidden'
+        })
     })
 
     document.getElementById('save').addEventListener('click',() => {
         var options = document.getElementById('advertise')
-        file.store('advertise',options.value,'network-settings')
-        document.getElementById('ad-save').classList -= 'hidden'
+        file.store('advertise',options.value,'network-settings',() => {
+            document.getElementById('ad-save').classList -= 'hidden'
+        })
     })
 
     document.getElementById('refresh').addEventListener('click',() => {

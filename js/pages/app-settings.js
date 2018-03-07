@@ -1,9 +1,26 @@
 const file = require('../file.js')
 const version = require('../../package.json').version
+const fs = require('fs')
+const dialog = require('electron').remote.dialog
 
 function init() {
-    console.error(version)
     document.getElementById('version').textContent = version
+
+    document.getElementById('save').addEventListener('click',() => {
+        file.getAll('wallets',(data) => {
+            dialog.showSaveDialog({
+                    filters: [
+                        {name:'JSON',extensions:['json']},
+                        {name:'All files',extensions:['*']}
+                    ]
+                },(file) => {
+                fs.writeFile(file,data,(err) => {
+                    if (err) throw err
+                })
+            })
+        })
+    })
+
     document.getElementById('clear').addEventListener('click',() => {
         file.storeAll('blockchain',[])
         file.storeAll('connections',[])

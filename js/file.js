@@ -1,7 +1,7 @@
 const remote = require('electron').remote
 const fs = require('fs')
 
-function store(key,data,file) {
+function store(key,data,file,callback=()=>{}) {
     // put data in file
     // no callbacks because it's a subroutine
     var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
@@ -39,6 +39,7 @@ function store(key,data,file) {
             content = JSON.stringify(jsondata)
             fs.writeFile(path,content,'utf-8',(err) => {
                 if (err) throw err
+                callback()
             })
         }
     })
