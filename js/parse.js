@@ -163,8 +163,8 @@ function pg(msg,ip) {
             var advertise = 'true'
         }
         reply.body['advertise'] = advertise
+        return reply
     })
-    return reply
 }
 
 function pgreply(msg,ip) {
