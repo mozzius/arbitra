@@ -85,6 +85,46 @@ function init() {
     },60000)
 }
 
+function connect(connectCount) {
+    // try to connect to other nodes
+    document.getElementById('connections').textContent = connectCount
+    file.getAll('recent-connections',(data) => {
+        var connections = JSON.parse(data)
+        var ping = {
+            "header": {
+                "type": "pg"
+            },
+            "body": {}
+        }
+        file.get('advertise','network-settings',(data) => {
+            if (data === null || data === '') {
+                var advertise = "true"
+            } else {
+                var advertise = data
+            }
+            ping.body['advertise'] = advertise
+            connections.forEach((node) => {
+                sendMsg(ping,node.ip,(type) => {
+                    if (type === 'pg') {
+                        connectCount++
+                    }
+                })
+            })
+            if (connectCount === 0) {
+                console.warn('no connections found!')
+                document.getElementById('nonodes').classList.remove('hidden')
+                console.warn('Connecting to backup server')
+                // wavecalcs.com is friend's server, and should be online for the purposes of this project
+                sendMsg(ping,'wavecalcs.com')
+            } else {
+                document.getElementById('nonodes').classList.add('hidden')
+            }
+            document.getElementById('connections').textContent = connectCount
+            return connectCount
+        })
+    })
+}
+
 function sendMsg(msg,ip,callback) {
     if (msg.header.type !== 'bl') {
         // don't want to affect the body of a block
@@ -219,46 +259,6 @@ function sendToAll(msg) {
                 })
             })
         }
-    })
-}
-
-function connect(connectCount) {
-    // try to connect to other nodes
-    document.getElementById('connections').textContent = connectCount
-    file.getAll('recent-connections',(data) => {
-        var connections = JSON.parse(data)
-        var ping = {
-            "header": {
-                "type": "pg"
-            },
-            "body": {}
-        }
-        file.get('advertise','network-settings',(data) => {
-            if (data === null || data === '') {
-                var advertise = "true"
-            } else {
-                var advertise = data
-            }
-            ping.body['advertise'] = advertise
-            connections.forEach((node) => {
-                sendMsg(ping,node.ip,(type) => {
-                    if (type === 'pg') {
-                        connectCount++
-                        document.getElementById('connections').textContent = connectCount
-                    }
-                })
-            })
-            if (connectCount === 0) {
-                console.warn('no connections found!')
-                document.getElementById('nonodes').classList.remove('hidden')
-                console.warn('Connecting to backup server')
-                // wavecalcs.com is friend's server, and should be online for the purposes of this project
-                sendMsg(ping,'wavecalcs.com')
-            } else {
-                document.getElementById('nonodes').classList.add('hidden')
-            }
-            return connectCount
-        })
     })
 }
 

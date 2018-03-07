@@ -150,19 +150,20 @@ function nr(msg) {
 
 function pg(msg,ip) {
     pgreply(msg,ip)
-    var reply = {
-        "header": {
-            "type": "pg"
-        },
-        "body": {}
-    }
     file.get('advertise','network-settings',(data) => {
         if (data === 'true' || data === 'false') {
             var advertise = data
         } else {
             var advertise = 'true'
         }
-        reply.body['advertise'] = advertise
+        var reply = {
+            "header": {
+                "type": "pg"
+            },
+            "body": {
+                "advertise": advertise
+            }
+        }
         return reply
     })
 }
@@ -189,10 +190,6 @@ function pgreply(msg,ip) {
     },'[]') // if it fails it returns an empty array
 }
 
-function bl(msg) {
-    blockchain.addBlock(msg)
-}
-
 function bh(msg) {
     file.getAll('blockchain',(data) => {
         var mainchain = JSON.parse(data)
@@ -215,15 +212,70 @@ function bh(msg) {
 }
 
 function nr(msg) {
-    
+    file.getAll('connections',(data) => {
+        var connections = JSON.parse(data)
+        var reply = {
+            "header": {
+                "type": "nd"
+            },
+            "body": {
+                "nodes": connections
+            }
+        }
+        return reply
+    })
 }
 
 function nd(msg) {
-
+    file.get('advertise','network-settings',(data) => {
+        if (data === 'true' || data === 'false') {
+            var advertise = data
+        } else {
+            var advertise = 'true'
+        }
+        var ping = {
+            "header": {
+                "type": "pg"
+            },
+            "body": {
+                "advertise": advertise
+            }
+        }
+        msg.body.nodes.forEach((node) => {
+            network.sendMsg(ping,node.ip)
+        })
+    })
 }
 
 function bh(msg) {
-    
+    file.getAll('blockchain',(data) => {
+        var mainchain =  JSON.parse('data')
+        blockchain.getTopBlock(mainchain,(result) => {
+            if (result !== msg.body.hash) {
+                var chainrequest = {
+                    "header": {
+                        "type": "cr"
+                    },
+                    "body": {
+                        "hash": msg.body.hash
+                    }
+                }
+                network.sendToAll(chainrequest)
+            }
+        })
+    },'{}')
+}
+
+function cr(msg) {
+    if (msg.body.hasOwnProperty('hash')) {
+        blockchain.get(msg.body.hash,(block) => {
+            if (block === null) {
+                throw 'notfound'
+            } else {
+                throw 'todo'
+            }
+        })
+    }
 }
 
 

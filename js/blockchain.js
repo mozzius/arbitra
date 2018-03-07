@@ -159,3 +159,4 @@ exports.calcBalances = calcBalances
 exports.updateBalances = updateBalances
 exports.addBlock = addBlock
 exports.getTopBlock = getTopBlock
+exports.mainChain = mainChain
