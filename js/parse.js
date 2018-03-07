@@ -278,6 +278,10 @@ function cr(msg) {
     }
 }
 
+function er(msg) {
+    file.append('error-logs',msg)
+}
+
 
 exports.tx = tx
 exports.hr = hr

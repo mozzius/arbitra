@@ -25,6 +25,7 @@ function init() {
                 msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
                 var reply = JSON.stringify(msg)
                 socket.write(reply)
+                file.append('sent',msg.header.hash)
                 socket.end()
             })
         })
@@ -140,6 +141,7 @@ function sendMsg(msg,ip,callback) {
     client.connect(port,ip,() => {
         console.log('Connected to: '+ip)
         client.write(sendMe)
+        file.append('sent',msg.header.hash)
         client.on('data',(data) => {
             console.log('Client received: '+data)
             parseReply(data,ip,(type) => {
@@ -248,15 +250,12 @@ function parseReply(data,ip,callback) {
 
 function sendToAll(msg) {
     file.getAll('connections',(data) => {
-        console.log(data)
         // doesn't do anything if there's no connections
-        if (data !== null || data === '') {
+        if (data !== null || data === '' || data === []) {
             nodes = JSON.parse(data)
             // go through connections and send a message to each
             nodes.forEach((node) => {
-                sendMsg(msg,node.ip,() => {
-                    file.append('sent',msg.header.hash)
-                })
+                sendMsg(msg,node.ip)
             })
         }
     })

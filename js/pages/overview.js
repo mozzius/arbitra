@@ -27,6 +27,11 @@ function init() {
             file.storeAll('connections',[])
         }
     })
+    file.getAll('recent-connections',(data) => {
+        if (data === null || data === '') {
+            file.storeAll('recent-connections',[])
+        }
+    })
 }
 
 exports.init = init
