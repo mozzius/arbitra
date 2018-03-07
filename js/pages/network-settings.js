@@ -3,6 +3,10 @@ const file = require('../file.js')
 
 function init() {
 
+    file.get('target-connections','network-settings',(target) => {
+        document.getElementById('curr').textContent = target
+    })
+
     document.getElementById('send').addEventListener('click',() => {
         file.get('advertise','network-settings',(data) => {
             var msg = {
@@ -16,6 +20,12 @@ function init() {
             network.sendMsg(msg,document.getElementById('sendto').value)
             document.getElementById('pg-save').classList -= 'hidden'
         })
+    })
+
+    document.getElementById('min-save').addEventListener('click',() => {
+        var min = document.getElementById('min')
+        file.store('target-connections',min.value,'network-settings')
+        document.getElementById('ad-save').classList -= 'hidden'
     })
 
     document.getElementById('save').addEventListener('click',() => {

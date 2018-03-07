@@ -69,6 +69,12 @@ function init() {
                 }
                 sendToAll(hr)
             }
+            // finally, save current connections to recent connections
+            file.getAll('connections',(data) => {
+                if (connections !== null) {
+                    file.storeAll('recent-connections',JSON.parse(data))
+                }
+            })
         })
     },60000)
 }
@@ -239,7 +245,7 @@ function connect(connections) {
                 console.warn('no connections found!')
                 document.getElementById('nonodes').classList.remove('hidden')
                 //////////////////////////////
-                //           TODO           // 
+                //           TODO           //
                 // Connect to backup server //
                 //////////////////////////////
             } else {

@@ -5,20 +5,21 @@ function init() {
     // might as well check all the files exist
     file.getAll('txpool',(data) => {
         if (data === null) {
-            file.storeAll('txpool','[]')
+            file.storeAll('txpool',[])
         }
     })
     file.getAll('network-settings',(data) => {
         if (data === null) {
             var defaults = {
                 "advertise": "true",
+                "target-connections": 5
             }
-            file.storeAll('txpool',JSON.parse(defaults))
+            file.storeAll('network-settings',defaults)
         }
     })
     file.getAll('blockchain',(data) => {
         if (data === null) {
-            file.storeAll('txpool','[]')
+            file.storeAll('blockchain',[])
         }
     })
 }

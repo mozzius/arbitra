@@ -83,7 +83,6 @@ function getAll(file,callback) {
             if (err.code === 'ENOENT') {
                 console.warn(file+'.json not found')
                 content = null
-                return
             } else {
                 alert('Error opening '+file+'.json')
                 console.error('Error opening '+file+'.json')
@@ -96,7 +95,7 @@ function getAll(file,callback) {
 
 function storeAll(file,data) {
     var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
-    content = JSON.stringify(jsondata)
+    content = JSON.stringify(data)
     fs.writeFile(path,content,'utf-8',(err) => {
         if (err) throw err
         typeof callback === 'function' && callback()
