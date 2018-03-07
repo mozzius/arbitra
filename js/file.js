@@ -45,7 +45,7 @@ function store(key,data,file) {
     })
 }
 
-function get(key,file,callback) {
+function get(key,file,callback,fail=null) {
     var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
     fs.readFile(path,'utf-8',(err,content) => {
         if (err) {
@@ -53,7 +53,7 @@ function get(key,file,callback) {
             if (err.code === 'ENOENT') {
                 console.warn(file+'.json not found')
                 console.trace()
-                callback(null)
+                callback(fail)
                 return
             } else {
                 alert('Error opening '+file+'.json')
@@ -67,7 +67,7 @@ function get(key,file,callback) {
         } catch(e) {
             // if the key doesn't exist, return null
             console.warn(e)
-            var result = null
+            var result = fail
         } finally {
             callback(result)
             return
@@ -75,14 +75,14 @@ function get(key,file,callback) {
     })
 }
 
-function getAll(file,callback) {
+function getAll(file,callback,fail=null) {
     var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
     fs.readFile(path,'utf-8',(err,content) => {
         if (err) {
             // if the file doesn't exist, return null
             if (err.code === 'ENOENT') {
                 console.warn(file+'.json not found')
-                content = null
+                content = fail
             } else {
                 alert('Error opening '+file+'.json')
                 console.error('Error opening '+file+'.json')

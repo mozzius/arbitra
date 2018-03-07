@@ -36,8 +36,11 @@ function init() {
         console.log('Server listening on port',port)
     })
 
-    var connections
-    // this goes on forever, every minute
+    //inital connection attempt
+    var connections = connect(0)
+    // this is a loop that maintains connections and
+    // sends top hash requests to make sure the client is up to date
+    // it goes on forever, every minute
     setInterval(() => {
         // first check that we have enough connections
         file.get('target-connections','network-settings',(target) => {
@@ -75,7 +78,7 @@ function init() {
                     file.storeAll('recent-connections',JSON.parse(data))
                 }
             })
-        })
+        },5) // if it fails to open the file it sets target to five
     },60000)
 }
 
@@ -202,8 +205,9 @@ function parseReply(data,ip,callback) {
 
 function sendToAll(msg) {
     file.getAll('connections',(data) => {
+        console.log(data)
         // doesn't do anything if there's no connections
-        if (data !== null) {
+        if (data !== null || data === '') {
             nodes = JSON.parse(data)
             // go through connections and send a message to each
             nodes.forEach((node) => {
@@ -215,9 +219,9 @@ function sendToAll(msg) {
     })
 }
 
-function connect(connections) {
+function connect(connectCount) {
     // try to connect to other nodes
-    document.getElementById('connections').textContent = connections
+    document.getElementById('connections').textContent = connectCount
     file.getAll('recent-connections',(data) => {
         var connections = JSON.parse(data)
         var ping = {
@@ -227,7 +231,7 @@ function connect(connections) {
             "body": {}
         }
         file.get('advertise','network-settings',(data) => {
-            if (data === null) {
+            if (data === null || data === '') {
                 var advertise = "true"
             } else {
                 var advertise = data
@@ -236,12 +240,12 @@ function connect(connections) {
             connections.forEach((node) => {
                 sendMsg(ping,node.ip,(type) => {
                     if (type === 'pg') {
-                        connections++
-                        document.getElementById('connections').textContent = connections
+                        connectCount++
+                        document.getElementById('connections').textContent = connectCount
                     }
                 })
             })
-            if (connections === 0) {
+            if (connectCount === 0) {
                 console.warn('no connections found!')
                 document.getElementById('nonodes').classList.remove('hidden')
                 console.warn('Connecting to backup server')
@@ -250,7 +254,7 @@ function connect(connections) {
             } else {
                 document.getElementById('nonodes').classList.add('hidden')
             }
-            return connections
+            return connectCount
         })
     })
 }

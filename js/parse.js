@@ -55,8 +55,12 @@ function block(body) {
 }
 
 function chain(chain) {
-    for(var hash in chain) {
-        block(chain[hash])
+    try {
+        for(var hash in chain) {
+            block(chain[hash])
+        }
+    } catch(e) {
+        console.warn('Received chain invalid')
     }
 }
 
@@ -153,10 +157,10 @@ function pg(msg,ip) {
         "body": {}
     }
     file.get('advertise','network-settings',(data) => {
-        if (data === null) {
-            var advertise = "true"
-        } else {
+        if (data === 'true' || data === 'false') {
             var advertise = data
+        } else {
+            var advertise = 'true'
         }
         reply.body['advertise'] = advertise
     })
@@ -165,26 +169,24 @@ function pg(msg,ip) {
 
 function pgreply(msg,ip) {
     var store = {}
-    store["ip"] = ip
-    store["advertise"] = msg.body.advertise
+    store['ip'] = ip
+    store['advertise'] = msg.body.advertise
     file.getAll('connections',(data) => {
         var repeat = false
         // checks to see if the ip is already in connections.json
-        if (data !== null) {
-            nodes = JSON.parse(data)
-            nodes.forEach((node) => {
-                if (node.ip === ip) {
-                    repeat = true
-                }
-            })
-        }
+        nodes = JSON.parse(data)
+        nodes.forEach((node) => {
+            if (node.ip === ip) {
+                repeat = true
+            }
+        })
         // stores it if not
         if (!repeat) {
             file.append('connections',store,() => {
                 console.log('Connection added: '+ip)
             })
         }
-    })
+    },'[]') // if it fails it returns an empty array
 }
 
 function bl(msg) {
