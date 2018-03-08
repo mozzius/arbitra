@@ -41,8 +41,9 @@ function init() {
     // wipe connections
     // this will be populated with connections that succeed
     file.storeAll('connections',[])
-    // inital connection attempt
-    var connections = connect(0,false)
+    // inital connection attempt, false makes sure it doesn't try to
+    // connect to backup server on the first try
+    connect(false)
 
     // this is a loop that maintains connections and
     // sends top hash requests to make sure the client is up to date
@@ -55,17 +56,20 @@ function init() {
             // if the current number of of connections is less than the minimum
             // as defined by user settings, connect
             if (connections < target) {
-                connections = connect(connections)
-                // if it's still not enough, send node requests
-                if (connections < target) {
-                    var nr = {
-                        "header": {
-                            "type": "nr"
-                        },
-                        "body": {}
+                connect()
+                // if it's still not enough after 3 seconds, send node requests
+                setTimeout(() => {
+                    connections = document.getElementById('connections').textContent
+                    if (connections < target) {
+                        var nr = {
+                            "header": {
+                                "type": "nr"
+                            },
+                            "body": {}
+                        }
+                        sendToAll(nr)
                     }
-                    sendToAll(nr)
-                }
+                },3000)
             }
             if (connections === 0) {
                 document.getElementById('nonodes').classList.remove('hidden')
@@ -90,10 +94,8 @@ function init() {
     },30000)
 }
 
-function connect(connectCount,backup=true) {
-    console.error(backup)
-    // try to connect to other nodes
-    document.getElementById('connections').textContent = connectCount
+function connect(backup=true) {
+    // try to connect to other nodes through old connections
     file.getAll('recent-connections',(data) => {
         var connections = JSON.parse(data)
         file.get('advertise','network-settings',(data) => {
@@ -111,14 +113,12 @@ function connect(connectCount,backup=true) {
                 }
             }
             connections.forEach((node) => {
-                sendMsg(ping,node.ip,(type) => {
-                    if (type === 'pg') {
-                        connectCount++
-                    }
-                })
+                sendMsg(ping,node.ip)
             })
+            // get the number of connections from textContent
+            var connectCount = document.getElementById('connections').textContent
             if (connectCount === 0 && backup) {
-                console.warn('no connections found!')
+                console.warn('No connections found!')
                 document.getElementById('nonodes').classList.remove('hidden')
                 console.warn('Connecting to backup server')
                 // wavecalcs.com is friend's server, and should be online for the purposes of this project
@@ -126,7 +126,6 @@ function connect(connectCount,backup=true) {
             } else {
                 document.getElementById('nonodes').classList.add('hidden')
             }
-            document.getElementById('connections').textContent = connectCount
             return connectCount
         })
     })
