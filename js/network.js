@@ -42,6 +42,7 @@ function init() {
     file.storeAll('connections',[])
     // inital connection attempt
     var connections = connect(0)
+    
     // this is a loop that maintains connections and
     // sends top hash requests to make sure the client is up to date
     // it goes on forever, every minute

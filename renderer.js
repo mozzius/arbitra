@@ -52,9 +52,6 @@ document.onreadystatechange = function () {
         document.getElementById('app-settings').addEventListener('click',() => {
             changePage('app-settings')
         })
-        document.getElementById('testing').addEventListener('click',() => {
-            changePage('testing')
-        })
         document.getElementById('dev').addEventListener('click',() => {
             // toggle dev tools
             var webcontents = remote.getCurrentWebContents()
