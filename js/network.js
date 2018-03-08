@@ -24,6 +24,7 @@ function init() {
                 msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
                 msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
                 var reply = JSON.stringify(msg)
+                console.info('Sending message to '+ip+': '+reply)
                 socket.write(reply)
                 file.append('sent',msg.header.hash)
                 socket.end()
@@ -41,12 +42,14 @@ function init() {
     // this will be populated with connections that succeed
     file.storeAll('connections',[])
     // inital connection attempt
-    var connections = connect(0)
-    
+    var connections = connect(0,false)
+
     // this is a loop that maintains connections and
     // sends top hash requests to make sure the client is up to date
-    // it goes on forever, every minute
+    // it goes on forever, every 30 seconds
     setInterval(() => {
+        console.log('Interval')
+        var connections = document.getElementById('connections').textContent
         // first check that we have enough connections
         file.get('target-connections','network-settings',(target) => {
             // if the current number of of connections is less than the minimum
@@ -84,27 +87,29 @@ function init() {
                 }
             })
         },5) // if it fails to open the file it sets target to five
-    },60000)
+    },30000)
 }
 
-function connect(connectCount) {
+function connect(connectCount,backup=true) {
+    console.error(backup)
     // try to connect to other nodes
     document.getElementById('connections').textContent = connectCount
     file.getAll('recent-connections',(data) => {
         var connections = JSON.parse(data)
-        var ping = {
-            "header": {
-                "type": "pg"
-            },
-            "body": {}
-        }
         file.get('advertise','network-settings',(data) => {
-            if (data === null || data === '') {
-                var advertise = "true"
-            } else {
+            if (data === 'true' || data === 'false') {
                 var advertise = data
+            } else {
+                var advertise = 'true'
             }
-            ping.body['advertise'] = advertise
+            var ping = {
+                "header": {
+                    "type": "pg"
+                },
+                "body": {
+                    "advertise": advertise
+                }
+            }
             connections.forEach((node) => {
                 sendMsg(ping,node.ip,(type) => {
                     if (type === 'pg') {
@@ -112,7 +117,7 @@ function connect(connectCount) {
                     }
                 })
             })
-            if (connectCount === 0) {
+            if (connectCount === 0 && backup) {
                 console.warn('no connections found!')
                 document.getElementById('nonodes').classList.remove('hidden')
                 console.warn('Connecting to backup server')
@@ -137,7 +142,7 @@ function sendMsg(msg,ip,callback) {
     msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
     msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
     var sendMe = JSON.stringify(msg)
-    console.info('Sending message: '+sendMe)
+    console.info('Sending message to '+ip+': '+sendMe)
     var client = new net.Socket()
     client.connect(port,ip,() => {
         console.log('Connected to: '+ip)
@@ -167,25 +172,22 @@ function parseMsg(data,ip,callback) {
         var msg = JSON.parse(data)
         if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
             if (msg.header.type === 'tx') {
+                // transaction
                 reply = parse.tx(msg)
-                // send on to other nodes
-                // if it's not valid, an error will have
-                // already been thrown
-                sendToAll(msg)
-                file.append('sent',msg.header.hash,() => {})
             } else if (msg.header.type === 'bk') {
+                // block
                 reply = parse.bk(msg)
-                // send on to other nodes
-                sendToAll(msg)
-                // add to blockchain
-                blockchain.addBlock(msg)
             } else if (msg.header.type === 'hr') {
+                // hash request
                 reply = parse.hr(msg)
-            } else if (msg.header.type === 'br') {
-                reply = parse.br(msg)
+            } else if (msg.header.type === 'cr') {
+                // chain request
+                reply = parse.cr(msg)
             } else if (msg.header.type === 'pg') {
+                // ping
                 reply = parse.pg(msg,ip)
             } else if (msg.header.type === 'nr') {
+                // node request
                 reply = parse.nr(msg)
             } else {
                 throw 'type'
@@ -206,6 +208,7 @@ function parseMsg(data,ip,callback) {
         } else {
             reply.body['error'] = e
         }
+        file.append('error-logs',reply)
     } finally {
         // replies with something, even if its an error msg
         callback(reply)

@@ -33,18 +33,7 @@ function createWindow() {
         // Dereference the window object, usually you would store windows
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
-        // Saves connections to recent connections, because we don't know
-        // if they're still there when it boots back up
-        /////////////////
-        // NOT WORKING //
-        /////////////////
-        file.getAll('connections',(data) => {
-            file.storeAll('recent-connections',data,() => {
-                file.storeAll('connections','[]',() => {
-                    win = null
-                })
-            })
-        })
+        win = null
     })
 }
 

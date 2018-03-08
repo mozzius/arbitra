@@ -30,6 +30,7 @@ function init() {
         file.storeAll('sent',[])
         file.storeAll('error-log',[])
         document.getElementById('ca-save').classList.remove('hidden')
+        console.warn('All files wiped')
     })
 }
 

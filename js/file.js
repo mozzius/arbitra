@@ -69,8 +69,7 @@ function get(key,file,callback,fail=null) {
             console.warn(e)
             var result = fail
         } finally {
-            callback(result)
-            return
+            return callback(result)
         }
     })
 }
@@ -93,12 +92,12 @@ function getAll(file,callback,fail=null) {
     })
 }
 
-function storeAll(file,data) {
+function storeAll(file,data,callback=()=>{}) {
     var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
     content = JSON.stringify(data)
     fs.writeFile(path,content,'utf-8',(err) => {
         if (err) throw err
-        typeof callback === 'function' && callback()
+        callback()
     })
 }
 

@@ -150,7 +150,8 @@ function nr(msg) {
 
 function pg(msg,ip) {
     pgreply(msg,ip)
-    file.get('advertise','network-settings',(data) => {
+    // remember to complain about scope issues
+    return file.get('advertise','network-settings',(data) => {
         if (data === 'true' || data === 'false') {
             var advertise = data
         } else {

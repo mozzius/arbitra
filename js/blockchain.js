@@ -18,7 +18,7 @@ function checkBalance(key,amount,callback) {
 }
 
 function calcBalances() {
-    const miningreward = 50
+    const miningreward = 50000000
     // mainChain gets the longest chain, as only the blocks under the highest
     // actually count
     mainChain((data) => {
@@ -87,7 +87,19 @@ function updateBalances(block) {
         } else {
             balances[block.to] = miningreward
         }
-        file.storeAll('balances',balances)
+        // calculating the balance in the corner
+        file.getAll('wallets',(data) => {
+            var wallets = JSON.parse(data)
+            var balance = 0
+            wallets.forEach((wallet) => {
+                // add the au in the wallet to the total balance
+                balance += balances[wallet.public]
+            })
+            // change microau to au and set the textcontent of the top left thing
+            document.getElementById('current-balance').textContent = balance / 100000
+            // save balances
+            file.storeAll('balances',balances)
+        },'[]')
     })
 }
 
