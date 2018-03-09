@@ -1,5 +1,7 @@
 const file = require('../file.js')
 const parse = require('../parse.js')
+const ecdsa = require('../ecdsa.js')
+const network = require('../network.js')
 
 function init() {
     addInput()
@@ -52,7 +54,7 @@ function populateDropdown(select) {
 
 function sendTx() {
     console.log('send button clicked')
-    var to = document.getElementById('to')
+    var to = document.getElementById('to').value
     // this isn't an array for some reason
     // we can make it one using Array.from
     // https://stackoverflow.com/a/37941811/5453419
@@ -65,33 +67,49 @@ function sendTx() {
             "from": []
         }
     }
-    message.body['to'] = document.getElementById('to').value
+    message.body['to'] = to
     file.getAll('wallets',(data) => {
+        var time = Date.now()
+        var from = []
         if (data === null) {
             document.getElementById('error').classList.remove('hidden')
             return
         } else {
+            var convert =  {}
             var wallets = JSON.parse(data)
-            var public, private
             wallets.forEach((wallet) => {
                 public = wallet.public
                 private = wallet.private
+                convert[public] = private
             })
         }
-        groups.forEach((group) => {
-            var child = group.childNodes
-            var wallet = child[0].value
-            var amount = child[1].value
-            if (wallet && amount) {
-                // carry on
-                console.log(wallet)
-                console.log(amount)
-
-            } else {
-                document.getElementById('error').classList.remove('hidden')
-                return
-            }
-        })
+        try {
+            groups.forEach((group) => {
+                var child = group.childNodes
+                var wallet = child[0].value
+                var amount = child[1].value
+                if (wallet && amount) {
+                    // carry on
+                    var message = amount+to+time
+                    var signature = ecdsa.signMsg(message,convert[wallet],(signature) => {
+                        message.body.from.push({
+                            "wallet": wallet,
+                            "amount": amount,
+                            "signature": signature
+                        })
+                    })
+                } else {
+                    document.getElementById('error').classList.remove('hidden')
+                    return
+                }
+                // if it's invalid, it will throw an error and be caught by the try-catch
+                parse.transaction(msg)
+                network.sendToAll(msg)
+            })
+        } catch(e) {
+            document.getElementById('error').classList.remove('hidden')
+            return
+        }
     })
 }
 

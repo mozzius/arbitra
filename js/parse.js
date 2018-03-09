@@ -27,7 +27,7 @@ function transaction(tx) {
                     if (!balanceCheck) {
                         throw 'amount'
                     } else {
-                        repeaets.push(input)
+                        repeats.push(input)
                     }
                 })
             } else {
@@ -71,7 +71,11 @@ function tx(msg) {
         },
         "body": {}
     }
+    // verify that it works
     transaction(msg.body)
+    // send to contacts
+    sendToAll(msg)
+    // reply
     return reply
 }
 
@@ -291,3 +295,4 @@ exports.nr = nr
 exports.pg = pg
 exports.pgreply = pgreply
 exports.block = block
+exports.transaction = transaction

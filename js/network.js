@@ -52,7 +52,7 @@ function init() {
     // it goes on forever, every 30 seconds
     setInterval(() => {
         console.log('Interval')
-        var connections = document.getElementById('connections').textContent
+        var connections = parseInt(document.getElementById('connections').textContent)
         // first check that we have enough connections
         file.get('target-connections','network-settings',(target) => {
             // if the current number of of connections is less than the minimum
@@ -61,7 +61,7 @@ function init() {
                 connect()
                 // if it's still not enough after 3 seconds, send node requests
                 setTimeout(() => {
-                    connections = document.getElementById('connections').textContent
+                    connections = parseInt(document.getElementById('connections').textContent)
                     if (connections < target) {
                         var nr = {
                             "header": {
@@ -118,7 +118,7 @@ function connect(backup=true) {
                 sendMsg(ping,node.ip)
             })
             // get the number of connections from textContent
-            var connectCount = document.getElementById('connections').textContent
+            var connectCount = parseInt(document.getElementById('connections').textContent)
             if (connectCount === 0 && backup) {
                 console.warn('No connections found!')
                 document.getElementById('nonodes').classList.remove('hidden')
@@ -134,35 +134,49 @@ function connect(backup=true) {
 }
 
 function sendMsg(msg,ip,callback) {
-    if (msg.header.type !== 'bl') {
-        // don't want to affect the body of a block
-        // as it will throw off the hash
-        msg.body['time'] = Date.now()
-    }
-    msg.header['version'] = version
-    msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
-    msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
-    var sendMe = JSON.stringify(msg)
-    console.info('Sending message to '+ip+': '+sendMe)
-    var client = new net.Socket()
-    client.connect(port,ip,() => {
-        console.log('Connected to: '+ip)
-        client.write(sendMe)
-        file.append('sent',msg.header.hash)
-        client.on('data',(data) => {
-            console.log('Client received: '+data)
-            parseReply(data,ip,(type) => {
-                client.destroy()
+    // for checking that the message hasn't already been sent
+    file.getAll('sent',(data) => {
+        var sent = JSON.parse(data)
+        if (msg.header.type !== 'bk' && msg.header.type !== 'tx') {
+            // don't want to affect the body of a block
+            // and the time of the tx is crucial as well
+            // as it will throw off the hash
+            msg.body['time'] = Date.now()
+        }
+        msg.header['version'] = version
+        msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
+        msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
+
+        // check that the message hasn't already been sent
+        if (!sent.includes(msg.header.hash)) {
+            var sendMe = JSON.stringify(msg)
+            console.info('Sending message to '+ip+': '+sendMe)
+
+            // actually go send the message
+            var client = new net.Socket()
+            client.connect(port,ip,() => {
+                console.log('Connected to: '+ip)
+                client.write(sendMe)
+                // add the hash to the sent messages file
+                file.append('sent',msg.header.hash)
+                client.on('data',(data) => {
+                    console.log('Client received: '+data)
+                    parseReply(data,ip,(type) => {
+                        client.destroy()
+                    })
+                })
+                client.on('close',() => {
+                    console.log('Connection closed')
+                })
+                client.on('timeout',() => {
+                    console.warn('Client timed out')
+                    client.destroy()
+                })
             })
-        })
-        client.on('close',() => {
-            console.log('Connection closed')
-        })
-        client.on('timeout',() => {
-            console.warn('Client timed out')
-            client.destroy()
-        })
-    })
+        } else {
+            console.log('Message already sent')
+        }
+    },'[]')
 }
 
 function parseMsg(data,ip,callback) {
@@ -223,12 +237,12 @@ function parseReply(data,ip,callback=(a)=>{}) {
     try {
         var msg = JSON.parse(data)
         if (msg.header.hash == hash.sha256hex(JSON.stringify(msg.body))) {
-            if (msg.header.type === 'bl') {
-                parse.bl(msg)
-            } else if (msg.header.type === 'bh') {
-                parse.bh(msg)
-            } else if (msg.header.type === 'nr') {
-                parse.nr(msg)
+            if (msg.header.type === 'cn') {
+                // chain
+                parse.cn(msg)
+            } else if (msg.header.type === 'th') {
+                // file.
+                parse.th(msg)
             } else if (msg.header.type === 'nd') {
                 parse.nd(msg)
             } else if (msg.header.type === 'pg') {
