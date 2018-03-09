@@ -19,10 +19,12 @@ function init() {
             console.log('Connected: '+ip)
             console.log('Server received: '+data)
             parseMsg(data,ip,(msg) => {
-                msg.body['time'] = Date.now()
-                msg.header['version'] = version
-                msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
-                msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
+                if (msg.header.type !== 'tx' && msg.header.type !== 'bk') {
+                    msg.body['time'] = Date.now()
+                    msg.header['version'] = version
+                    msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
+                    msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
+                }
                 var reply = JSON.stringify(msg)
                 console.info('Sending message to '+ip+': '+reply)
                 socket.write(reply)
@@ -214,7 +216,7 @@ function parseMsg(data,ip,callback) {
     }
 }
 
-function parseReply(data,ip,callback) {
+function parseReply(data,ip,callback=(a)=>{}) {
     // parse incoming replies
     // by calling parse functions
     var type
@@ -239,15 +241,16 @@ function parseReply(data,ip,callback) {
             } else {
                 throw 'type'
             }
+
         } else {
             throw 'hash'
         }
     } catch(e) {
         console.warn('Reply error: '+e)
+        file.append('error-log',msg)
     } finally {
-        // call the callback, if it exists
-        // callback is to calculate the number of connections
-        typeof callback === 'function' && callback(msg.header.type)
+        // call the callback, if needed
+        callback(msg.header.type)
     }
 }
 
