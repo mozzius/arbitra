@@ -276,7 +276,7 @@ function bh(msg) {
     },'{}')
 }
 
-function cr(msg) {
+function cr(msg,callback) {
     if (msg.body.hasOwnProperty('hash')) {
         blockchain.get(msg.body.hash,(block) => {
             if (block === null) {
@@ -291,6 +291,7 @@ function cr(msg) {
                             "chain": chain
                         }
                     }
+                    callback(reply)
                 })
             }
         })

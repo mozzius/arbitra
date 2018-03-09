@@ -124,7 +124,8 @@ function connect(backup=true) {
                 document.getElementById('nonodes').classList.remove('hidden')
                 console.warn('Connecting to backup server')
                 // wavecalcs.com is friend's server, and should be online for the purposes of this project
-                sendMsg(ping,'wavecalcs.com')
+                // wavecalcs.com = 5.81.186.90
+                sendMsg(ping,'5.81.186.90')
             } else {
                 document.getElementById('nonodes').classList.add('hidden')
             }
