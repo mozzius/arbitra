@@ -19,7 +19,6 @@ function init() {
             console.log('Received connection from: '+ip)
             console.log('Server received: '+data)
             parseMsg(data,ip,(msg) => {
-                console.warn(msg)
                 if (msg.header.type !== 'tx' && msg.header.type !== 'bk') {
                     msg.body['time'] = Date.now()
                     msg.header['version'] = version

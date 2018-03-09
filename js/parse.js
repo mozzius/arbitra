@@ -61,6 +61,7 @@ function chain(chain) {
         }
     } catch(e) {
         console.warn('Received chain invalid')
+        throw e
     }
 }
 
@@ -192,6 +193,8 @@ function pgreply(msg,ip) {
         if (!repeat) {
             file.append('connections',store,() => {
                 console.log('Connection added: '+ip)
+                var current = document.getElementById('connections').textContent
+                current = parseInt(current) + 1
             })
         }
     },'[]') // if it fails it returns an empty array
@@ -279,10 +282,24 @@ function cr(msg) {
             if (block === null) {
                 throw 'notfound'
             } else {
-                throw 'todo'
+                blockchain.mainChain((chain) => {
+                    var reply = {
+                        "header": {
+                            "type": "cn"
+                        },
+                        "body": {
+                            "chain": chain
+                        }
+                    }
+                })
             }
         })
     }
+}
+
+function cn(msg) {
+    console.log('Recieved chain: '+JSON.stringify(msg))
+    console.error('TODO: DO SOMETHING WITH IT')
 }
 
 function er(msg) {
@@ -291,10 +308,14 @@ function er(msg) {
 
 
 exports.tx = tx
+exports.bk = bk
 exports.hr = hr
-exports.br = br
 exports.nr = nr
 exports.pg = pg
 exports.pgreply = pgreply
+exports.nd = nd
+exports.cr = er
+exports.er = er
+exports.cn = cn
 exports.block = block
 exports.transaction = transaction
