@@ -64,7 +64,7 @@ function chain(chain) {
     }
 }
 
-function tx(msg) {
+function tx(msg,callback) {
     var reply = {
         "header": {
             "type": "ok"
@@ -76,10 +76,10 @@ function tx(msg) {
     // send to contacts
     sendToAll(msg)
     // reply
-    return reply
+    callback(reply)
 }
 
-function bk(msg) {
+function bk(msg,callback) {
     var reply = {
         "header": {
             "type": "ok"
@@ -88,28 +88,30 @@ function bk(msg) {
     }
     block(msg.body)
     // if nothing has been thrown, add to local blockchain
-    return reply
+    callback(reply)
 }
 
-function hr(msg) {
-    var reply = {
-        "header": {
-            "type": "bh"
-        },
-        "body": {}
-    }
+function hr(msg,callback) {
     file.getAll('blockchain',(data) => {
         if (data === null) {
             throw 'notfound'
         } else {
             blockchain.getTopBlock(JSON.parse(data),(top) => {
-                return top
+                var reply = {
+                    "header": {
+                        "type": "bh"
+                    },
+                    "body": {
+                        "hash": top
+                    }
+                }
+                callback(top)
             })
         }
     })
 }
 
-function br(msg) {
+function br(msg,callback) {
     file.get('blockchain',msg.body.hash,(result) => {
         if (result !== null) {
             var reply = {
@@ -121,14 +123,14 @@ function br(msg) {
                     "body": result
                 }
             }
-            return reply
+            callback(reply)
         } else {
             throw 'notfound'
         }
     })
 }
 
-function nr(msg) {
+function nr(msg,callback) {
     var reply = {
         "header": {
             "type": "nd"
@@ -147,15 +149,15 @@ function nr(msg) {
                     reply.body.nodes.push(connection.ip)
                 }
             })
-            return reply
+            callback(reply)
         }
     })
 }
 
-function pg(msg,ip) {
+function pg(msg,ip,callback) {
     pgreply(msg,ip)
     // remember to complain about scope issues
-    return file.get('advertise','network-settings',(data) => {
+    file.get('advertise','network-settings',(data) => {
         if (data === 'true' || data === 'false') {
             var advertise = data
         } else {
@@ -169,7 +171,7 @@ function pg(msg,ip) {
                 "advertise": advertise
             }
         }
-        return reply
+        callback(reply)
     })
 }
 
@@ -195,7 +197,7 @@ function pgreply(msg,ip) {
     },'[]') // if it fails it returns an empty array
 }
 
-function bh(msg) {
+function bh(msg,callback) {
     file.getAll('blockchain',(data) => {
         var mainchain = JSON.parse(data)
         blockchain.getTopBlock(mainchain,(top) => {
@@ -216,7 +218,7 @@ function bh(msg) {
     })
 }
 
-function nr(msg) {
+function nr(msg,callback) {
     file.getAll('connections',(data) => {
         var connections = JSON.parse(data)
         var reply = {
@@ -227,7 +229,7 @@ function nr(msg) {
                 "nodes": connections
             }
         }
-        return reply
+        callback(reply)
     })
 }
 

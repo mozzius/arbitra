@@ -69,7 +69,7 @@ function get(key,file,callback,fail=null) {
             console.warn(e)
             var result = fail
         } finally {
-            return callback(result)
+            callback(result)
         }
     })
 }

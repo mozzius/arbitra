@@ -16,9 +16,10 @@ function init() {
         socket.setEncoding('utf8')
         // when it receives data, send to parseMsg()
         socket.on('data',(data) => {
-            console.log('Connected: '+ip)
+            console.log('Received connection from: '+ip)
             console.log('Server received: '+data)
             parseMsg(data,ip,(msg) => {
+                console.warn(msg)
                 if (msg.header.type !== 'tx' && msg.header.type !== 'bk') {
                     msg.body['time'] = Date.now()
                     msg.header['version'] = version
@@ -188,22 +189,22 @@ function parseMsg(data,ip,callback) {
         if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
             if (msg.header.type === 'tx') {
                 // transaction
-                reply = parse.tx(msg)
+                parse.tx(msg,callback)
             } else if (msg.header.type === 'bk') {
                 // block
-                reply = parse.bk(msg)
+                parse.bk(msg,callback)
             } else if (msg.header.type === 'hr') {
                 // hash request
-                reply = parse.hr(msg)
+                parse.hr(msg,callback)
             } else if (msg.header.type === 'cr') {
                 // chain request
-                reply = parse.cr(msg)
+                parse.cr(msg,callback)
             } else if (msg.header.type === 'pg') {
                 // ping
-                reply = parse.pg(msg,ip)
-            } else if (msg.header.type === 'nr') {
+                parse.pg(msg,ip,callback)
+            } else if (msg.header.type === 'nr',callback) {
                 // node request
-                reply = parse.nr(msg)
+                parse.nr(msg,callback)
             } else {
                 throw 'type'
             }
@@ -211,6 +212,7 @@ function parseMsg(data,ip,callback) {
             throw 'hash'
         }
     } catch(e) {
+        // catching any errors and replying with an error message
         console.warn(e)
         reply = {
             'header': {
@@ -224,8 +226,6 @@ function parseMsg(data,ip,callback) {
             reply.body['error'] = e
         }
         file.append('error-logs',reply)
-    } finally {
-        // replies with something, even if its an error msg
         callback(reply)
     }
 }
