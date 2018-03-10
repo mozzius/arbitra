@@ -5,7 +5,7 @@ const blockchain = require('./blockchain.js')
 const file = require('./file.js')
 
 function transaction(tx) {
-    var from = tx.transactions
+    var from = tx.from
     var len = from.length
     var input
     var concat

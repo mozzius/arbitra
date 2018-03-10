@@ -53,7 +53,6 @@ function populateDropdown(select) {
 }
 
 function sendTx() {
-    console.log('send button clicked')
     var to = document.getElementById('to').value
     // this isn't an array for some reason
     // we can make it one using Array.from
@@ -64,34 +63,36 @@ function sendTx() {
             "type": "tx"
         },
         "body": {
+            "to": to,
             "from": []
         }
     }
-    message.body['to'] = to
     file.getAll('wallets',(data) => {
         var time = Date.now()
-        var from = []
-        if (data === null) {
-            document.getElementById('error').classList.remove('hidden')
-            return
-        } else {
-            var convert =  {}
-            var wallets = JSON.parse(data)
-            wallets.forEach((wallet) => {
-                public = wallet.public
-                private = wallet.private
-                convert[public] = private
-            })
-        }
+        // converting wallets into a format
+        // where you can enter the public key
+        // and get the private key
+        var convert =  {}
+        var wallets = JSON.parse(data)
+        wallets.forEach((wallet) => {
+            public = wallet.public
+            private = wallet.private
+            convert[public] = private
+        })
         try {
             groups.forEach((group) => {
                 var child = group.childNodes
                 var wallet = child[0].value
-                var amount = child[1].value
-                if (wallet && amount) {
-                    // carry on
-                    var message = amount+to+time
-                    var signature = ecdsa.signMsg(message,convert[wallet],(signature) => {
+                console.log(wallet)
+                // 2 because of the br
+                var amount = child[2].value
+                console.log(amount)
+                if (wallet && amount > 0) {
+                    // convert to microau
+                    amount *= 1000000
+                    // the message that is signed
+                    var concat = amount+to+time
+                    var signature = ecdsa.signMsg(concat,convert[wallet],(signature) => {
                         message.body.from.push({
                             "wallet": wallet,
                             "amount": amount,
@@ -99,19 +100,18 @@ function sendTx() {
                         })
                     })
                 } else {
-                    document.getElementById('error').classList.remove('hidden')
-                    return
+                    throw 'no amount entered'
                 }
-                // if it's invalid, it will throw an error and be caught by the try-catch
-                console.log('Transaction: '+JSON.stringify(msg))
-                parse.transaction(msg)
-                network.sendToAll(msg)
             })
+            // if it's invalid, it will throw an error and be caught by the try-catch
+            console.log('Transaction: '+JSON.stringify(message))
+            parse.transaction(message.body)
+            network.sendToAll(message)
         } catch(e) {
             document.getElementById('error').classList.remove('hidden')
-            return
+            console.warn('Tx failed: '+e)
         }
-    })
+    },'[]')
 }
 
 exports.init = init
