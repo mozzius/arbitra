@@ -59,7 +59,7 @@ function calcBalances() {
 }
 
 function updateBalances(block) {
-    const miningreward = 50
+    const miningreward = 50000000
     txs = block.body.transactions
     file.getAll('balances',(balances) => {
         // set the most recent block hash
@@ -110,11 +110,16 @@ function addBlock(msg) {
             block(msg)
             // if it failed the test, an error will have been thrown
             file.get(msg.header.hash,'blockchain',(data) => {
-                // only store the block if it doesn't already exist
-                if (data === null) {
-                    file.store(msg.header.hash,msg.body,'blockchain')
-                    updateBalances(msg)
-                }
+                file.store(msg.header.hash,msg.body,'blockchain')
+                    file.getAll('txpool',(data) => {
+                        var txpool = JSON.parse(data)
+                        msg.body.transactions.forEach((tx) => {
+                            // remove pending transactions if they're in the received block
+                            txpool.splice(txpool.indexOf(tx),1)
+                        })
+                        file.storeAll('txpool',txpool)
+                    },'[]')
+                updateBalances(msg)
             })
         } catch(e) {
             console.warn('Block failed:',JSON.stringify(block))
@@ -131,7 +136,7 @@ function mainChain(callback) {
             mainchain[top] = fullchain[top]
             var current = top
             var parent
-            while (fullchain[current].height != 1) {
+            while (fullchain[current].height > 0) {
                 parent = fullchain[current].parent
                 mainchain[parent] = fullchain[parent]
                 current = parent

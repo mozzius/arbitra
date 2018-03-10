@@ -1,15 +1,18 @@
 const hash = require(__dirname+'/js/hashing.js')
+const bc = require(__dirname+'/js/blockchain.js')
 const fs = require('fs')
 
 class Miner {
     constructor(path) {
         this.path = path
-        // determine difficulty some other way
+        // difficulty is static
         this.block = {
             "header": {
                 "type": "bl"
             },
-            "body": {}
+            "body": {
+                "difficulty": 7
+            }
         }
         fs.readFile(this.path+'blockchain.json','utf-8',(err,data) => {
             if (err) {
@@ -39,6 +42,21 @@ class Miner {
                 postMessage('Block formed, mining initiated')
             })
         })
+
+        // parent and height
+        getTopBlock((top) => {
+            this.block.body['parent'] = top
+            this.block.body.height = blockchain[top].height+1
+        })
+        
+        fs.readFile(this.path+'wallets.json','utf-8',(err,data) => {
+            if (err) {
+                throw 'Please create a wallet before hashing'
+            }
+            var wallets = JSON.parse(data)
+            var miner = wallets[0].public
+            this.block.body['miner'] = miner
+        })
         /*
         // need to add this but without depending on file
         file.getAll('wallets',(data2) => {
@@ -61,17 +79,16 @@ class Miner {
         // repeatedly hashes with a random nonce
         try {
             while (true) {
-                var body = this.block.body
                 this.rand((nonce) => {
-                    body['nonce'] = nonce
+                    this.block.body['nonce'] = nonce
                     // t2 is updated every loop
-                    body['time'] = this.t2
+                    this.block.body['time'] = this.t2
                     this.hashBlock(body,(hash) => {
                         this.hashes++
                         this.dhash++
                         // checks difficulty
                         var pass = true
-                        for (var i = 0; i < body.difficulty; i++) {
+                        for (var i = 0; i < this.block.body.difficulty; i++) {
                             if (hash.charAt(i) !== 'a') {
                                 pass = false
                             }
@@ -85,6 +102,7 @@ class Miner {
                             fs.writeFile(this.path+'txpool.json','[]','utf-8',(err) => {
                                 if (err) throw err
                                 network.sendToAll(this.block)
+                                this.block.body.transactions = '[]'
                             })
                         } else {
                             // printing for the console
@@ -96,6 +114,7 @@ class Miner {
                                 this.dhash = 0
                                 this.t1 = Date.now()
                                 postMessage('Hashing at '+hs.toFixed(3)+' hashes/sec - '+this.hashes+' hashes in '+Math.floor((this.t1-this.tt)/1000)+' seconds')
+
                                 // check to see if the block has updated
                                 fs.readFile(this.path+'txpool.json','utf-8',(err,content) => {
                                     if (err) {

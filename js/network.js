@@ -86,6 +86,15 @@ function init() {
                 }
                 sendToAll(hr)
             }
+            // set the currency amount in the corner
+            file.getAll('wallets',(data) => {
+                var balance = 0
+                var wallets = JSON.parse(data)
+                wallets.forEach((wallet) => {
+                    balance += wallet.amount
+                })
+                document.getElementById('current-balance').textContent = balance
+            },'[]')
             // finally, save current connections to recent connections
             file.getAll('connections',(data) => {
                 if (connections !== null) {
@@ -129,7 +138,6 @@ function connect(backup=true) {
             } else {
                 document.getElementById('nonodes').classList.add('hidden')
             }
-            return connectCount
         })
     })
 }
@@ -188,7 +196,6 @@ function sendMsg(msg,ip,callback) {
 function parseMsg(data,ip,callback) {
     // parse incoming messages and crafts a reply
     // by calling parse functions
-    var reply
     try {
         var msg = JSON.parse(data)
         if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
@@ -219,16 +226,19 @@ function parseMsg(data,ip,callback) {
     } catch(e) {
         // catching any errors and replying with an error message
         console.warn(e)
-        reply = {
-            'header': {
-                'type': 'er'
-            },
-            'body': {}
-        }
+        var error
         if (e.name === 'SyntaxError') {
-            reply.body['error'] = 'parse'
+            error =  'parse'
         } else {
             reply.body['error'] = e
+        }
+        var reply = {
+            "header": {
+                "type": "er"
+            },
+            "body": {
+                "error": error
+            }
         }
         file.append('error-logs',reply)
         callback(reply)

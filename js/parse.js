@@ -24,10 +24,10 @@ function transaction(tx) {
         ecdsa.verifyMsg(concat,input.signature,input.person,(result) => {
             if (result) {
                 blockchain.checkBalance(input.person,input.amount,(balanceCheck) => {
-                    if (!balanceCheck) {
-                        throw 'amount'
-                    } else {
+                    if (balanceCheck) {
                         repeats.push(input)
+                    } else {
+                        throw 'amount'
                     }
                 })
             } else {
@@ -74,6 +74,8 @@ function tx(msg,callback) {
     }
     // verify that it works
     transaction(msg.body)
+    // add to txpool
+    file.append(tx.body)
     // send to contacts
     sendToAll(msg)
     // reply
@@ -89,6 +91,7 @@ function bk(msg,callback) {
     }
     block(msg.body)
     // if nothing has been thrown, add to local blockchain
+    blockchain.addBlock(msg)
     callback(reply)
 }
 
@@ -205,21 +208,40 @@ function bh(msg,callback) {
     file.getAll('blockchain',(data) => {
         var mainchain = JSON.parse(data)
         blockchain.getTopBlock(mainchain,(top) => {
-            if (top !== msg.body.hash && !mainchain.includes(msg.body.hash)) {
+            if (top !== msg.body.hash && !Object.keys(mainchain).includes(msg.body.hash)) {
                 // if the received top hash is not equal to the one on disk
-                // and it's not in the blockchain, then send out the block request
-                var blockrequest = {
+                // and it's not in the blockchain, then send out a chain request
+                var chainrequest = {
                     "header": {
-                        "type": "br"
+                        "type": "cr"
                     },
                     "body": {
                         "hash": msg.body.hash
                     }
                 }
-                network.sendToAll(blockrequest)
+                network.sendToAll(chainrequest)
             }
         })
-    })
+    },'{}')
+}
+
+function bh(msg) {
+    file.getAll('blockchain',(data) => {
+        var mainchain =  JSON.parse('data')
+        blockchain.getTopBlock(mainchain,(result) => {
+            if (result !== msg.body.hash) {
+                var chainrequest = {
+                    "header": {
+                        "type": "cr"
+                    },
+                    "body": {
+                        "hash": msg.body.hash
+                    }
+                }
+                network.sendToAll(chainrequest)
+            }
+        })
+    },'{}')
 }
 
 function nr(msg,callback) {
@@ -271,25 +293,6 @@ function nd(msg) {
             })
         })
     })
-}
-
-function bh(msg) {
-    file.getAll('blockchain',(data) => {
-        var mainchain =  JSON.parse('data')
-        blockchain.getTopBlock(mainchain,(result) => {
-            if (result !== msg.body.hash) {
-                var chainrequest = {
-                    "header": {
-                        "type": "cr"
-                    },
-                    "body": {
-                        "hash": msg.body.hash
-                    }
-                }
-                network.sendToAll(chainrequest)
-            }
-        })
-    },'{}')
 }
 
 function cr(msg,callback) {

@@ -107,6 +107,8 @@ function sendTx() {
             console.log('Transaction: '+JSON.stringify(message))
             parse.transaction(message.body)
             network.sendToAll(message)
+            file.append('txpool',msg.body)
+            file.append('recenttx',msg.body)
         } catch(e) {
             document.getElementById('error').classList.remove('hidden')
             console.warn('Tx failed: '+e)
