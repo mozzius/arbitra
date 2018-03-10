@@ -191,12 +191,11 @@ function pgreply(msg,ip) {
         })
         // stores it if not and if it is not our ip
         const ourip = require('ip').address
-        console.log(ourip())
         if (!repeat && ip !== ourip()) {
             file.append('connections',store,() => {
                 console.log('Connection added: '+ip)
                 var current = document.getElementById('connections').textContent
-                current = parseInt(current) + 1
+                document.getElementById('connections').textContent = parseInt(current) + 1
             })
         }
     },'[]') // if it fails it returns an empty array
@@ -239,6 +238,7 @@ function nr(msg,callback) {
 }
 
 function nd(msg) {
+    // some nodes we can connect to
     file.get('advertise','network-settings',(data) => {
         if (data === 'true' || data === 'false') {
             var advertise = data
@@ -253,8 +253,22 @@ function nd(msg) {
                 "advertise": advertise
             }
         }
-        msg.body.nodes.forEach((node) => {
-            network.sendMsg(ping,node.ip)
+        file.getAll('connections',(data) => {
+            // this must get connection data, as otherwise it wouldn't have received this message
+            var connections = JSON.parse(data)
+            msg.body.nodes.forEach((node) => {
+                var send = true
+                // if we are already connected to the node don't send
+                connections.forEach((connection) => {
+                    if (node.ip === connection) {
+                        send = false
+                    }
+                })
+                // otherwise send a ping
+                if (send) {
+                    network.sendMsg(ping,node.ip)
+                }
+            })
         })
     })
 }

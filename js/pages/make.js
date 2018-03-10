@@ -103,6 +103,7 @@ function sendTx() {
                     return
                 }
                 // if it's invalid, it will throw an error and be caught by the try-catch
+                console.log('Transaction: '+JSON.stringify(msg))
                 parse.transaction(msg)
                 network.sendToAll(msg)
             })
