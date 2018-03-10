@@ -189,8 +189,10 @@ function pgreply(msg,ip) {
                 repeat = true
             }
         })
-        // stores it if not
-        if (!repeat) {
+        // stores it if not and if it is not our ip
+        const ourip = require('ip').address
+        console.log(ourip())
+        if (!repeat && ip !== ourip()) {
             file.append('connections',store,() => {
                 console.log('Connection added: '+ip)
                 var current = document.getElementById('connections').textContent

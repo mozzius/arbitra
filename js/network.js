@@ -137,6 +137,10 @@ function connect(backup=true) {
 function sendMsg(msg,ip,callback) {
     // for checking that the message hasn't already been sent
     file.getAll('sent',(data) => {
+        // for some reason, sent.json sometimes ends with [...]]
+        //if (data[data.length-1] === data[data.length-2]) {
+        //    data = data.slice(0,-1)
+        //}
         var sent = JSON.parse(data)
         if (msg.header.type !== 'bk' && msg.header.type !== 'tx') {
             // don't want to affect the body of a block
