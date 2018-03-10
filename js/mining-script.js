@@ -1,10 +1,15 @@
 const hash = require(__dirname+'/js/hashing.js')
-const bc = require(__dirname+'/js/blockchain.js')
 const fs = require('fs')
 
 class Miner {
     constructor(path) {
         this.path = path
+        // this is for the printing later
+        this.hashes = 0
+        this.dhash = 0
+        this.t1 = Date.now()
+        this.t2 = Date.now()
+        this.tt = Date.now()
         // difficulty is static
         this.block = {
             "header": {
@@ -21,12 +26,6 @@ class Miner {
             }
             var blockchain = JSON.parse(data)
 
-            // this is for the printing later
-            this.hashes = 0
-            this.dhash = 0
-            this.t1 = Date.now()
-            this.t2 = Date.now()
-            this.tt = Date.now()
             fs.readFile(this.path+'txpool.json','utf-8',(err,data) => {
                 if (err) {
                     // if the file doesn't exist, set content to []
@@ -39,12 +38,15 @@ class Miner {
                 }
                 var transactions = JSON.parse(data)
                 this.block['transactions'] = transactions
-                postMessage('Block formed, mining initiated')
             })
         })
 
         // parent and height
-        getTopBlock((top) => {
+        this.getTopBlock((top) => {
+            if (top === null) {
+                this.block.body['parent'] = '0000000000000000000000000000000000000000000000000000000000000000'
+                this.block.body.height = blockchain[top].height = 0
+            }
             this.block.body['parent'] = top
             this.block.body.height = blockchain[top].height+1
         })
@@ -57,22 +59,8 @@ class Miner {
             var miner = wallets[0].public
             this.block.body['miner'] = miner
         })
-        /*
-        // need to add this but without depending on file
-        file.getAll('wallets',(data2) => {
-            var wallets = JSON.parse(data2)
-            block.body['miner'] = wallets[0]
 
-            // gets the parent block
-            file.get('latest','blockchain',(data3) => {
-                var latest = JSON.parse(data3)
-                block.body['parent'] = latest
-
-                // return the block
-                callback(block)
-            })
-        })
-        */
+        postMessage('Block formed, mining initiated')
     }
 
     mine() {
@@ -83,7 +71,7 @@ class Miner {
                     this.block.body['nonce'] = nonce
                     // t2 is updated every loop
                     this.block.body['time'] = this.t2
-                    this.hashBlock(body,(hash) => {
+                    this.hashBlock(this.block.body,(hash) => {
                         this.hashes++
                         this.dhash++
                         // checks difficulty
@@ -93,7 +81,7 @@ class Miner {
                                 pass = false
                             }
                         }
-
+                        this.t2 = Date.now()
                         // this triggers if the block has passed the difficulty test
                         if (pass) {
                             postMessage('Hash found! Nonce: '+nonce)
@@ -106,7 +94,6 @@ class Miner {
                             })
                         } else {
                             // printing for the console
-                            this.t2 = Date.now()
                             if ((this.t2-this.t1) > 10000) {
                                 // calculate hashes per second (maybe)
                                 // *1000 turns it into seconds
@@ -153,29 +140,22 @@ class Miner {
         callback(hashed)
     }
 
-    getDifficulty(blockhash,callback) {
-        var difficulty
+    getTopBlock(callback) {
         fs.readFile(this.path+'blockchain.json',(err,data) => {
-            // even if file is empty throw as that's a problem
             if (err) throw err
-            var blockchain = JSON.parse(data)
-            var oldtime = blockchain[blockhash].time
-            if (Date.now - oldtime < 60000) {
-                difficulty = blockchain[blockhash].difficulty + 1
-            } else {
-                difficulty = blockchain[blockhash].difficulty
+            if (data === '[]' || data === '') {
+                callback(none)
             }
-            callback(difficulty)
-        })
-    }
-
-    getTopBlock() {
-        fs.readFile(this.path+'blockchain.json',(err,data) => {
-            if (err) throw err
             var blockchain = JSON.parse(data)
             // get the first key in the object
             // doesn't matter if it's best it just needs to be valid
-            var best = Object.keys(ahash)[0]
+            for (var best in blockchain) {
+                // this is the fastest way of getting the first key
+                // even if it's kind of messy looking
+                // Object.keys(blockchain)[0] puts the whole object into memory
+                break
+            }
+            // iterates through the blockchain
             for (var key in blockchain) {
                 // larger height the better
                 if (blockchain[key].height > blockchain[best].height) {

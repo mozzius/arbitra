@@ -136,7 +136,7 @@ function mainChain(callback) {
             mainchain[top] = fullchain[top]
             var current = top
             var parent
-            while (fullchain[current].height > 0) {
+            while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
                 parent = fullchain[current].parent
                 mainchain[parent] = fullchain[parent]
                 current = parent

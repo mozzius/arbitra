@@ -42,16 +42,23 @@ function block(body) {
     var len = txlist.length
     var tx
     // verify all the transactions
-    for (var i; i < len; ++i) {
-        tx = txlist[i]
-        try {
-            transaction(tx)
-        } catch(e) {
-            if (e === 'signature' || e === 'amount') {
-                throw 'transaction'
-            }
+    var pass = true
+    for (var i = 0; i < 7; i++) {
+        if (hash.charAt(i) !== 'a') {
+            pass = false
         }
     }
+    if (body.difficulty === 7 && pass)
+        for (var i; i < len; ++i) {
+            tx = txlist[i]
+            try {
+                transaction(tx)
+            } catch(e) {
+                if (e === 'signature' || e === 'amount') {
+                    throw 'transaction'
+                }
+            }
+        }
 }
 
 function chain(chain) {

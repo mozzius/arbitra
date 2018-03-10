@@ -7,12 +7,12 @@ function init() {
         changePage('mine')
     })
     file.getAll('blockchain',(data) => {
-        blockchain = JSON.parse(data)
+        chain = JSON.parse(data)
         var list = document.getElementById('bk-list')
         var listItem
         var block
-        for (var hash in blockchain) {
-            block = blockchain[hash]
+        for (var hash in chain) {
+            block = chain[hash]
             listItem = document.createElement('div')
             listItem.classList.add('list-item')
             // timestamp to date
