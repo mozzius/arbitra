@@ -48,7 +48,7 @@ function block(body) {
             pass = false
         }
     }
-    if (body.difficulty === 7 && pass)
+    if (body.difficulty === 7 && pass) {
         for (var i; i < len; ++i) {
             tx = txlist[i]
             try {
@@ -59,6 +59,9 @@ function block(body) {
                 }
             }
         }
+    } else {
+        throw 'difficulty'
+    }
 }
 
 function chain(chain) {
