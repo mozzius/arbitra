@@ -46,71 +46,67 @@ class Miner {
 
     mine() {
         // repeatedly hashes with a random nonce
-        try {
-            while (true) {
-                this.rand((nonce) => {
-                    this.block.body['nonce'] = nonce
-                    // t2 is updated every loop
-                    this.block.body['time'] = this.t2
-                    this.hashBlock(this.block.body,(hash) => {
-                        this.hashes++
-                        this.dhash++
-                        // checks difficulty
-                        var pass = true
-                        for (var i = 0; i < this.block.body.difficulty; i++) {
-                            if (hash.charAt(i) !== 'a') {
-                                pass = false
-                            }
+        while (true) {
+            this.rand((nonce) => {
+                this.block.body['nonce'] = nonce
+                // t2 is updated every loop
+                this.block.body['time'] = this.t2
+                this.hashBlock(this.block.body,(hash) => {
+                    this.hashes++
+                    this.dhash++
+                    // checks difficulty
+                    var pass = true
+                    for (var i = 0; i < this.block.body.difficulty; i++) {
+                        if (hash.charAt(i) !== 'a') {
+                            pass = false
                         }
-                        this.t2 = Date.now()
-                        // this triggers if the block has passed the difficulty test
-                        if (pass) {
-                            postMessage('Hash found! Nonce: '+nonce)
-                            postMessage(hash)
-                            postMessage(this.block)
-                            // get rid of the pending transactions
-                            fs.writeFileSync(this.path+'txpool.json','[]','utf-8')
-                            // set the new block things
-                            this.block.body.transactions = []
-                            var top = this.getTopBlock()
-                            this.block.body['parent'] = hash
-                            this.block.body['height'] += 1 
-                        } else {
-                            // printing for the console
-                            if ((this.t2-this.t1) > 10000) {
-                                // calculate hashes per second (maybe)
-                                // *1000 turns it into seconds
-                                var hs = (this.dhash/(this.t2-this.t1))*1000
-                                this.dhash = 0
-                                this.t1 = Date.now()
-                                postMessage('Hashing at '+hs.toFixed(3)+' hashes/sec - '+this.hashes+' hashes in '+Math.floor((this.t1-this.tt)/1000)+' seconds')
+                    }
+                    this.t2 = Date.now()
+                    // this triggers if the block has passed the difficulty test
+                    if (pass) {
+                        postMessage('Hash found! Nonce: '+nonce)
+                        postMessage(hash)
+                        postMessage(this.block)
+                        // get rid of the pending transactions
+                        fs.writeFileSync(this.path+'txpool.json','[]','utf-8')
+                        // set the new block things
+                        this.block.body.transactions = []
+                        var top = this.getTopBlock()
+                        this.block.body['parent'] = hash
+                        this.block.body['height'] += 1 
+                    } else {
+                        // printing for the console
+                        if ((this.t2-this.t1) > 10000) {
+                            // calculate hashes per second (maybe)
+                            // *1000 turns it into seconds
+                            var hs = (this.dhash/(this.t2-this.t1))*1000
+                            this.dhash = 0
+                            this.t1 = Date.now()
+                            postMessage('Hashing at '+hs.toFixed(3)+' hashes/sec - '+this.hashes+' hashes in '+Math.floor((this.t1-this.tt)/1000)+' seconds')
 
-                                // check to see if the block has updated
-                                fs.readFile(this.path+'txpool.json','utf-8',(err,content) => {
-                                    if (err) {
-                                        // if the file doesn't exist, set content to []
-                                        if (err.code === 'ENOENT') {
-                                            content = '[]'
-                                        } else {
-                                            alert('Error opening file')
-                                            throw err
-                                        }
+                            // check to see if the block has updated
+                            fs.readFile(this.path+'txpool.json','utf-8',(err,content) => {
+                                if (err) {
+                                    // if the file doesn't exist, set content to []
+                                    if (err.code === 'ENOENT') {
+                                        content = '[]'
+                                    } else {
+                                        postMessage('Error opening file')
+                                        throw err
                                     }
-                                    var current = JSON.stringify(this.block.body.transactions)
-                                    // change the transactions if they are different
-                                    if (current !== content) {
-                                        var newtx = JSON.parse(content)
-                                        this.block.body['transactions'] = newtx
-                                        postMessage('Transactions updated')
-                                    }
-                                })
-                            }
+                                }
+                                var current = JSON.stringify(this.block.body.transactions)
+                                // change the transactions if they are different
+                                if (current !== content) {
+                                    var newtx = JSON.parse(content)
+                                    this.block.body['transactions'] = newtx
+                                    postMessage('Transactions updated')
+                                }
+                            })
                         }
-                    })
+                    }
                 })
-            }
-        } catch(e) {
-            postMessage(e.message)
+            })
         }
     }
 
@@ -191,6 +187,10 @@ onmessage = (path) => {
         var miner = new Miner(path.data)
         miner.mine()
     } catch(e) {
+        postMessage('Error caught')
+        if (typeof e !== 'string') {
+            e = e.message
+        }
         postMessage(e)
     }
 }

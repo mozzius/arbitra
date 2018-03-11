@@ -41,6 +41,11 @@ function init() {
             file.storeAll('blockchain',{})
         }
     })
+    file.getAll('balances',(data) => {
+        if (data === null || data === '' || data === '[]') {
+            file.storeAll('blockchain',{})
+        }
+    })
     file.getAll('connections',(data) => {
         if (data === null || data === '') {
             file.storeAll('connections',[])
@@ -50,12 +55,6 @@ function init() {
         if (data === null || data === '') {
             file.storeAll('recent-connections',[])
         }
-    })
-    file.getAll('blockchain',(data) => {
-        var bc = JSON.parse(data)
-        blockchain.getTopBlock(bc,(top) => {
-            document.getElementById('top').textContent = top
-        })
     })
 }
 

@@ -63,7 +63,7 @@ function updateBalances(block) {
     txs = block.body.transactions
     file.getAll('balances',(balances) => {
         // set the most recent block hash
-        balance['latest'] = block.header.hash
+        balances['latest'] = block.header.hash
         for (var i = 0, len = txs.length; i < len; i++) {
             var from = tx[i].from
             for (var i = 0, len = tx.length; i < len; i++) {
@@ -90,19 +90,29 @@ function updateBalances(block) {
         // calculating the balance in the corner
         file.getAll('wallets',(data) => {
             var wallets = JSON.parse(data)
+            var newWallets = []
             var balance = 0
             wallets.forEach((wallet) => {
+                if (balances.hasOwnProperty(block.miner)) {
+                    amount = balances[wallet.public]
+                }
                 // add the au in the wallet to the total balance
-                balance += balances[wallet.public]
+                balance += amount
                 // and set the balance in the wallet
-                wallet.balance = balances[wallet.public]
+                newWallets.push({
+                    "name": wallet.name,
+                    "public": wallet.public,
+                    "private": wallet.private,
+                    "amount": amount
+                })
             })
             // change microau to au and set the textcontent of the top left thing
             document.getElementById('current-balance').textContent = balance / 100000
             // save balances
             file.storeAll('balances',balances)
+            file.storeAll('wallets',newWallets)
         },'[]')
-    })
+    },'{}')
 }
 
 function addBlock(msg) {
