@@ -18,7 +18,7 @@ function checkBalance(key,amount,callback) {
 }
 
 function calcBalances() {
-    const miningreward = 50000000
+    const miningreward = 5000000
     // mainChain gets the longest chain, as only the blocks under the highest
     // actually count
     mainChain((chain) => {
@@ -52,12 +52,38 @@ function calcBalances() {
                 balances[block.miner] = miningreward
             }
         }
-        file.storeAll('balances',balances)
+        // calculating the balance in the corner
+        file.getAll('wallets',(data) => {
+            var wallets = JSON.parse(data)
+            var newWallets = []
+            var balance = 0
+            wallets.forEach((wallet) => {
+                if (balances.hasOwnProperty(wallet.public)) {
+                    amount = balances[wallet.public]
+                } else {
+                    amount = 0
+                }
+                // add the au in the wallet to the total balance
+                balance += amount
+                // and set the balance in the wallet
+                newWallets.push({
+                    "name": wallet.name,
+                    "public": wallet.public,
+                    "private": wallet.private,
+                    "amount": amount
+                })
+            })
+            // change microau to au and set the textcontent of the top left thing
+            document.getElementById('current-balance').textContent = balance / 100000
+            // save balances
+            file.storeAll('wallets',newWallets)
+            file.storeAll('balances',balances)
+        },'[]')
     })
 }
 
 function updateBalances(block) {
-    const miningreward = 50000000
+    const miningreward = 5000000
     txs = block.body.transactions
     file.getAll('balances',(balances) => {
         // set the most recent block hash
@@ -144,8 +170,6 @@ function mainChain(callback) {
                 mainchain[top] = fullchain[top]
                 var current = top
                 var parent
-                console.log(current)
-                console.log(fullchain[current])
                 while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
                     parent = fullchain[current].parent
                     mainchain[parent] = fullchain[parent]
