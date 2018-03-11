@@ -20,7 +20,7 @@ function init() {
                 try {
                     miner = new Worker('js/mining-script.js')
                     miner.onmessage = (msg) => {
-                        if(typeof msg.data !== 'object') {
+                        if(typeof msg.data === 'string') {
                             pre.innerHTML += msg.data+'<br>'
                         } else {
                             console.log(JSON.stringify(msg.data))

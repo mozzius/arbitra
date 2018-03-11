@@ -43,12 +43,12 @@ function block(body) {
     var tx
     // verify all the transactions
     var pass = true
-    for (var i = 0; i < 7; i++) {
+    for (var i = 0; i < 5; i++) {
         if (hash.charAt(i) !== 'a') {
             pass = false
         }
     }
-    if (body.difficulty === 7 && pass) {
+    if (body.difficulty === 5 && pass) {
         for (var i; i < len; ++i) {
             tx = txlist[i]
             try {

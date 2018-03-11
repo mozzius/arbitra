@@ -86,15 +86,6 @@ function init() {
                 }
                 sendToAll(hr)
             }
-            // set the currency amount in the corner
-            file.getAll('wallets',(data) => {
-                var balance = 0
-                var wallets = JSON.parse(data)
-                wallets.forEach((wallet) => {
-                    balance += wallet.amount
-                })
-                document.getElementById('current-balance').textContent = balance
-            },'[]')
             // finally, save current connections to recent connections
             file.getAll('connections',(data) => {
                 if (connections !== null) {

@@ -19,7 +19,7 @@ function init() {
         data['name'] = name
         data['public'] = document.getElementById('public').textContent
         data['private'] = document.getElementById('private').textContent
-        data['amount'] = '0'
+        data['amount'] = 0
         console.log(JSON.stringify(data))
         file.append('wallets',data,() => {
             changePage('wallets')

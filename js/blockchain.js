@@ -94,6 +94,8 @@ function updateBalances(block) {
             wallets.forEach((wallet) => {
                 // add the au in the wallet to the total balance
                 balance += balances[wallet.public]
+                // and set the balance in the wallet
+                wallet.balance = balances[wallet.public]
             })
             // change microau to au and set the textcontent of the top left thing
             document.getElementById('current-balance').textContent = balance / 100000
