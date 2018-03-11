@@ -20,51 +20,25 @@ class Miner {
                 "difficulty": difficulty
             }
         }
-        fs.readFile(this.path+'blockchain.json','utf-8',(err,data) => {
-            if (err) {
-                // real problem if this doesn't exist, so throw error
-                throw err.message
-            }
-            var blockchain = JSON.parse(data)
 
-            fs.readFile(this.path+'txpool.json','utf-8',(err,data) => {
-                if (err) {
-                    // if the file doesn't exist, set content to []
-                    if (err.code === 'ENOENT') {
-                        data = '[]'
-                    } else {
-                        alert('Error opening file')
-                        throw err
-                    }
-                }
-                if (data === '') {
-                    data = '[]'
-                }
-                var transactions = JSON.parse(data)
-                this.block['transactions'] = transactions
-            })
-        })
+        var transactions = JSON.parse(fs.readFileSync(this.path+'txpool.json','utf-8'))
+        this.block.body['transactions'] = transactions
 
         // parent and height
-        this.getTopBlock((top) => {
-            if (top === null) {
-                this.block.body['parent'] = '0000000000000000000000000000000000000000000000000000000000000000'
-                this.block.body.height = blockchain[top].height = 0
-            } else {
-                this.block.body['parent'] = top
-                this.block.body.height = blockchain[top].height+1
-            }
-        })
+        var top = this.getTopBlock()
+        if (top === null) {
+            this.block.body['parent'] = '0000000000000000000000000000000000000000000000000000000000000000'
+            this.block.body['height'] = 0
+        } else {
+            var blockchain = JSON.parse(fs.readFileSync(this.path+'blockchain.json','utf8'))
+            this.block.body['parent'] = top
+            this.block.body['height'] = blockchain[top].height+1
+        }
+        // miner
+        var wallets = JSON.parse(fs.readFileSync(this.path+'wallets.json','utf-8'))
+        var miner = wallets[0].public
+        this.block.body['miner'] = miner
         
-        fs.readFile(this.path+'wallets.json','utf-8',(err,data) => {
-            if (err) {
-                throw 'Please create a wallet before hashing'
-            }
-            var wallets = JSON.parse(data)
-            var miner = wallets[0].public
-            this.block.body['miner'] = miner
-        })
-
         postMessage('Block formed, mining initiated')
     }
 
@@ -145,35 +119,65 @@ class Miner {
         callback(hashed)
     }
 
-    getTopBlock(callback) {
-        fs.readFile(this.path+'blockchain.json',(err,data) => {
-            if (err) throw err
-            if (data === '[]' || data === '') {
-                callback(none)
-            }
-            var blockchain = JSON.parse(data)
-            // get the first key in the object
-            // doesn't matter if it's best it just needs to be valid
-            for (var best in blockchain) {
-                // this is the fastest way of getting the first key
-                // even if it's kind of messy looking
-                // Object.keys(blockchain)[0] puts the whole object into memory
-                break
-            }
-            // iterates through the blockchain
-            for (var key in blockchain) {
-                // larger height the better
-                if (blockchain[key].height > blockchain[best].height) {
+    getTopBlock() {
+        try {
+            var data = fs.readFileSync(this.path+'blockchain.json','utf8')
+        } catch(e) {
+            return null
+        }
+        if (data === '{}' || data === '') {
+            return null
+        }
+        var fullchain = JSON.parse(data)
+        // get the first key in the object
+        // doesn't matter if it's best it just needs to be valid
+        for (var best in fullchain) {
+            // this is the fastest way of getting the first key
+            // even if it's kind of messy looking
+            // Object.keys(fullchain)[0] puts the whole object into memory
+            break
+        }
+        // iterates through the fullchain
+        for (var key in fullchain) {
+            // larger height the better
+            if (fullchain[key].height > fullchain[best].height) {
+                var candidate = true
+                // iterate down the chain to see if you can reach the bottom
+                // if the parent is undefined at any point it is not part of the main chain
+                // run out of time for a more efficient method
+                var current = key
+                while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    parent = fullchain[current].parent
+                    if (typeof fullchain[parent] !== 'undefined') {
+                        current = parent
+                    } else {
+                        candiate = false
+                    }
+                }
+                if (candidate) {
                     best = key
-                // otherwise, if they're the same pick the oldest one
-                } else if (blockchain[key].height === blockchain[best].height) {
-                    if (blockchain[key].time < blockchain[best].time) {
+                }
+            // otherwise, if they're the same pick the oldest one
+            } else if (fullchain[key].height === fullchain[best].height) {
+                if (fullchain[key].time < fullchain[best].time) {
+                    // see other comments
+                    var candidate = true
+                    var current = key
+                    while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                        parent = fullchain[current].parent
+                        if (typeof fullchain[parent] !== 'undefined') {
+                            current = parent
+                        } else {
+                            candiate = false
+                        }
+                    }
+                    if (candidate) {
                         best = key
                     }
-                } 
+                }
             }
-            callback(best)
-        })
+        }
+        return best
     }
 }
 
