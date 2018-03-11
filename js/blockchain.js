@@ -107,7 +107,7 @@ function updateBalances(block) {
 
 function addBlock(msg) {
     // doublecheck the hash
-    if (msg.header.hash == hash.sha256hex(JSON.stringify(msg.body))) {
+    if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
         try {
             block(msg)
             // if it failed the test, an error will have been thrown
@@ -122,10 +122,11 @@ function addBlock(msg) {
             },'[]')
             updateBalances(msg)
         } catch(e) {
-            console.warn('Block failed:',JSON.stringify(block))
+            console.warn('Block failed:',JSON.stringify(msg))
+            console.warn(e)
         }
     } else {
-        console.warn('Blocks hash failed:',JSON.stringify(block))
+        console.warn('Blocks hash failed:',JSON.stringify(msg))
     }
 }
 
