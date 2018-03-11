@@ -49,7 +49,7 @@ function init() {
 
     // this is a loop that maintains connections and
     // sends top hash requests to make sure the client is up to date
-    // it goes on forever, every 30 seconds
+    // it goes on forever, every minute
     setInterval(() => {
         console.log('Interval')
         var connections = parseInt(document.getElementById('connections').textContent)
@@ -93,7 +93,7 @@ function init() {
                 }
             })
         },5) // if it fails to open the file it sets target to five
-    },30000)
+    },60000)
 }
 
 function connect(backup=true) {
