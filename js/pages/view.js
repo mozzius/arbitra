@@ -20,7 +20,7 @@ function init() {
             var date = new Date(block.time*1000).toISOString().slice(-13, -5)
             // pretty printing json
             var txs = JSON.stringify(block.transactions,null,4)
-            listItem.innerHTML = '<p><b>Time:</b> '+date+'</p><p><b>Hash:</b> '+hash+'</p><p><b>Miner:</b> '+block.miner+'</p><p><b>Transactions:</b><p>'
+            listItem.innerHTML = '<p><b>Time:</b> '+date+'</p><p><b>Hash:</b> '+hash+'</p><p><b>Parent:</b> '+block.parent+'</p><p><b>Miner:</b> '+block.miner+'</p><p><b>Transactions:</b><p>'
             list.appendChild(listItem)
         }
     })
