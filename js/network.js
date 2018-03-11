@@ -256,15 +256,19 @@ function parseReply(data,ip,callback=(a)=>{}) {
                 // chain
                 parse.cn(msg)
             } else if (msg.header.type === 'th') {
-                // file.
+                // top hash
                 parse.th(msg)
             } else if (msg.header.type === 'nd') {
+                // nodes
                 parse.nd(msg)
             } else if (msg.header.type === 'pg') {
+                // ping
                 parse.pgreply(msg,ip)
             } else if (msg.header.type === 'ok') {
+                // message received ok
                 console.info('message recieved ok')
             } else if (msg.hedaer.type === 'er') {
+                // error (uh oh)
                 console.warn('We recieved an error')
                 parse.er(msg)
             } else {

@@ -3,6 +3,7 @@ const fs = require('fs')
 
 class Miner {
     constructor(path) {
+        const difficulty = 5
         this.path = path
         // this is for the printing later
         this.hashes = 0
@@ -13,10 +14,10 @@ class Miner {
         // difficulty is static
         this.block = {
             "header": {
-                "type": "bl"
+                "type": "bk"
             },
             "body": {
-                "difficulty": 7
+                "difficulty": difficulty
             }
         }
         fs.readFile(this.path+'blockchain.json','utf-8',(err,data) => {
