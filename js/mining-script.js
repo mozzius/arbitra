@@ -47,9 +47,10 @@ class Miner {
             if (top === null) {
                 this.block.body['parent'] = '0000000000000000000000000000000000000000000000000000000000000000'
                 this.block.body.height = blockchain[top].height = 0
+            } else {
+                this.block.body['parent'] = top
+                this.block.body.height = blockchain[top].height+1
             }
-            this.block.body['parent'] = top
-            this.block.body.height = blockchain[top].height+1
         })
         
         fs.readFile(this.path+'wallets.json','utf-8',(err,data) => {
@@ -87,10 +88,10 @@ class Miner {
                         if (pass) {
                             postMessage('Hash found! Nonce: '+nonce)
                             postMessage(hash)
+                            postMessage(this.block)
                             // get rid of the pending transactions
                             fs.writeFile(this.path+'txpool.json','[]','utf-8',(err) => {
                                 if (err) throw err
-                                network.sendToAll(this.block)
                                 this.block.body.transactions = '[]'
                             })
                         } else {

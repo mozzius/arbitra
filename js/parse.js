@@ -328,8 +328,9 @@ function cr(msg,callback) {
 }
 
 function cn(msg) {
-    console.log('Recieved chain: '+JSON.stringify(msg))
-    console.error('TODO: DO SOMETHING WITH IT')
+    msg.body.chain.forEach((testblock) => {
+        blockchain.addBlock(testblock)
+    })
 }
 
 function er(msg) {

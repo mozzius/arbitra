@@ -36,8 +36,8 @@ function init() {
         }
     })
     file.getAll('blockchain',(data) => {
-        if (data === null || data === '') {
-            file.storeAll('blockchain',[])
+        if (data === null || data === '' || data === '[]') {
+            file.storeAll('blockchain',{})
         }
     })
     file.getAll('connections',(data) => {

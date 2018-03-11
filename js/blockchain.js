@@ -111,29 +111,29 @@ function addBlock(msg) {
         try {
             block(msg)
             // if it failed the test, an error will have been thrown
-            file.get(msg.header.hash,'blockchain',(data) => {
-                file.store(msg.header.hash,msg.body,'blockchain')
-                    file.getAll('txpool',(data) => {
-                        var txpool = JSON.parse(data)
-                        msg.body.transactions.forEach((tx) => {
-                            // remove pending transactions if they're in the received block
-                            txpool.splice(txpool.indexOf(tx),1)
-                        })
-                        file.storeAll('txpool',txpool)
-                    },'[]')
-                updateBalances(msg)
-            })
+            file.store(msg.header.hash,msg.body,'blockchain')
+            file.getAll('txpool',(data) => {
+                var txpool = JSON.parse(data)
+                msg.body.transactions.forEach((tx) => {
+                    // remove pending transactions if they're in the received block
+                    txpool.splice(txpool.indexOf(tx),1)
+                })
+                file.storeAll('txpool',txpool)
+            },'[]')
+            updateBalances(msg)
         } catch(e) {
             console.warn('Block failed:',JSON.stringify(block))
         }
+    } else {
+        console.warn('Blocks hash failed:',JSON.stringify(block))
     }
 }
 
 function mainChain(callback) {
     var mainchain = {}
-    file.getAll('blockchain',(fullchain) => {
+    file.getAll('blockchain',(data) => {
         // assume that the file exists
-        var blockchain = JSON.parse(data)
+        var fullchain = JSON.parse(data)
         getTopBlock(fullchain,(top) => {
             mainchain[top] = fullchain[top]
             var current = top
@@ -148,26 +148,54 @@ function mainChain(callback) {
     })
 }
 
-function getTopBlock(blockchain,callback) {
+function getTopBlock(fullchain,callback) {
     // get the first key in the object
     // doesn't matter if it's best it just needs to be valid
-    for (var best in blockchain) {
+    for (var best in fullchain) {
         // this is the fastest way of getting the first key
         // even if it's kind of messy looking
-        // Object.keys(blockchain)[0] puts the whole object into memory
+        // Object.keys(fullchain)[0] puts the whole object into memory
         break
     }
-    // iterates through the blockchain
-    for (var key in blockchain) {
+    // iterates through the fullchain
+    for (var key in fullchain) {
         // larger height the better
-        if (blockchain[key].height > blockchain[best].height) {
-            best = key
-        // otherwise, if they're the same pick the oldest one
-        } else if (blockchain[key].height === blockchain[best].height) {
-            if (blockchain[key].time < blockchain[best].time) {
+        if (fullchain[key].height > fullchain[best].height) {
+            var candidate = true
+            // iterate down the chain to see if you can reach the bottom
+            // if the parent is undefined at any point it is not part of the main chain
+            // run out of time for a more efficient method
+            var current = key
+            while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                parent = fullchain[current].parent
+                if (typeof fullchain[parent] !== 'undefined') {
+                    current = parent
+                } else {
+                    candiate = false
+                }
+            }
+            if (candidate) {
                 best = key
             }
-        } 
+        // otherwise, if they're the same pick the oldest one
+        } else if (fullchain[key].height === fullchain[best].height) {
+            if (fullchain[key].time < fullchain[best].time) {
+                // see other comments
+                var candidate = true
+                var current = key
+                while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    parent = fullchain[current].parent
+                    if (typeof fullchain[parent] !== 'undefined') {
+                        current = parent
+                    } else {
+                        candiate = false
+                    }
+                }
+                if (candidate) {
+                    best = key
+                }
+            }
+        }
     }
     callback(best)
 }
