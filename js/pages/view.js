@@ -3,7 +3,7 @@ const blockchain = require('../blockchain.js')
 const changePage = require('../changepage').changePage
 
 function init() {
-    document.getElementById('mine').addEventListener('click', function () {
+    document.getElementById('mine-button').addEventListener('click',() => {
         changePage('mine')
     })
     file.getAll('blockchain',(data) => {

@@ -46,6 +46,12 @@ function init() {
     // inital connection attempt, false makes sure it doesn't try to
     // connect to backup server on the first try
     connect(false)
+    
+    try {
+        blockchain.calcBalances()
+    } catch(e) {
+        console.warn('calcBalances() failed')
+    }
 
     // this is a loop that maintains connections and
     // sends top hash requests to make sure the client is up to date

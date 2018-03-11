@@ -86,11 +86,12 @@ function tx(msg,callback) {
     // verify that it works
     transaction(msg.body)
     // add to txpool
-    file.append(tx.body)
-    // send to contacts
-    sendToAll(msg)
-    // reply
-    callback(reply)
+    file.append('txpool',msg.body,() => {
+        // send to contacts
+        sendToAll(msg)
+        // reply
+        callback(reply)
+    })
 }
 
 function bk(msg,callback) {

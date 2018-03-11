@@ -21,18 +21,16 @@ function calcBalances() {
     const miningreward = 50000000
     // mainChain gets the longest chain, as only the blocks under the highest
     // actually count
-    mainChain((data) => {
+    mainChain((chain) => {
         var balances = {}
-        var block
         // iterate through the blocks
-        for (var i = 0, len = data.length; i < len; i++) {
-            block = data[i]
-            txs = block.transactions
+        for (var key in chain) {
+            var block = chain[key]
+            transactions = block.transactions
             // iterate through each block to find each transaction
-            for (var j = 0, len = txs.length; j < len; j++) {
-                var from = tx[j].from
+            transactions.forEach((transaction) => {
                 // iterate through the inputs
-                for (var k = 0, len = tx.length; i < len; k++) {
+                transaction.from.forEach((from) => {
                     // deduct amounts from the inputs
                     if (balances.hasOwnProperty(from.wallet)) {
                         balances[from.wallet] -= from.amount
@@ -40,21 +38,20 @@ function calcBalances() {
                         balances[from.wallet] = -from.amount
                     }
                     // add amount to the recipient's balance
-                    if (balances.hasOwnProperty(tx[k].to)) {
-                        balances[tx[k].to] += from.amount
+                    if (balances.hasOwnProperty(transaction.to)) {
+                        balances[transaction.to] += from.amount
                     } else {
-                        balances[tx[k].to] = from.amount
+                        balances[transaction.to] = from.amount
                     }
-                }
-            }
+                })
+            })
             // mining rewards
             if (balances.hasOwnProperty(block.miner)) {
-                balances[block.to] += miningreward
+                balances[block.miner] += miningreward
             } else {
-                balances[block.to] = miningreward
+                balances[block.miner] = miningreward
             }
         }
-        var data = JSON.stringify(balances)
         file.storeAll('balances',data)
     })
 }
@@ -129,7 +126,7 @@ function addBlock(msg) {
             })
             file.storeAll('txpool',txpool)
         },'[]')
-        updateBalances(msg)
+        calcBalances()
     } catch(e) {
         console.warn('Block failed:',JSON.stringify(msg))
         console.warn(e)
@@ -140,13 +137,15 @@ function mainChain(callback) {
     var mainchain = {}
     file.getAll('blockchain',(data) => {
         var fullchain = JSON.parse(data)
-        if (fullchain === []) {
+        if (fullchain === {}) {
             callback(data)
         } else {
             getTopBlock(fullchain,(top) => {
                 mainchain[top] = fullchain[top]
                 var current = top
                 var parent
+                console.log(current)
+                console.log(fullchain[current])
                 while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
                     parent = fullchain[current].parent
                     mainchain[parent] = fullchain[parent]
