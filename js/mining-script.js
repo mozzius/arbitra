@@ -146,8 +146,7 @@ class Miner {
                 // if the parent is undefined at any point it is not part of the main chain
                 // run out of time for a more efficient method
                 var current = key
-                postMessage(current)
-                postMessage(fullchain[current].parent)
+                var parent
                 while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
                     parent = fullchain[current].parent
                     if (typeof fullchain[parent] !== 'undefined') {
