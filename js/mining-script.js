@@ -21,6 +21,8 @@ class Miner {
             }
         }
 
+        // talk about switching to syncronous
+
         var transactions = JSON.parse(fs.readFileSync(this.path+'txpool.json','utf-8'))
         this.block.body['transactions'] = transactions
 
@@ -38,7 +40,7 @@ class Miner {
         var wallets = JSON.parse(fs.readFileSync(this.path+'wallets.json','utf-8'))
         var miner = wallets[0].public
         this.block.body['miner'] = miner
-        
+
         postMessage('Block formed, mining initiated')
     }
 
