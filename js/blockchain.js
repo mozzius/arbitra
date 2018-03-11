@@ -31,6 +31,7 @@ function calcBalances() {
             // iterate through each block to find each transaction
             for (var j = 0, len = txs.length; j < len; j++) {
                 var from = tx[j].from
+                // iterate through the inputs
                 for (var k = 0, len = tx.length; i < len; k++) {
                     // deduct amounts from the inputs
                     if (balances.hasOwnProperty(from.wallet)) {

@@ -14,8 +14,7 @@ function init() {
                 listItem = document.createElement('div')
                 listItem.classList.add('list-item')
                 // timestamp to date
-                // from https://stackoverflow.com/a/35890537
-                var date = new Date(tx.time*1000).toISOString().slice(-13, -5)
+                var date = new Date(tx.time).toString()
                 listItem.innerHTML = '<p><b>Time:</b> '+date+'</p><p><b>To:</b> '+tx.to+'</p><p><b>Amount:</b> <span class="money">'+tx.amount+'</span></p>'
                 txList.appendChild(listItem)
             })

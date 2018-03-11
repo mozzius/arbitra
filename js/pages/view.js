@@ -16,11 +16,10 @@ function init() {
             listItem = document.createElement('div')
             listItem.classList.add('list-item')
             // timestamp to date
-            // from https://stackoverflow.com/a/35890537
-            var date = new Date(block.time*1000).toISOString().slice(-13, -5)
+            var date = new Date(block.time).toString()
             // pretty printing json
             var txs = JSON.stringify(block.transactions,null,4)
-            listItem.innerHTML = '<p><b>Time:</b> '+date+'</p><p><b>Hash:</b> '+hash+'</p><p><b>Parent:</b> '+block.parent+'</p><p><b>Miner:</b> '+block.miner+'</p><p><b>Transactions:</b><p>'
+            listItem.innerHTML = '<p><b>Time:</b> '+date+'</p><p><b>Hash:</b> '+hash+'</p><p><b>Parent:</b> '+block.parent+'</p><p><b>Miner:</b> '+block.miner+'</p><p><b>Height:</b> '+block.height+'</p><p><b>Transactions:</b><p>'
             list.appendChild(listItem)
         }
     })
