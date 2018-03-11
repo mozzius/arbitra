@@ -46,7 +46,6 @@ function init() {
     // inital connection attempt, false makes sure it doesn't try to
     // connect to backup server on the first try
     connect(false)
-    blockchain.calcBalances()
 
     // this is a loop that maintains connections and
     // sends top hash requests to make sure the client is up to date
@@ -77,7 +76,6 @@ function init() {
             if (connections === 0) {
                 document.getElementById('nonodes').classList.remove('hidden')
             } else {
-                document.getElementById('nonodes').classList.add('hidden')
                 // check that the chain is up to date
                 var hr = {
                     "header": {

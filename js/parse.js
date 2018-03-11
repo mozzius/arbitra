@@ -208,6 +208,7 @@ function pgreply(msg,ip) {
         if (!repeat && ip !== ourip()) {
             file.append('connections',store,() => {
                 console.log('Connection added: '+ip)
+                document.getElementById('nonodes').classList.add('hidden')
                 var current = document.getElementById('connections').textContent
                 document.getElementById('connections').textContent = parseInt(current) + 1
             })

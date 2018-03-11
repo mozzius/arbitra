@@ -29,9 +29,9 @@ function calcBalances() {
             block = data[i]
             txs = block.transactions
             // iterate through each block to find each transaction
-            for (var i = 0, len = txs.length; i < len; i++) {
-                var from = tx[i].from
-                for (var i = 0, len = tx.length; i < len; i++) {
+            for (var j = 0, len = txs.length; j < len; j++) {
+                var from = tx[j].from
+                for (var k = 0, len = tx.length; i < len; k++) {
                     // deduct amounts from the inputs
                     if (balances.hasOwnProperty(from.wallet)) {
                         balances[from.wallet] -= from.amount
@@ -39,10 +39,10 @@ function calcBalances() {
                         balances[from.wallet] = -from.amount
                     }
                     // add amount to the recipient's balance
-                    if (balances.hasOwnProperty(tx[i].to)) {
-                        balances[tx[i].to] += from.amount
+                    if (balances.hasOwnProperty(tx[k].to)) {
+                        balances[tx[k].to] += from.amount
                     } else {
-                        balances[tx[i].to] = from.amount
+                        balances[tx[k].to] = from.amount
                     }
                 }
             }
@@ -138,20 +138,23 @@ function addBlock(msg) {
 function mainChain(callback) {
     var mainchain = {}
     file.getAll('blockchain',(data) => {
-        // assume that the file exists
         var fullchain = JSON.parse(data)
-        getTopBlock(fullchain,(top) => {
-            mainchain[top] = fullchain[top]
-            var current = top
-            var parent
-            while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
-                parent = fullchain[current].parent
-                mainchain[parent] = fullchain[parent]
-                current = parent
-            }
-            callback(mainchain)
-        })
-    })
+        if (fullchain === []) {
+            callback(data)
+        } else {
+            getTopBlock(fullchain,(top) => {
+                mainchain[top] = fullchain[top]
+                var current = top
+                var parent
+                while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    parent = fullchain[current].parent
+                    mainchain[parent] = fullchain[parent]
+                    current = parent
+                }
+                callback(mainchain)
+            })
+        }
+    },'[]')
 }
 
 function getTopBlock(fullchain,callback) {

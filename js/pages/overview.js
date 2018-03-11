@@ -1,11 +1,12 @@
 const file = require('../file')
 const blockchain = require('../blockchain.js')
+const ecdsa = require('../ecdsa.js')
 
 function init() {
     // since it runs when you start the program
     // might as well check all the files exist
     file.getAll('wallets',(data) => {
-        if (data === null) {
+        if (data === null || data === '' || data === '{}') {
             ecdsa.createKeys((public, private, err) => {
                 if(err) {
                     console.error(err)
@@ -17,7 +18,7 @@ function init() {
                         "private": private,
                         "amount": 0
                     }
-                    file.storeAll('wallets',wallet)
+                    file.storeAll('wallets',[wallet])
                 }
             })
         }
