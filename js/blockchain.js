@@ -52,7 +52,7 @@ function calcBalances() {
                 balances[block.miner] = miningreward
             }
         }
-        file.storeAll('balances',data)
+        file.storeAll('balances',balances)
     })
 }
 
