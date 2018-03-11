@@ -1,4 +1,5 @@
 const file = require('../file')
+const blockchain = require('../blockchain.js')
 
 function init() {
     // since it runs when you start the program
@@ -49,6 +50,12 @@ function init() {
         if (data === null || data === '') {
             file.storeAll('recent-connections',[])
         }
+    })
+    file.getAll('blockchain',(data) => {
+        var bc = JSON.parse(data)
+        blockchain.getTopBlock(bc,(top) => {
+            document.getElementById('top').textContent = top
+        })
     })
 }
 

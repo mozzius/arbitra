@@ -114,9 +114,15 @@ function connect(backup=true) {
                     "advertise": advertise
                 }
             }
-            connections.forEach((node) => {
-                sendMsg(ping,node.ip)
-            })
+            file.getAll('connections',(curdata) => {
+                var current = JSON.parse(curdata)
+                connections.forEach((node) => {
+                    if (!current.includes(node)) {
+                        sendMsg(ping,node.ip)
+                    }
+                })
+            },'[]')
+            
             // get the number of connections from textContent
             var connectCount = parseInt(document.getElementById('connections').textContent)
             if (connectCount === 0 && backup) {
@@ -171,9 +177,12 @@ function sendMsg(msg,ip,callback) {
                     })
                 })
                 client.on('close',() => {
-                    console.log('Connection closed')
                 })
                 client.on('timeout',() => {
+                    console.warn('Client timed out')
+                    client.destroy()
+                })
+                client.on('error',(e) => {
                     console.warn('Client timed out')
                     client.destroy()
                 })

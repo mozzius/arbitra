@@ -40,7 +40,7 @@ class Miner {
         var wallets = JSON.parse(fs.readFileSync(this.path+'wallets.json','utf-8'))
         var miner = wallets[0].public
         this.block.body['miner'] = miner
-
+        
         postMessage('Block formed, mining initiated')
     }
 
@@ -69,10 +69,13 @@ class Miner {
                             postMessage(hash)
                             postMessage(this.block)
                             // get rid of the pending transactions
-                            fs.writeFile(this.path+'txpool.json','[]','utf-8',(err) => {
-                                if (err) throw err
-                                this.block.body.transactions = []
-                            })
+                            fs.writeFileSync(this.path+'txpool.json','[]','utf-8')
+                            // set the new block things
+                            this.block.body.transactions = []
+                            var top = this.getTopBlock()
+                            var blockchain = JSON.parse(fs.readFileSync(this.path+'blockchain.json','utf8'))
+                            this.block.body['parent'] = top
+                            this.block.body['height'] = blockchain[top].height+1
                         } else {
                             // printing for the console
                             if ((this.t2-this.t1) > 10000) {
