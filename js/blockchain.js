@@ -151,8 +151,8 @@ function addBlock(msg) {
                 txpool.splice(txpool.indexOf(tx),1)
             })
             file.storeAll('txpool',txpool)
+            calcBalances()
         },'[]')
-        calcBalances()
     } catch(e) {
         console.warn('Block failed:',JSON.stringify(msg))
         console.warn(e)
