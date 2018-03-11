@@ -109,7 +109,7 @@ function addBlock(msg) {
     try {
         parse.block(msg.body)
         // if it failed the test, an error will have been thrown
-        file.store(msg.header.hash,msg.body,'blockchain')
+        file.store(hash.sha256hex(JSON.stringify(msg.body)),msg.body,'blockchain')
         file.getAll('txpool',(data) => {
             var txpool = JSON.parse(data)
             msg.body.transactions.forEach((tx) => {
