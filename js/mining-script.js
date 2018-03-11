@@ -37,6 +37,9 @@ class Miner {
                         throw err
                     }
                 }
+                if (data === '') {
+                    data = '[]'
+                }
                 var transactions = JSON.parse(data)
                 this.block['transactions'] = transactions
             })
@@ -92,7 +95,7 @@ class Miner {
                             // get rid of the pending transactions
                             fs.writeFile(this.path+'txpool.json','[]','utf-8',(err) => {
                                 if (err) throw err
-                                this.block.body.transactions = '[]'
+                                this.block.body.transactions = []
                             })
                         } else {
                             // printing for the console
