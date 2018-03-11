@@ -41,10 +41,11 @@ function block(body) {
     var txlist = body.transactions
     var len = txlist.length
     var tx
+    var blockhash = hash.sha256hex(JSON.stringify(body))
     // verify all the transactions
     var pass = true
     for (var i = 0; i < 5; i++) {
-        if (hash.charAt(i) !== 'a') {
+        if (blockhash.charAt(i) !== 'a') {
             pass = false
         }
     }

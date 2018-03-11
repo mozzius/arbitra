@@ -1,6 +1,7 @@
 const file = require('./file.js')
 const hash = require('./hashing.js')
 const ecdsa = require('./ecdsa.js')
+const parse = require('./parse.js')
 
 function getBlock(hash,callback) {
     file.get(hash,'blockchain',(result) => {
@@ -10,9 +11,8 @@ function getBlock(hash,callback) {
 
 function checkBalance(key,amount,callback) {
     file.get(key,'balances',(balance) => {
-        // returns true if the wallet's balance
-        // is less than or equal to the amount
-        // requested
+        // returns true if the wallet's balance is
+        // less than or equal to the amount requested
         callback(balance >= amount)
     })
 }
@@ -106,27 +106,22 @@ function updateBalances(block) {
 }
 
 function addBlock(msg) {
-    // doublecheck the hash
-    if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
-        try {
-            block(msg)
-            // if it failed the test, an error will have been thrown
-            file.store(msg.header.hash,msg.body,'blockchain')
-            file.getAll('txpool',(data) => {
-                var txpool = JSON.parse(data)
-                msg.body.transactions.forEach((tx) => {
-                    // remove pending transactions if they're in the received block
-                    txpool.splice(txpool.indexOf(tx),1)
-                })
-                file.storeAll('txpool',txpool)
-            },'[]')
-            updateBalances(msg)
-        } catch(e) {
-            console.warn('Block failed:',JSON.stringify(msg))
-            console.warn(e)
-        }
-    } else {
-        console.warn('Blocks hash failed:',JSON.stringify(msg))
+    try {
+        parse.block(msg.body)
+        // if it failed the test, an error will have been thrown
+        file.store(msg.header.hash,msg.body,'blockchain')
+        file.getAll('txpool',(data) => {
+            var txpool = JSON.parse(data)
+            msg.body.transactions.forEach((tx) => {
+                // remove pending transactions if they're in the received block
+                txpool.splice(txpool.indexOf(tx),1)
+            })
+            file.storeAll('txpool',txpool)
+        },'[]')
+        updateBalances(msg)
+    } catch(e) {
+        console.warn('Block failed:',JSON.stringify(msg))
+        console.warn(e)
     }
 }
 
