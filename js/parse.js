@@ -121,7 +121,7 @@ function hr(msg,callback) {
                         "hash": top
                     }
                 }
-                callback(top)
+                callback(reply)
             })
         }
     })
