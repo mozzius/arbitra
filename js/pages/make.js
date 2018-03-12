@@ -46,7 +46,7 @@ function populateDropdown(select) {
         wallets.forEach((wallet) => {
             option = document.createElement('option')
             option.value = wallet.public
-            option.text = wallet.amount+"au - "+wallet.name
+            option.text = wallet.amount/100000+"au - "+wallet.name
             select.add(option)
         })
     })
@@ -89,7 +89,7 @@ function sendTx() {
                 console.log(amount)
                 if (wallet && amount > 0) {
                     // convert to microau
-                    amount *= 1000000
+                    amount *= 100000
                     // the message that is signed
                     var concat = amount+to+time
                     var signature = ecdsa.signMsg(concat,convert[wallet],(signature) => {
@@ -107,8 +107,8 @@ function sendTx() {
             console.log('Transaction: '+JSON.stringify(message))
             parse.transaction(message.body)
             network.sendToAll(message)
-            file.append('txpool',msg.body)
-            file.append('recenttx',msg.body)
+            file.append('txpool',message.body)
+            file.append('recenttx',message.body)
         } catch(e) {
             document.getElementById('error').classList.remove('hidden')
             console.warn('Tx failed: '+e)
