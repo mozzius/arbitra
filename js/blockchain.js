@@ -144,6 +144,7 @@ function addBlock(msg) {
         parse.block(msg.body)
         // if it failed the test, an error will have been thrown
         file.store(hash.sha256hex(JSON.stringify(msg.body)),msg.body,'blockchain')
+        console.log('Block added')
         file.getAll('txpool',(data) => {
             var txpool = JSON.parse(data)
             msg.body.transactions.forEach((tx) => {
@@ -165,17 +166,19 @@ function mainChain(callback) {
         if (data === '{}') {
             callback({})
         } else {
-            var fullchain = JSON.parse(data)
-            getTopBlock(fullchain,(top) => {
-                mainchain[top] = fullchain[top]
-                var current = top
-                var parent
-                while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
-                    parent = fullchain[current].parent
-                    mainchain[parent] = fullchain[parent]
-                    current = parent
-                }
-                callback(mainchain)
+            setTimeout(() => {
+                var fullchain = JSON.parse(data)
+                getTopBlock(fullchain,(top) => {
+                    mainchain[top] = fullchain[top]
+                    var current = top
+                    var parent
+                    while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                        parent = fullchain[current].parent
+                        mainchain[parent] = fullchain[parent]
+                        current = parent
+                    }
+                    callback(mainchain)
+                })
             })
         }
     },'[]')

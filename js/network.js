@@ -175,7 +175,7 @@ function sendMsg(msg,ip,callback) {
                 file.append('sent',msg.header.hash)
                 client.on('data',(data) => {
                     console.log('Client received: '+data)
-                    parseReply(data,ip,(type) => {
+                    parseReply(data,ip,() => {
                         client.destroy()
                     })
                 })
@@ -248,10 +248,9 @@ function parseMsg(data,ip,callback) {
     }
 }
 
-function parseReply(data,ip,callback=(a)=>{}) {
+function parseReply(data,ip,callback=()=>{}) {
     // parse incoming replies
     // by calling parse functions
-    var type
     try {
         var msg = JSON.parse(data)
         if (msg.header.hash == hash.sha256hex(JSON.stringify(msg.body))) {
@@ -286,7 +285,7 @@ function parseReply(data,ip,callback=(a)=>{}) {
         file.append('error-log',msg)
     } finally {
         // call the callback, if needed
-        callback(msg.header.type)
+        callback()
     }
 }
 
