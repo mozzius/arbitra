@@ -142,7 +142,7 @@ function connect(backup=true) {
                 document.getElementById('nonodes').classList.add('hidden')
             }
         })
-    })
+    },'[]')
 }
 
 function sendMsg(msg,ip,callback) {
