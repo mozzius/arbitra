@@ -78,6 +78,13 @@ function init() {
                         sendToAll(nr)
                     }
                 },3000)
+            } else {
+                // save current connections to recent connections
+                file.getAll('connections',(data) => {
+                    if (connections !== null) {
+                        file.storeAll('recent-connections',JSON.parse(data))
+                    }
+                })
             }
             connections = parseInt(document.getElementById('connections').textContent)
             if (connections === 0) {
@@ -92,12 +99,6 @@ function init() {
                 }
                 sendToAll(hr)
             }
-            // finally, save current connections to recent connections
-            file.getAll('connections',(data) => {
-                if (connections !== null) {
-                    file.storeAll('recent-connections',JSON.parse(data))
-                }
-            })
         },5) // if it fails to open the file it sets target to five
     },60000)
 }
@@ -292,7 +293,7 @@ function parseReply(data,ip,callback=()=>{}) {
 function sendToAll(msg) {
     file.getAll('connections',(data) => {
         // doesn't do anything if there's no connections
-        if (data !== null || data === '' || data === []) {
+        if (data !== null || data === '' || data === '[]') {
             nodes = JSON.parse(data)
             // go through connections and send a message to each
             nodes.forEach((node) => {

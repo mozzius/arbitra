@@ -411,144 +411,31 @@ exports.sha256hex = sha256hex
 
 Now we can import our hashing function from all over the application.
 
-### Message Sending/Receiving
-
-In the design phase we figured out how to use the `net` module to set up a TCP server. Now, we need to create a system where we can send and receive messages in the background of the application, all while the rest of the app does it's own stuff. First of all, I put the code from the design stage in it's own file, `network.js`. We can them import it into `renderer.js` to run in the background of the application.
-
-```javascript
-const net = require('net')
-const hash = require('./hashing.js')
-
-function init() {
-    var server = net.createServer((socket) => {
-        console.log("Server created")
-        socket.on("data",(data) => {
-            console.log("Server received: "+data)
-            var hashed = hash.sha256hex(data)
-            socket.write(hashed)
-        })
-        socket.on("end",socket.end)
-    })
-    
-    server.listen(2018)
-}
-
-function sendMsg(message,ip) {
-    var client = new net.Socket()
-    client.connect(2018,ip,() => {
-        client.write(message)
-        client.on("data",(data) => {
-            console.log("Client received: "+data)
-            client.destroy()
-        })
-        client.on("close",() => {
-            console.log("Connection closed")
-        })
-    })
-}
-
-exports.init = init
-exports.sendMsg = sendMsg
-```
-
-Then in `renderer.js`, after it calls the `changePage()` function, I put this:
-
-```javascript
-const network = require('./js/network.js')
-
-...
-
-network.init()
-network.sendMsg("hello","127.0.0.1")
-```
-
-This produced:
-
-```console
-C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\network.js:6 Server created
-C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\network.js:8 Server received: hello
-C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\network.js:23 Client received: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
-C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\network.js:27 Connection closed
-renderer.js:13 Page change: overview
-C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\overview.js:2 overview.js loaded
-```
-
-This is promising. We can run the `sendMsg()` function from anywhere and the server will reply. Now we need to structure the server so that it can reply as we want it to.
-
-```javascript
-var server = net.createServer((socket) => {
-        console.log("Server created")
-        socket.on("data",(data) => {
-            console.log("Server received: "+data)
-            parseMsg(data,(reply) => {
-                socket.write(reply)
-            })
-        })
-        socket.on("end",socket.end)
-    })
-```
-
-This passes received data to the `parseMsg()` function, which should return a reply which the server then sends back. This will be created later. For testing purposes, it simply returns a hash of the input message.
-
-```javascript
-function parseMsg(data,callback) {
-    callback(hash.sha256hex(data))
-}
-```
-
-But what causes clients to start sending messages in the first place? We need to make the system where it figures out the data it needs and starts asking for it without prompting. When the app starts up, it needs to check the following
-
-### Message Parsing/Processing
-
-Once a message has been received, we need to parse it and send it's information on into the system. We also need to ensure that a message is valid, as one of the critical parts of a cryptocurrency is ensuring that all messages are correct and valid.
-
-First, I created an example message, that is a transaction.
-
-```javascript
-var message = {
-  header: {
-    type: "tx",
-    hash: "b3fa55f98fcfcaf6a15a7c4eb7cdd1b593693d3fef2fb7aec3b6768fd7c6a4ce",
-    size: 10
-    version: "0.0.1"
-    time: 12931802
-  },
-  body: {
-    sender: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
-    reciever: "b3fa55f98fcfcaf6a15a7c4eb7cdd1b593693d3fef2fb7aec3b6768fd7c6a4ce",
-    amount: "12",
-    time: 1516831879816
-  }
-}
-```
-
-This is  a JSON object that represents a transaction. Whilst it is not at all correct, we can use it for testing the system as we build it. The function that the server calls is called `parseMsg()`, and it takes the received data and a callback function. First of all, we need to be able to store sent transactions.
-
-#### Storing Messages
+### File
 
 As mentioned previously, to avoid messages going in circles we need to store the hashes of received messages so that we don't resend it to people. For this, we will store in a JSON file the hash of the sent messages, along with the IP addresses that it has sent them to. The file will be in the following format:
 
 ```json
 {
     "b3fa55f98fcfcaf6a15a7c4eb7cdd1b593693d3fef2fb7aec3b6768fd7c6a4ce": ["168.12.143.1","168.991.125.6"],
-    "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824": ["localhost"]
+    "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824": ["127.0.0.1"]
 }
 ```
 
 By using the hash as a key, we can simply use `file[hash]` to retrieve the array of addresses that that message was sent to, which is far easier and more efficient than having to search for it.
 
-##### store
+The method by which you read and write to files in Node.js is using the `fs`  (file system) module, a default library. However, it is powerful but quite clumsy, so I created some functions that wrap around `fs`' functions that are better adapted to this project's needs. These are stored in `file.js`.
 
-First we need to import `fs` and `electron.remote` into `network.js`, since we need `fs` to get the file path of the `%APPDATA%` folder where the JSON file is located.
+#### store
+
+First we need to import `fs` and `electron.remote` into `file.js`, since we need `remote` to get the file path of the `%APPDATA%` folder where the JSON files will be located.
 
 ```javascript
-const net = require('net')
-const hash = require('./hashing.js')
 const remote = require('electron').remote
 const fs = require('fs')
 ```
 
-Then we make a new function called `store()`. This will open the JSON file, append a new hash, and then save it. We get the correct file path using `remote.app.getPath('appData')`.
+Then we make a new function called `store()`. This will open the JSON file, append a new hash, and then save it. We get the correct file path using `remote.app.getPath('appData')`. I had originally designed this function to just work for `sent.json`, but this is changed later.
 
 ```javascript
 function store(key,data) {
@@ -637,8 +524,7 @@ store(key,data)
 It creates `sent.json`, as expected...
 
 ```console
-C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\network.js:23 Server started
-C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\network.js:34 Creating sent.json
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\file.js:10 Creating sent.json
 renderer.js:13 Page change: overview
 C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\overview.js:2 overview.js loaded
 ```
@@ -686,7 +572,7 @@ function store(key,data) {
 
 Now, the function opens `sent.json`, checks if there's an error, and if there's not it tries to parse the content. If it doesn't work, it uses an empty object. Finally, it puts the data into the object, turns it back into a string and writes this new string back into the file. If there is an error when reading the file, it checks to see if the error corresponds to the file not existing - if that's the case, it sets the content to `'{}'`, an empty object. Otherwise, it will throw an error.
 
-I realised that we will want to use this in other situations as well, such as to store wallets or the blockchain. I therefore made it take a third argument, `file`, and then put it in it's own file, `file.json`.
+It was at this point I realised that we will want to use this in other situations as well, such as to store wallets or the blockchain. I therefore made it take a third argument, `file`.
 
 ```javascript
 const remote = require('electron').remote
@@ -759,7 +645,7 @@ https://gist.github.com/telekosmos/3b62a31a5c43f40849bb#gistcomment-1826809
         }
 ```
 
-###### Removing arrays
+##### Removing arrays
 
 If we want to make it truly generic, we need to get rid of the code relating to arrays, or at least put it in a separate function. I decided to solve this by adding a check to see what type `data` is. If it's an array, we do the concatenation thing with `Set`, otherwise we just replace it. I originally tried to do this using `typeof`, however upon testing, it simply returns `"object"` for arrays, which is a problem given that we want to differentiate between array objects and other objects.
 
@@ -830,7 +716,7 @@ function store(key,data,file,callback=()=>{}) {
 }
 ```
 
-###### Testing
+##### Testing
 
 I tested this by calling `store('test',['data1','data2'],'test')`. This returned:
 
@@ -873,7 +759,7 @@ We can now test the array concatenation. Calling `store('test',['data2','data3']
 
 It worked!
 
-##### get
+#### get
 
 Now we need to retrieve data. This function is very similar, except instead of writing to the file at the end, it just calls the callback with the data it retrieved.
 
@@ -942,7 +828,7 @@ function get(key,file,callback,fail=null) {
 }
 ```
 
-At this stage, I realised that these functions would be very helpful throughout the project. I therefore upgraded them to their own file, `file.js`. I then exported them using `exports`. If I want to use them elsewhere in the project, then I simply use `const file = require('./file.js')`, then use `file.get()` to use the get function, for example.
+I also now exported the functions, so they can be used in other files.
 
 ```javascript
 const remote = require('electron').remote
@@ -960,7 +846,7 @@ I realised that it would be helpful to add some more functions to deal with othe
 - `storeAll()`, the corresponding wrapper around `fs.writeFile()`
 - `append()`, which appends data to a file which contains an array rather than an object literal.
 
-##### getAll
+#### getAll
 
 This is simply stripping the complicated parts out of `get()`.
 
@@ -987,7 +873,7 @@ function getAll(file,callback,fail=null) {
 exports.getAll = getAll
 ```
 
-##### storeAll
+#### storeAll
 
 `storeAll()` is even simpler.
 
@@ -1002,7 +888,7 @@ function storeAll(file,data,callback=()=>{}) {
 }
 ```
 
-##### append
+#### append
 
 Append is very similar to `get()`, but rather than the stuff with `Array.isArray()`, it simply appends the data to the file using `jsondata.push()`.
 
@@ -1041,9 +927,158 @@ function append(file,data,callback=()=>{}) {
 }
 ```
 
+### Message Sending/Receiving
+
+In the design phase we figured out how to use the `net` module to set up a TCP server. Now, we need to create a system where we can send and receive messages in the background of the application, all while the rest of the app does it's own stuff. First of all, I put the code from the design stage in it's own file, `network.js`. We can them import it into `renderer.js` to run in the background of the application.
+
+```javascript
+const net = require('net')
+const hash = require('./hashing.js')
+
+function init() {
+    var server = net.createServer((socket) => {
+        console.log("Server created")
+        socket.on("data",(data) => {
+            console.log("Server received: "+data)
+            var hashed = hash.sha256hex(data)
+            socket.write(hashed)
+        })
+        socket.on("end",socket.end)
+    })
+    
+    server.listen(2018)
+}
+
+function sendMsg(message,ip) {
+    var client = new net.Socket()
+    client.connect(2018,ip,() => {
+        client.write(message)
+        client.on("data",(data) => {
+            console.log("Client received: "+data)
+            client.destroy()
+        })
+        client.on("close",() => {
+            console.log("Connection closed")
+        })
+    })
+}
+
+exports.init = init
+exports.sendMsg = sendMsg
+```
+
+Then in `renderer.js`, after it calls the `changePage()` function, I put this:
+
+```javascript
+const network = require('./js/network.js')
+
+...
+
+network.init()
+network.sendMsg("hello","127.0.0.1")
+```
+
+This produced:
+
+```console
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\network.js:6 Server created
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\network.js:8 Server received: hello
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\network.js:23 Client received: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\network.js:27 Connection closed
+renderer.js:13 Page change: overview
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\overview.js:2 overview.js loaded
+```
+
+This is promising. We can run the `sendMsg()` function from anywhere and the server will reply. Now we need to structure the server so that it can reply as we want it to.
+
+```javascript
+var server = net.createServer((socket) => {
+        console.log("Server created")
+        socket.on("data",(data) => {
+            console.log("Server received: "+data)
+            parseMsg(data,(reply) => {
+                socket.write(reply)
+            })
+        })
+        socket.on("end",socket.end)
+    })
+```
+
+This passes received data to the `parseMsg()` function, which should return a reply which the server then sends back. This will be created later. For testing purposes, it simply returns a hash of the input message.
+
+```javascript
+function parseMsg(data,callback) {
+    callback(hash.sha256hex(data))
+}
+```
+
+Since we'd never be sending one message at a time, I created a function that opens `connections.json` and sends a message to each of the IPs within, `sendToAll()`. It uses a function `file.getAll()` which I haven't created yet, but in summary it opens the file with the name passed to it, and returns the data in that file. This function calls `file.getAll()` to get `connections.json`, then iterates through the objects in the file using `forEach()`, and sends a message to each of them.
+
+```javascript
+function sendToAll(msg) {
+    file.getAll('connections',(data) => {
+        // doesn't do anything if there's no connections
+        if (data !== null || data === '' || data === '[]') {
+            nodes = JSON.parse(data)
+            // go through connections and send a message to each
+            nodes.forEach((node) => {
+                sendMsg(msg,node.ip)
+            })
+        }
+    })
+}
+```
+
+But what causes clients to start sending messages in the first place? We need to make the system where it figures out the data it needs and starts asking for it without prompting. When the app starts up, it needs to do the following:
+
+- try to connect to previously connected to nodes
+- calculate account balance for the counter in the top left
+- calculate the number of nodes we are connected to
+- start a loop to continually check for nodes
+
+I decided the best place for this is within the `network.init()` function, after we set the server running. First of all, we need to wipe `connections.json`, as this is meant to contain current connections and it is unknown if those connections are still there. Therefore, we remove it's contents when the application starts. This uses `file.storeAll()`, which again is a function that we have not defined, but stores the second parameter's data in the file with the name of the first parameter. In this case, it stores an empty array.
+
+```javascript
+    // wipe connections
+    // this will be populated with connections that succeed
+    file.storeAll('connections',[])
+```
+
+Next, we need to connect to the nodes listed in `recent-connections.json`, to reaffirm that they are still around. I decided to put this in a function called `connect()`.
+
+#### connect
+
+
+
+### Message Parsing/Processing
+
+Once a message has been received, we need to parse it and send it's information on into the system. We also need to ensure that a message is valid, as one of the critical parts of a cryptocurrency is ensuring that all messages are correct and valid.
+
+First, I created an example message, that is a transaction.
+
+```javascript
+var message = {
+  header: {
+    type: "tx",
+    hash: "b3fa55f98fcfcaf6a15a7c4eb7cdd1b593693d3fef2fb7aec3b6768fd7c6a4ce",
+    size: 10
+    version: "0.0.1"
+    time: 12931802
+  },
+  body: {
+    sender: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+    reciever: "b3fa55f98fcfcaf6a15a7c4eb7cdd1b593693d3fef2fb7aec3b6768fd7c6a4ce",
+    amount: "12",
+    time: 1516831879816
+  }
+}
+```
+
+This is  a JSON object that represents a transaction. Whilst it is not at all correct, we can use it for testing the system as we build it. The function that the server calls is called `parseMsg()`, and it takes the received data and a callback function. First of all, we need to be able to store sent transactions.
+
 #### parseMsg
 
-Now, we can move on to parsing the message. The best way of doing this that I can think of is having a function for each message type. First, we need to create the if statement that handles this. First, it creates an object literal for the reply. It then attempts to parse the message into JSON. If it doesn't parse, it catches the error and calls the `er()` function, which takes the error message, which should set the reply to an error message. Otherwise, it checks the header type and calls the corresponding function. After the reply has been constructed, the header is created and then the reply is turned back to a string. Finally, it is passed to the callback function where it will be sent back to the sender.
+The best way of doing this that I can think of is having a function for each message type. First, we need to create the if statement that handles this. First, it creates an object literal for the reply. It then attempts to parse the message into JSON. If it doesn't parse, it catches the error and calls the `er()` function, which takes the error message, which should set the reply to an error message. Otherwise, it checks the header type and calls the corresponding function. After the reply has been constructed, the header is created and then the reply is turned back to a string. Finally, it is passed to the callback function where it will be sent back to the sender.
 
 ```javascript
 function parseMsg(data,callback) {
@@ -1145,6 +1180,8 @@ To make things a bit clearer, I decided to split these functions into a new file
 
 The first of these functions is `pg()`. Since we need the IP of the node that sent it, we pass the IP as well as the message.
 
+##### pg
+
 What we need to achieve with this function is:
 
 - Add to `connections.json`, the file which contains active connections.
@@ -1152,7 +1189,7 @@ What we need to achieve with this function is:
 
 However, since we need to do the first part again when we receive a ping as a reply, I decided to split it up into two functions, one which adds it to `connections.json`, and the other which replies with the ping. `pgreply()` adds the IP to `connections.json`, and `pg()` calls `pgreply()` and then returns the reply message.
 
-First, I created `pgreply()`. First, it creates the object which it will store later on. Then, it
+First, I created `pgreply()`. First, it creates the object which it will store later on. Then, it gets all the connections using the `getAll()` function I made. It then iterates through the connections, and sets `repeat` to `true` if the IP that sent the message is already in connections. If `repeat` is false, meaning that it is not already connected to that node, then it appends the `store` object, which contains the IP and whether or not the node wants to be advertised.
 
 ```javascript
 function pgreply(msg,ip) {
@@ -1168,21 +1205,67 @@ function pgreply(msg,ip) {
                 repeat = true
             }
         })
-        // stores it if not and if it is not our ip
-        const ourip = require('ip').address
-        if (!repeat && ip !== ourip()) {
+        // stores it if not
+        if (!repeat) {
             file.append('connections',store,() => {
                 console.log('Connection added: '+ip)
-                document.getElementById('nonodes').classList.add('hidden')
-                var current = document.getElementById('connections').textContent
-                document.getElementById('connections').textContent = parseInt(current) + 1
             })
         }
     },'[]')
 }
 ```
 
+However, since we don't want to connect to ourselves, I decided to install the `ip` module and check if our IP is the same as the one we would be adding.
 
+```cmd
+>npm install --save ip
+```
+
+We then check if it's the same
+
+```javascript
+        // stores it if not and if it is not our ip
+        const ourip = require('ip').address
+        if (!repeat && ip !== ourip()) {
+            file.append('connections',store,() => {
+                console.log('Connection added: '+ip)
+            })
+        }
+```
+
+Back to `pg()`. I created a new file in `%APPDATA%` called `network-settings.json`, and then added the following:
+
+```json
+{"advertise":"true"}
+```
+
+This will be automatically added later on.
+
+We then `get()` this file, then set the reply message accordingly.
+
+```javascript
+function pg(msg,ip,callback) {
+    // store the connection
+    pgreply(msg,ip)
+    // send a reply
+    file.get('advertise','network-settings',(data) => {
+        if (data === 'true' || data === 'false') {
+            var advertise = data
+        } else {
+            var advertise = 'true'
+        }
+        var reply = {
+            "header": {
+                "type": "pg"
+            },
+            "body": {
+                "advertise": advertise
+            }
+        }
+        return reply
+    })
+}
+```
 
 
 

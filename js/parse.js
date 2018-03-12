@@ -153,8 +153,9 @@ function nr(msg,callback) {
 }
 
 function pg(msg,ip,callback) {
+    // store the connection
     pgreply(msg,ip)
-    // remember to complain about scope issues
+    // send a reply
     file.get('advertise','network-settings',(data) => {
         if (data === 'true' || data === 'false') {
             var advertise = data
