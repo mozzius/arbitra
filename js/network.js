@@ -138,8 +138,6 @@ function connect(backup=true) {
                 // wavecalcs.com is friend's server, and should be online for the purposes of this project
                 // wavecalcs.com = 5.81.186.90
                 sendMsg(ping,'5.81.186.90')
-            } else {
-                document.getElementById('nonodes').classList.add('hidden')
             }
         })
     },'[]')

@@ -190,33 +190,17 @@ function getTopBlock(fullchain,callback) {
         // Object.keys(fullchain)[0] puts the whole object into memory
         break
     }
-    // iterates through the fullchain
-    for (var key in fullchain) {
-        // larger height the better
-        if (fullchain[key].height > fullchain[best].height) {
-            var candidate = true
-            // iterate down the chain to see if you can reach the bottom
-            // if the parent is undefined at any point it is not part of the main chain
-            // run out of time for a more efficient method
-            var current = key
-            var parent
-            while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
-                parent = fullchain[current].parent
-                if (typeof fullchain[parent] !== 'undefined') {
-                    current = parent
-                } else {
-                    candiate = false
-                }
-            }
-            if (candidate) {
-                best = key
-            }
-        // otherwise, if they're the same pick the oldest one
-        } else if (fullchain[key].height === fullchain[best].height) {
-            if (fullchain[key].time < fullchain[best].time) {
-                // see other comments
+    if (typeof best !== 'undefined') {
+        // iterates through the fullchain
+        for (var key in fullchain) {
+            // larger height the better
+            if (fullchain[key].height > fullchain[best].height) {
                 var candidate = true
+                // iterate down the chain to see if you can reach the bottom
+                // if the parent is undefined at any point it is not part of the main chain
+                // run out of time for a more efficient method
                 var current = key
+                var parent
                 while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
                     parent = fullchain[current].parent
                     if (typeof fullchain[parent] !== 'undefined') {
@@ -228,8 +212,28 @@ function getTopBlock(fullchain,callback) {
                 if (candidate) {
                     best = key
                 }
+            // otherwise, if they're the same pick the oldest one
+            } else if (fullchain[key].height === fullchain[best].height) {
+                if (fullchain[key].time < fullchain[best].time) {
+                    // see other comments
+                    var candidate = true
+                    var current = key
+                    while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                        parent = fullchain[current].parent
+                        if (typeof fullchain[parent] !== 'undefined') {
+                            current = parent
+                        } else {
+                            candiate = false
+                        }
+                    }
+                    if (candidate) {
+                        best = key
+                    }
+                }
             }
         }
+    } else {
+        best = null
     }
     callback(best)
 }
