@@ -170,7 +170,6 @@ function sendMsg(msg,ip,callback) {
             // actually go send the message
             var client = new net.Socket()
             client.connect(port,ip,() => {
-                console.log('Connected to: '+ip)
                 client.write(sendMe)
                 // add the hash to the sent messages file
                 file.append('sent',msg.header.hash)
@@ -234,7 +233,7 @@ function parseMsg(data,ip,callback) {
         if (e.name === 'SyntaxError') {
             error =  'parse'
         } else {
-            reply.body['error'] = e
+            error = e
         }
         var reply = {
             "header": {
@@ -244,7 +243,7 @@ function parseMsg(data,ip,callback) {
                 "error": error
             }
         }
-        file.append('error-logs',reply)
+        file.append('error-logs',data)
         callback(reply)
     }
 }

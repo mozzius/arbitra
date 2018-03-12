@@ -293,9 +293,11 @@ function cr(msg,callback) {
 }
 
 function cn(msg) {
-    msg.body.chain.forEach((testblock) => {
-        blockchain.addBlock(testblock)
-    })
+    for (var key in msg.chain) {
+        // an oversight means we need to give it msg.body
+        var block = {"body":msg.chain[key]}
+        blockchain.addBlock(block)
+    }
 }
 
 function er(msg) {
