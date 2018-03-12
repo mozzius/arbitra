@@ -162,10 +162,10 @@ function addBlock(msg) {
 function mainChain(callback) {
     var mainchain = {}
     file.getAll('blockchain',(data) => {
-        var fullchain = JSON.parse(data)
-        if (fullchain === {}) {
-            callback(data)
+        if (data === '{}') {
+            callback({})
         } else {
+            var fullchain = JSON.parse(data)
             getTopBlock(fullchain,(top) => {
                 mainchain[top] = fullchain[top]
                 var current = top
@@ -199,6 +199,7 @@ function getTopBlock(fullchain,callback) {
             // if the parent is undefined at any point it is not part of the main chain
             // run out of time for a more efficient method
             var current = key
+            var parent
             while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
                 parent = fullchain[current].parent
                 if (typeof fullchain[parent] !== 'undefined') {
