@@ -310,6 +310,7 @@ exports.nr = nr
 exports.pg = pg
 exports.pgreply = pgreply
 exports.nd = nd
+exports.bh = bh
 exports.cr = er
 exports.er = er
 exports.cn = cn

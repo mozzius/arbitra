@@ -259,9 +259,9 @@ function parseReply(data,ip,callback=(a)=>{}) {
             if (msg.header.type === 'cn') {
                 // chain
                 parse.cn(msg)
-            } else if (msg.header.type === 'th') {
+            } else if (msg.header.type === 'bh') {
                 // top hash
-                parse.th(msg)
+                parse.bh(msg)
             } else if (msg.header.type === 'nd') {
                 // nodes
                 parse.nd(msg)
@@ -271,7 +271,7 @@ function parseReply(data,ip,callback=(a)=>{}) {
             } else if (msg.header.type === 'ok') {
                 // message received ok
                 console.info('message recieved ok')
-            } else if (msg.hedaer.type === 'er') {
+            } else if (msg.header.type === 'er') {
                 // error (uh oh)
                 console.warn('We recieved an error')
                 parse.er(msg)
