@@ -783,6 +783,53 @@ if (jsondata.hasOwnProperty(key) && Array.isArray(data)) {
 }
 ```
 
+Finally, I added an optional callback that is called when the file is written to. I did this by giving `callback` the default value of `()=>{}`, which is ES6 arrow notation for a function, meaning that if no argument is passed for callback an empty function is called instead.
+
+```javascript
+function store(key,data,file,callback=()=>{}) {
+    // put data in file
+    var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
+    fs.readFile(path,'utf-8',(err,content) => {
+        if (err) {
+            // if the file doesn't exist, it creates an empty object literal
+            // it will then continue on and create the file later
+            if (err.code === 'ENOENT') {
+                content = '{}'
+            } else {
+                alert('Error opening '+file+'.json')
+                throw err
+            }
+        }
+        // try to parse content to js then push the data
+        try {
+            var jsondata = JSON.parse(content)
+            if (jsondata.hasOwnProperty(key) && Array.isArray(data)) {
+                // if the key exists it concatenates the two arrays, creates a new set
+                // which removes duplicates, then turns it back to an array
+                // https://gist.github.com/telekosmos/3b62a31a5c43f40849bb#gistcomment-1826809
+                var set = new Set(jsondata[key].concat(data))
+                jsondata[key] = Array.from(set)
+            } else {
+                // otherwise sets the key to the data
+                jsondata[key] = data
+            }
+        } catch(e) {
+            console.warn(e)
+            var jsondata = {}
+            jsondata[key] = data
+        } finally {
+            // writes the contents back to the file
+            // or makes the file if it doesn't exist yet
+            content = JSON.stringify(jsondata)
+            fs.writeFile(path,content,'utf-8',(err) => {
+                if (err) throw err
+                callback()
+            })
+        }
+    })
+}
+```
+
 ###### Testing
 
 I tested this by calling `store('test',['data1','data2'],'test')`. This returned:
@@ -862,6 +909,138 @@ function get(key,file,callback) {
 }
 ```
 
+However, I noticed later on that returning `null` if no data is found was awkward to work around. I therefore added `fail`, which is an optional parameter which is returned if no data is found.
+
+```javascript
+function get(key,file,callback,fail=null) {
+    var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
+    fs.readFile(path,'utf-8',(err,content) => {
+        if (err) {
+            // if the file doesn't exist, return null
+            if (err.code === 'ENOENT') {
+                console.warn(file+'.json not found')
+                console.trace()
+                callback(fail)
+                return
+            } else {
+                alert('Error opening '+file+'.json')
+                throw err
+            }
+        }
+        // try to parse content to js then push the data
+        try {
+            var jsondata = JSON.parse(content)
+            var result = jsondata[key]
+        } catch(e) {
+            // if the key doesn't exist, return null
+            console.warn(e)
+            var result = fail
+        } finally {
+            callback(result)
+        }
+    })
+}
+```
+
+At this stage, I realised that these functions would be very helpful throughout the project. I therefore upgraded them to their own file, `file.js`. I then exported them using `exports`. If I want to use them elsewhere in the project, then I simply use `const file = require('./file.js')`, then use `file.get()` to use the get function, for example.
+
+```javascript
+const remote = require('electron').remote
+const fs = require('fs')
+
+// functions go here
+
+exports.store = store
+exports.get = get
+```
+
+I realised that it would be helpful to add some more functions to deal with other problems. These ended up being:
+
+- `getAll()`, a wrapper around `fs.readFile()`
+- `storeAll()`, the corresponding wrapper around `fs.writeFile()`
+- `append()`, which appends data to a file which contains an array rather than an object literal.
+
+##### getAll
+
+This is simply stripping the complicated parts out of `get()`.
+
+```javascript
+function getAll(file,callback,fail=null) {
+    var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
+    fs.readFile(path,'utf-8',(err,content) => {
+        if (err) {
+            // if the file doesn't exist, return null
+            if (err.code === 'ENOENT') {
+                console.warn(file+'.json not found')
+                content = fail
+            } else {
+                alert('Error opening '+file+'.json')
+                console.error('Error opening '+file+'.json')
+                throw err
+            }
+        }
+        callback(content)
+    })
+}
+
+// this is at the bottom of the file with the others
+exports.getAll = getAll
+```
+
+##### storeAll
+
+`storeAll()` is even simpler.
+
+```javascript
+function storeAll(file,data,callback=()=>{}) {
+    var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
+    content = JSON.stringify(data)
+    fs.writeFile(path,content,'utf-8',(err) => {
+        if (err) throw err
+        callback()
+    })
+}
+```
+
+##### append
+
+Append is very similar to `get()`, but rather than the stuff with `Array.isArray()`, it simply appends the data to the file using `jsondata.push()`.
+
+```javascript
+function append(file,data,callback=()=>{}) {
+    // write data to a file, but where the file is an array so no key
+    var path = remote.app.getPath('appData')+'/arbitra-client/'+file+'.json'
+    fs.readFile(path,'utf-8',(err,content) => {
+        if (err) {
+            // if the file doesn't exist, it creates an empty object literal
+            // it will then continue on and create the file later
+            if (err.code === 'ENOENT') {
+                content = '[]'
+            } else {
+                alert('Error opening '+file+'.json')
+                throw err
+            }
+        }
+        // try to parse content to js then push the data
+        try {
+            var jsondata = JSON.parse(content)
+            jsondata.push(data)
+        } catch(e) {
+            console.warn(e)
+            var jsondata = [data]
+        } finally {
+            // writes the contents back to the file
+            // or makes the file if it doesn't exist yet
+            content = JSON.stringify(jsondata)
+            fs.writeFile(path,content,'utf-8',(err) => {
+                if (err) throw err
+                callback()
+            })
+        }
+    })
+}
+```
+
 #### parseMsg
 
 Now, we can move on to parsing the message. The best way of doing this that I can think of is having a function for each message type. First, we need to create the if statement that handles this. First, it creates an object literal for the reply. It then attempts to parse the message into JSON. If it doesn't parse, it catches the error and calls the `er()` function, which takes the error message, which should set the reply to an error message. Otherwise, it checks the header type and calls the corresponding function. After the reply has been constructed, the header is created and then the reply is turned back to a string. Finally, it is passed to the callback function where it will be sent back to the sender.
@@ -901,8 +1080,6 @@ function parseMsg(data,callback) {
     }
 }
 ```
-
-We don't pass `reply` to each function, because if we declare the functions inside `parseMsg()` it will be within scope, making them subroutines.
 
 First however, we can simplify this system slightly. Every message has a hash, so we can verify that once before we start parsing the messages. Therefore, I added the check before the if statements. If it fails, it will call `er()` with the error message of `'hash'`.
 
@@ -966,11 +1143,46 @@ We also need to find the size of the body. I found an answer on [StackOverflow](
 
 To make things a bit clearer, I decided to split these functions into a new file, `verify.js`, so that `parseMsg()` is more readable. However, this means that each of the functions like `tx()` will be converted to `verify.tx()`.
 
-The first of these functions is `tx()`.
+The first of these functions is `pg()`. Since we need the IP of the node that sent it, we pass the IP as well as the message.
+
+What we need to achieve with this function is:
+
+- Add to `connections.json`, the file which contains active connections.
+- Reply with a ping
+
+However, since we need to do the first part again when we receive a ping as a reply, I decided to split it up into two functions, one which adds it to `connections.json`, and the other which replies with the ping. `pgreply()` adds the IP to `connections.json`, and `pg()` calls `pgreply()` and then returns the reply message.
+
+First, I created `pgreply()`. First, it creates the object which it will store later on. Then, it
 
 ```javascript
-
+function pgreply(msg,ip) {
+    var store = {}
+    store['ip'] = ip
+    store['advertise'] = msg.body.advertise
+    file.getAll('connections',(data) => {
+        var repeat = false
+        // checks to see if the ip is already in connections.json
+        nodes = JSON.parse(data)
+        nodes.forEach((node) => {
+            if (node.ip === ip) {
+                repeat = true
+            }
+        })
+        // stores it if not and if it is not our ip
+        const ourip = require('ip').address
+        if (!repeat && ip !== ourip()) {
+            file.append('connections',store,() => {
+                console.log('Connection added: '+ip)
+                document.getElementById('nonodes').classList.add('hidden')
+                var current = document.getElementById('connections').textContent
+                document.getElementById('connections').textContent = parseInt(current) + 1
+            })
+        }
+    },'[]')
+}
 ```
+
+
 
 
 
