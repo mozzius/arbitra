@@ -79,6 +79,7 @@ function init() {
                     }
                 },3000)
             }
+            connections = parseInt(document.getElementById('connections').textContent)
             if (connections === 0) {
                 document.getElementById('nonodes').classList.remove('hidden')
             } else {

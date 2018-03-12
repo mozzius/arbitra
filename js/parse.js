@@ -127,25 +127,6 @@ function hr(msg,callback) {
     })
 }
 
-function br(msg,callback) {
-    file.get('blockchain',msg.body.hash,(result) => {
-        if (result !== null) {
-            var reply = {
-                "header": {
-                    "type": "bl"
-                },
-                "body": {
-                    "hash": msg.body.hash,
-                    "body": result
-                }
-            }
-            callback(reply)
-        } else {
-            throw 'notfound'
-        }
-    })
-}
-
 function nr(msg,callback) {
     var reply = {
         "header": {
@@ -224,25 +205,6 @@ function bh(msg,callback) {
             if (top !== msg.body.hash && !Object.keys(mainchain).includes(msg.body.hash)) {
                 // if the received top hash is not equal to the one on disk
                 // and it's not in the blockchain, then send out a chain request
-                var chainrequest = {
-                    "header": {
-                        "type": "cr"
-                    },
-                    "body": {
-                        "hash": msg.body.hash
-                    }
-                }
-                network.sendToAll(chainrequest)
-            }
-        })
-    },'{}')
-}
-
-function bh(msg) {
-    file.getAll('blockchain',(data) => {
-        var mainchain =  JSON.parse('data')
-        blockchain.getTopBlock(mainchain,(result) => {
-            if (result !== msg.body.hash) {
                 var chainrequest = {
                     "header": {
                         "type": "cr"

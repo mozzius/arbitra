@@ -1,10 +1,12 @@
 const file = require('../file.js')
 const changePage = require('../changepage').changePage
+const blockchain = require('../blockchain.js')
 
 function init() {
     document.getElementById('create').addEventListener('click',() => {
         changePage('wallets-create')
     })
+    blockchain.calcBalances()
     file.getAll('wallets',(data) => {
         wallets = JSON.parse(data)
         var walletList = document.getElementById('wallet-list')

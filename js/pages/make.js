@@ -69,6 +69,7 @@ function sendTx() {
     }
     file.getAll('wallets',(data) => {
         var time = Date.now()
+        message.body['time'] = time
         // converting wallets into a format
         // where you can enter the public key
         // and get the private key
