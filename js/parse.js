@@ -38,18 +38,19 @@ function transaction(tx) {
 }
 
 function block(body) {
+    const difficulty = 6
     var txlist = body.transactions
     var len = txlist.length
     var tx
     var blockhash = hash.sha256hex(JSON.stringify(body))
     // verify all the transactions
     var pass = true
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < body.difficulty; i++) {
         if (blockhash.charAt(i) !== 'a') {
             pass = false
         }
     }
-    if (body.difficulty === 5 && pass) {
+    if (body.difficulty === difficulty && pass) {
         for (var i; i < len; ++i) {
             tx = txlist[i]
             try {

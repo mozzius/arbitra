@@ -3,7 +3,7 @@ const fs = require('fs')
 
 class Miner {
     constructor(path) {
-        const difficulty = 5
+        const difficulty = 6
         this.path = path
         // this is for the printing later
         this.hashes = 0
