@@ -536,5 +536,28 @@ Then there are also the other message functions that the client can receive, whi
 - Receive a block - verify, add to the local blockchain and send it on
 - Receive a block request - reply with block
 - Receive a latest block hash request - reply with latest block hash
-- Receive a ping - asks 
+- Receive a ping - add to list of connections
+
+
+### Data Files
+
+The is a lot of data that we will need to store. The way that we do this is by storing it in the applications' `%APPDATA%` folder, which we can access using the `remote` module.
+
+```javascript
+var path = remote.app.getPath('appData')+'/arbitra-client/
+```
+
+We can then store data using the `fs` (File System) module, which will be covered during the Technical Solution phase.
+
+Files will be in JSON (JavaScript Object Notation), because as the name suggests it is directly 
+
+#### File Planning
+
+There are several different files that we need to have. The obvious ones are listed here:
+
+| Name |      |      |
+| ---- | ---- | ---- |
+|      |      |      |
+|      |      |      |
+|      |      |      |
 
