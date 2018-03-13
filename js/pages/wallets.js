@@ -15,7 +15,7 @@ function init() {
             wallets.forEach((wallet) => {
                 listItem = document.createElement('div')
                 listItem.classList.add('list-item')
-                listItem.innerHTML = '<p><b>Name:</b> '+wallet.name+'</p><p><b>Public:</b> '+wallet.public+'</p><p><b>Amount:</b> <span class="money">'+wallet.amount/100000+'</span></p>'
+                listItem.innerHTML = '<p><b>Name:</b> '+wallet.name+'</p><p><b>Public:</b> '+wallet.public+'</p><p><b>Amount:</b> <span class="money">'+wallet.amount/1000000+'</span></p>'
                 walletList.appendChild(listItem)
             })
         }

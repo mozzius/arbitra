@@ -4,9 +4,7 @@ const ecdsa = require('./ecdsa.js')
 const parse = require('./parse.js')
 
 function getBlock(hash,callback) {
-    file.get(hash,'blockchain',(result) => {
-        callback(result)
-    })
+    file.get(hash,'blockchain',callback)
 }
 
 function checkBalance(key,amount,callback) {
@@ -14,11 +12,11 @@ function checkBalance(key,amount,callback) {
         // returns true if the wallet's balance is
         // less than or equal to the amount requested
         callback(balance >= amount)
-    })
+    },0)
 }
 
 function calcBalances() {
-    const miningreward = 5000000
+    const miningreward = 50000000
     // mainChain gets the longest chain, as only the blocks under the highest
     // actually count
     mainChain((chain) => {
@@ -83,7 +81,7 @@ function calcBalances() {
 }
 
 function updateBalances(block) {
-    const miningreward = 5000000
+    const miningreward = 50000000
     txs = block.body.transactions
     file.getAll('balances',(balances) => {
         // set the most recent block hash
@@ -234,6 +232,7 @@ function getTopBlock(fullchain,callback) {
                     }
                 }
             }
+            document.getElementById('height').textContent = fullchain[best].height
         }
     } else {
         best = null

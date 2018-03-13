@@ -198,13 +198,14 @@ function sendMsg(msg,ip,callback) {
 }
 
 function parseMsg(data,ip,callback) {
-    // parse incoming messages and crafts a reply
+    // parse incoming messages and replies
     // by calling parse functions
     try {
         var msg = JSON.parse(data)
         if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
             if (msg.header.type === 'tx') {
                 // transaction
+                // callback is used to send the reply
                 parse.tx(msg,callback)
             } else if (msg.header.type === 'bk') {
                 // block

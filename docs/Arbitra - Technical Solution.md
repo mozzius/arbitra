@@ -1217,7 +1217,7 @@ function pgreply(msg,ip) {
 
 However, since we don't want to connect to ourselves, I decided to install the `ip` module and check if our IP is the same as the one we would be adding.
 
-```cmd
+```shell
 >npm install --save ip
 ```
 
@@ -1241,7 +1241,197 @@ Back to `pg()`. I created a new file in `%APPDATA%` called `network-settings.jso
 
 This will be automatically added later on.
 
-We then `get()` this file, then set the reply message accordingly.
+We then `get()` this file, then set the reply message accordingly. It checks to see if `data` is either `'true'` or `'false'`, as I was having issues with that at an early stage.
+
+```javascript
+function pg(msg,ip,callback) {
+    // store the connection
+    pgreply(msg,ip)
+    // send a reply
+    var reply = {
+        "header": {
+            "type": "pg"
+        },
+        "body": {
+            "advertise": advertise
+        }
+    }
+    file.get('advertise','network-settings',(data) => {
+        if (data === 'true' || data === 'false') {
+            reply.body['advertise'] = data
+        } else {
+            reply.body['advertise'] = 'true'
+        }
+    })
+    return reply
+}
+```
+
+###### Testing
+
+I decided to test the ping function by creating function in `testing.html` to ping an IP. `testing.html` looks like this:
+
+```html
+<h1>Testing Page</h1>
+
+<input type="text" id="sendto"/>
+<button id="send">Send ping</button>
+```
+
+`testing.js` is changed to this:
+
+```javascript
+const network = require('./network.js')
+
+function init() {
+    var msg = {
+        "header": {
+            "type": "pg",
+        },
+        "body": {
+            "advertise": true
+        }
+    }
+    document.getElementById('send').addEventListener('click',() => {
+        network.sendMsg(msg,document.getElementById('sendto').value)
+    })
+}
+
+exports.init = init
+```
+
+It creates a message, `msg`, then when the send button is clicked it sends `msg` to the value of the input box using `network.sendMsg()`.
+
+Hopefully, if we send this ping to `localhost` we should see it print the same message twice, as the reply should be the same as what we sent.
+
+```console
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\network.js:169 Sending message: {"header":{"type":"pg","version":"0.0.1","size":39,"hash":"e925d7387f58e2a27ea686946400f180e122c2b68094418241ef857ea74af151"},"body":{"advertise":true,"time":1520933329222}}
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\network.js:19 Received connection from: 127.0.0.1
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\network.js:20 Server received: {"header":{"type":"pg","version":"0.0.1","size":39,"hash":"e925d7387f58e2a27ea686946400f180e122c2b68094418241ef857ea74af151"},"body":{"advertise":true,"time":1520933329222}}
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\network.js:29 Sending message to 127.0.0.1: {"header":{"type":"pg","version":"0.0.1","size":39,"hash":"e0e72e4798fc24ccfc4c31178488ad7e801a80b02294024c1ae868c089be77d"},"body":{"time":1520933329271}}
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\network.js:178 Client received: {"header":{"type":"pg","version":"0.0.1","size":39,"hash":"e0e72e4798fc24ccfc4c31178488ad7e801a80b02294024c1ae868c089be77d"},"body":{"time":1520933329271}}
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\parse.js:194 Connection added: 127.0.0.1
+C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\parse.js:194 Connection added: localhost
+```
+
+This looks mostly good! However, I noticed that in the reply, it doesn't reply with a value for `advertise`, which is a problem. Looking again at the code for `pg()`:
+
+```javascript
+function pg(msg,ip,callback) {
+    // store the connection
+    pgreply(msg,ip)
+    // send a reply
+    var reply = {
+        "header": {
+            "type": "pg"
+        },
+        "body": {
+            "advertise": advertise
+        }
+    }
+    file.get('advertise','network-settings',(data) => {
+        if (data === 'true' || data === 'false') {
+            reply.body['advertise'] = data
+        } else {
+            reply.body['advertise'] = 'true'
+        }
+    })
+    return reply
+}
+```
+
+The issue lies in `file.get()` - since the data is returned in a callback, and since callbacks are asyncronous, `reply.body.advertise` is being set to `data` *after* the reply is returned. My first solution was to move the `return reply` into the callback.
+
+```javascript
+function pg(msg,ip,callback) {
+    // store the connection
+    pgreply(msg,ip)
+    // send a reply
+    file.get('advertise','network-settings',(data) => {
+        if (data === 'true' || data === 'false') {
+            advertise = data
+        } else {
+            advertise = 'true'
+        }
+        var reply = {
+            "header": {
+                "type": "pg"
+            },
+            "body": {
+                "advertise": advertise
+            }
+        }
+        return reply
+    })
+}
+```
+
+However, since the callback is itself a function, this is simply returning `reply` to where it is called in `file.get()` rather than returning it back to `parseMsg()`. I struggled with this issue for quite a while, as I didn't know how to get the data from `file.get()` to return syncronously.
+
+###### Restructuring parseMsg
+
+The solution, it turned out, does not use returns. Going back to `parseMsg()`, the callback is effectively a function that sends a reply. Therefore, rather than getting each file to return a reply, it is better to pass `callback()` to each of the `type` functions. Then, it creates a reply and passes it to the callback, rather than returning it back down to `parseMsg()`
+
+In this way, the whole process is completely asyncronous as at no point is the program waiting for a function to finish.
+
+The redesigned `parseMsg()` now catches any errors and appends the received data to a file called `error-logs` before sending a reply. It also sends `ip` to `pg()`, which will be passed to the function when it receives data.
+
+```javascript
+function parseMsg(data,ip,callback) {
+    // parse incoming messages and replies
+    // by calling parse functions
+    try {
+        var msg = JSON.parse(data)
+        if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
+            if (msg.header.type === 'tx') {
+                // transaction
+                // callback is used to send the reply
+                parse.tx(msg,callback)
+            } else if (msg.header.type === 'bk') {
+                // block
+                parse.bk(msg,callback)
+            } else if (msg.header.type === 'hr') {
+                // hash request
+                parse.hr(msg,callback)
+            } else if (msg.header.type === 'cr') {
+                // chain request
+                parse.cr(msg,callback)
+            } else if (msg.header.type === 'pg') {
+                // ping
+                parse.pg(msg,ip,callback)
+            } else if (msg.header.type === 'nr',callback) {
+                // node request
+                parse.nr(msg,callback)
+            } else {
+                throw 'type'
+            }
+        } else {
+            throw 'hash'
+        }
+    } catch(e) {
+        // catching any errors and replying with an error message
+        console.warn(e)
+        var error
+        if (e.name === 'SyntaxError') {
+            error =  'parse'
+        } else {
+            error = e
+        }
+        var reply = {
+            "header": {
+                "type": "er"
+            },
+            "body": {
+                "error": error
+            }
+        }
+        file.append('error-logs',data)
+        callback(reply)
+    }
+}
+```
+
+`pg()` now looks like this:
 
 ```javascript
 function pg(msg,ip,callback) {
@@ -1262,14 +1452,214 @@ function pg(msg,ip,callback) {
                 "advertise": advertise
             }
         }
-        return reply
+        callback(reply)
     })
 }
 ```
 
+### Blockchain
 
+We now need to tackle the blockchain, which is a critical part of the project. It it basically a cool name for a linked list. We need to create the following functions to process it:
+
+- Getting a block
+- Check how many au a wallet has
+- Adding a block
+- Getting the top block in the chain
+- Getting all the blocks between the top block and the genesis block
+
+To aid with the first function, I decided to structure the blockchain as an object literal rather than an array, with the hash of the block as the key. In this way, we don't need to store the header, and to get a block we simply use `blockchain[hash_of_block]`.
+
+I creates all these functions in a file called `blockchain.js`. The blockchain itself is stored in `blockchain.json`, in `%APPDATA%`. First of all, I created `getBlock()`.
+
+#### getBlock
+
+This simply uses `file.get()` to get the block
+
+```javascript
+const file = require('./file.js')
+
+function getBlock(hash,callback) {
+    file.get(hash,'blockchain',callback)
+}
+```
+
+#### Balances
+
+Since we don't want to have to trawl through the blockchain to check every input of every transaction, I decided to store just the balances in a new file called `balances.json`. This file is again a dictionary-style object, with the wallet as the key storing the amount assigned to them. This is much more efficient for getting the amount assigned to a block. We will only need to generate this file when the blockchain changes. To generate it, I created a function called `calcBalances()`
+
+##### calcBalances
+
+`calcBalances()` needs to iterate through all the inputs in each transaction in each block in the blockchain. I decided to use `forEach()` to do this, as although it is technically slower, it is much clearer to see what is happening. In each input, it sees if `balances`, the object that stores the balances, contains the wallet referred to in the input, using `hasOwnProperty()` which returns `true` if the property has a value assigned to it. If that's case, it deducts the amount defined in the input, and increases the recipient's balance by the same amount.
+
+```javascript
+function calcBalances() {
+    file.getAll((data) => {
+        var chain = JSON.parse(data)
+        var balances = {}
+        // iterate through the blocks
+        for (var key in chain) {
+            var block = chain[key]
+            transactions = block.transactions
+            // iterate through each block to find each transaction
+            transactions.forEach((transaction) => {
+                // iterate through the inputs
+                transaction.from.forEach((from) => {
+                    // deduct amounts from the inputs
+                    if (balances.hasOwnProperty(from.wallet)) {
+                        balances[from.wallet] -= from.amount
+                    } else {
+                        balances[from.wallet] = -from.amount
+                    }
+                    // add amount to the recipient's balance
+                    if (balances.hasOwnProperty(transaction.to)) {
+                        balances[transaction.to] += from.amount
+                    } else {
+                        balances[transaction.to] = from.amount
+                    }
+                })
+            })
+        }
+    })
+}
+```
+
+However, we also need to accound for the mining reward. I set this as a `const` at the top of the function. Since it is in microau, it is set to 50000000. For each block, we add the mining reward to the miner's wallet.
+
+```javascript
+function calcBalances() {
+    const miningreward = 50000000
+    file.getAll((data) => {
+        var chain = JSON.parse(data)
+        var balances = {}
+        // iterate through the blocks
+        for (var key in chain) {
+            var block = chain[key]
+            transactions = block.transactions
+            // iterate through each block to find each transaction
+            transactions.forEach((transaction) => {
+                // iterate through the inputs
+                transaction.from.forEach((from) => {
+                    // deduct amounts from the inputs
+                    if (balances.hasOwnProperty(from.wallet)) {
+                        balances[from.wallet] -= from.amount
+                    } else {
+                        balances[from.wallet] = -from.amount
+                    }
+                    // add amount to the recipient's balance
+                    if (balances.hasOwnProperty(transaction.to)) {
+                        balances[transaction.to] += from.amount
+                    } else {
+                        balances[transaction.to] = from.amount
+                    }
+                })
+            })
+            // mining rewards
+            if (balances.hasOwnProperty(block.miner)) {
+                balances[block.miner] += miningreward
+            } else {
+                balances[block.miner] = miningreward
+            }
+        }
+    })
+}
+```
+
+However, we have a problem. In it's current state, it calculates the balance of *every* block rather than those under the top block, which is incorrect. What we need is a function which gets the top block then returns a subsection of the blockchain containing only blocks under the top block. This function will be called `mainChain()`, and will be defined later. For now, we will pretend that it exists (as I made these functions at the same time).
+
+```javascript
+function calcBalances() {
+    const miningreward = 50000000
+    // mainChain gets the longest chain, as only the blocks under the highest
+    // actually count
+    mainChain((chain) => {
+        var balances = {}
+        // iterate through the blocks
+        for (var key in chain) {
+            var block = chain[key]
+            transactions = block.transactions
+            // iterate through each block to find each transaction
+            transactions.forEach((transaction) => {
+                // iterate through the inputs
+                transaction.from.forEach((from) => {
+                    // deduct amounts from the inputs
+                    if (balances.hasOwnProperty(from.wallet)) {
+                        balances[from.wallet] -= from.amount
+                    } else {
+                        balances[from.wallet] = -from.amount
+                    }
+                    // add amount to the recipient's balance
+                    if (balances.hasOwnProperty(transaction.to)) {
+                        balances[transaction.to] += from.amount
+                    } else {
+                        balances[transaction.to] = from.amount
+                    }
+                })
+            })
+            // mining rewards
+            if (balances.hasOwnProperty(block.miner)) {
+                balances[block.miner] += miningreward
+            } else {
+                balances[block.miner] = miningreward
+            }
+        }
+    })
+}
+```
+
+##### checkBalance
+
+We need a function which checks the balance of a wallet to see if it greater than or equal to some amount. This function is called `checkBalance()`.
+
+```javascript
+function checkBalance(key,amount,callback) {
+    file.get(key,'balances',(balance) => {
+        // returns true if the wallet's balance is
+        // less than or equal to the amount requested
+        callback(balance >= amount)
+    },0)
+}
+```
 
 ### Pages
+
+Before we start creating the pages, I decided to restructure the application slightly. I moved all the Javascript files relating to any of the pages - `overview.js`, `wallets.js` etc - to a subfolder in `js`, `pages`. I also moved the `changePage()` function from `renderer.js` to it's own file, then imported it back into `renderer.js`. I also modified it to account for the new location of the Javascript files.
+
+```javascript
+const remote = require('electron').remote
+const fs = require('fs')
+
+function changePage(name) {
+    var path = 'pages/' + name + '.html'
+    fs.readFile(path,'utf-8',(err, data) => {
+        if (err) {
+            alert('An error ocurred reading the file: '+name)
+            console.warn('An error ocurred reading the file: '+err.message)
+            return
+        }
+        document.getElementById('body').innerHTML = data
+        try {
+            const pageJS = require('./pages/'+name+'.js')
+            pageJS.init()
+        } catch(e) {
+            console.error(e)
+        }
+    })
+}
+
+exports.changePage = changePage
+```
+
+I imported it back into `renderer.js` like so:
+
+```javascript
+const changePage = require('./js/changepage.js').changePage
+```
+
+Now that the Javascript files for pages are a folder deeper than the other files, we have to import these other files like so:
+
+```javascript
+const file = require('../file.js')
+```
 
 #### Transactions
 
