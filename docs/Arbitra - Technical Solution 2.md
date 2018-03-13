@@ -66,6 +66,7 @@ function calcBalances() {
                 })
             })
         }
+        file.storeAll('balances',balances)
     })
 }
 ```
@@ -107,6 +108,7 @@ function calcBalances() {
                 balances[block.miner] = miningreward
             }
         }
+        file.storeAll('balances',balances)
     })
 }
 ```
@@ -149,6 +151,7 @@ function calcBalances() {
                 balances[block.miner] = miningreward
             }
         }
+        file.storeAll('balances',balances)
     })
 }
 ```
@@ -223,9 +226,50 @@ First, we need to store the wallets. Each wallet has four attributes:
 - User-defined name
 - Public key
 - Private key
-- Money
+- Amount
 
-The first three are static. However, the money in the wallet is dependent on the blockchain, which we do not want to have to trawl through every time to find the value of each wallet. Therefore, we should also store the block hash of the highest block the last time the blockchain was checked. We can store these in a JSON file.
+The first three are static. However, the money in the wallet is dependent on the blockchain, which we do not want to have to trawl through every time to find the value of each wallet. Therefore, I decided to update the wallets every time `calcBalances()` is called. It iterates through `wallets.json`, which is where the wallets will be found, and finds the total amount for each wallet. While doing this, I realised that we could take this opportunity to calculate the balance counter in the corner of the application. For each wallet that is iterated through, the amount calculated for each wallets is added to a counter, and the total in the corner is set to this amount.
+
+```javascript
+function calcBalances() {
+    const miningreward = 50000000
+    // mainChain gets the longest chain, as only the blocks under the highest
+    // actually count
+    mainChain((chain) => {
+        var balances = {}
+        // iterate through the blocks
+        // removed in this example as nothing has changed
+        for (var key in chain) {...}
+        // calculating the balance in the corner
+        file.getAll('wallets',(data) => {
+            var wallets = JSON.parse(data)
+            var newWallets = []
+            var balance = 0
+            wallets.forEach((wallet) => {
+                if (balances.hasOwnProperty(wallet.public)) {
+                    amount = balances[wallet.public]
+                } else {
+                    amount = 0
+                }
+                // add the au in the wallet to the total balance
+                balance += amount
+                // and set the balance in the wallet
+                newWallets.push({
+                    "name": wallet.name,
+                    "public": wallet.public,
+                    "private": wallet.private,
+                    "amount": amount
+                })
+            })
+            // change microau to au and set the textcontent of the top left thing
+            document.getElementById('current-balance').textContent = balance / 100000
+            // save balances
+            file.storeAll('wallets',newWallets)
+            file.storeAll('balances',balances)
+        },'[]')
+    })
+}
+```
 
 ##### Send
 
