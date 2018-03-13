@@ -4,7 +4,7 @@ const file = require('../file.js')
 
 function init() {
     ecdsa.createKeys((public, private, err) => {
-        if(err) {
+        if (err) {
             console.error(err)
             changePage('wallets')
         } else {

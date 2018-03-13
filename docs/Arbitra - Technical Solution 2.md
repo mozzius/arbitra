@@ -328,9 +328,119 @@ function init() {
 exports.init = init
 ```
 
-We now need to populate `#wallets-create`.
+We now need to populate `#wallet-list`. This is done by getting the wallets and iterating through them, appending a new `div` for each wallet, which is done by calling `document.createElement()` and using `appendChild()` to place it inside of the `#wallet-list` element. I also called `blockchain.calcBalances()` to ensure the wallets are up to date.
 
-##### Send
+```javascript
+const file = require('../file.js')
+const changePage = require('../changepage').changePage
+const blockchain = require('../blockchain.js')
+
+function init() {
+    document.getElementById('create').addEventListener('click',() => {
+        changePage('wallets-create')
+    })
+    blockchain.calcBalances()
+    file.getAll('wallets',(data) => {
+        wallets = JSON.parse(data)
+        var walletList = document.getElementById('wallet-list')
+        var listItem
+        wallets.forEach((wallet) => {
+            listItem = document.createElement('div')
+            walletList.appendChild(listItem)
+        })
+    },'[]')
+}
+
+exports.init = init
+```
+
+We now need to add the class `.list-item` to the child element, and add the data. The first is achieved by calling `listItem.classList.add('list-item')`. The second part however, using the method above of creating new elements using Javascript and appending them one by one, is cumbersome with the large number of sub-elements we need. Therefore, I decided instead to create a string and use `innerHTML`, which takes a string instead.
+
+```javascript
+        wallets.forEach((wallet) => {
+            listItem = document.createElement('div')
+            listItem.classList.add('list-item')
+            listItem.innerHTML = '<p><b>Name:</b> '+wallet.name+'</p><p><b>Public:</b> '+wallet.public+'</p><p><b>Amount:</b> <span class="money">'+wallet.amount/1000000+'</span></p>'
+            walletList.appendChild(listItem)
+        })
+```
+
+Notice how `wallet.amount` is divided by 1000000 - this is because `wallet.amount` is in $\mu$au, and we need to convert it to au.
+
+Now, to see if it works, we need to make a way to create wallets.
+
+##### Creating Wallets
+
+I created a new page called `create-wallets`, which was linked to earlier. The HTML for `create-wallets` is like so:
+
+```html
+<h1>Transactions</h1>
+
+<h2>Create a Wallet</h2>
+
+<p>Wallet Name:</p>
+<input type="text"  id="name" placeholder="My Wallet"><br>
+<p>Public Key:</p>
+<div class="list-item" id="public"></div>
+<p>Private Key (DO NOT SHARE!):</p>
+<div class="list-item" id="private"></div>
+<button id="create">Create Wallet</button>
+```
+
+It turns out we can reuse the `.list-item` class as a kind of highlight box. What `wallets-create.js` will need to do is populate `#public` and `#private` with the appropriate key, then add these and the name to a wallet when `#create` is clicked.
+
+To do this, we need to use the `ecdsa` module, as well as `file` and `changePage`. This is where we can use `ecdsa.createKeys()` to create the public and private keys.
+
+```javascript
+const ecdsa = require('../ecdsa.js')
+const changePage = require('../changepage').changePage
+const file = require('../file.js')
+
+function init() {
+    ecdsa.createKeys((public, private, err) => {
+        if (err) {
+            console.error(err)
+            changePage('wallets')
+        } else {
+            document.getElementById('public').innerText = public
+            document.getElementById('private').innerText = private
+        }
+    })
+    document.getElementById('create').addEventListener('click',() => {
+        var name = document.getElementById('name').value
+        console.log('Creating wallet: '+name)
+        var data = {}
+        data['name'] = name
+        data['public'] = document.getElementById('public').textContent
+        data['private'] = document.getElementById('private').textContent
+        data['amount'] = 0
+        console.log(JSON.stringify(data))
+        file.append('wallets',data,() => {
+            changePage('wallets')
+        })
+    })
+}
+
+exports.init = init
+```
+
+###### Testing
+
+We can now test both `wallets` and `wallets-create`. First, I navigated to `wallets`.
+
+![Wallets page](https://i.imgur.com/cJGwxw0.png)
+
+As you can see, there's nothing there. So, I clicked on the "create" button, which takes us to `wallets-create`.
+
+![wallets-create page](https://i.imgur.com/14WSrWD.png)
+
+I entered the name "My Wallet" and pressed "Create", which took me back to the `wallets` page - except now, it had a wallet called "My Wallet", which means that it worked!
+
+![Wallets with a wallet in it](https://i.imgur.com/UMolFuM.png)
+
+##### Create Transaction
+
+
 
 ##### View recent
 

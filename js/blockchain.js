@@ -72,7 +72,7 @@ function calcBalances() {
                 })
             })
             // change microau to au and set the textcontent of the top left thing
-            document.getElementById('current-balance').textContent = balance / 100000
+            document.getElementById('current-balance').textContent = balance / 1000000
             // save balances
             file.storeAll('wallets',newWallets)
             file.storeAll('balances',balances)
