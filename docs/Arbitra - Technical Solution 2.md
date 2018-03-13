@@ -230,6 +230,8 @@ First, we need to store the wallets. Each wallet has four attributes:
 
 The first three are static. However, the money in the wallet is dependent on the blockchain, which we do not want to have to trawl through every time to find the value of each wallet. Therefore, I decided to update the wallets every time `calcBalances()` is called. It iterates through `wallets.json`, which is where the wallets will be found, and finds the total amount for each wallet. While doing this, I realised that we could take this opportunity to calculate the balance counter in the corner of the application. For each wallet that is iterated through, the amount calculated for each wallets is added to a counter, and the total in the corner is set to this amount.
 
+Finally, the new wallet's values are stored in `wallets.json`.
+
 ```javascript
 function calcBalances() {
     const miningreward = 50000000
@@ -270,6 +272,63 @@ function calcBalances() {
     })
 }
 ```
+
+Finally, we can start displaying the wallets in `wallets.html`. The HTML structure of the page is like so:
+
+```html
+<h1>Transactions</h1>
+
+<h2>Wallets</h2>
+
+<div class="highlight-box">
+    <h3>My wallets</h3>
+    <button id="create">Create new wallet</button>
+    <div class="list" id="wallet-list"></div>
+</div>
+```
+
+The button with an id of `create` needs to link to the page where wallets are generated, so we will need to import `changePage()` into `wallets.js`. `#wallet-list` is the html object where we will be adding the wallets. `.list` is a CSS class like so:
+
+```css
+.list {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+```
+
+This means that if the contents of `#wallet-list` is too wide it will simply be hidden, but if it too tall it will create a scroll bar.
+
+Elements within `.list` will have class `.list-item`, which has the following properties:
+
+```css
+.list-item {
+    overflow-x: auto;
+    width: calc(100% - 12px);
+    background-color: white;
+    margin: 5px 0;
+    padding: 5px;
+    border: 1px solid #333;
+    border-radius: 5px;
+    white-space: nowrap;
+}
+```
+
+In `wallets.js`, we first import `file` and `changePage()`, and add an event listener to change the page to `wallets-create` when the button is clicked. This will be the page where we can create a wallet.
+
+```javascript
+const file = require('../file.js')
+const changePage = require('../changepage').changePage
+
+function init() {
+    document.getElementById('create').addEventListener('click',() => {
+        changePage('wallets-create')
+    })
+}
+
+exports.init = init
+```
+
+We now need to populate `#wallets-create`.
 
 ##### Send
 
