@@ -1,6 +1,7 @@
 const file = require('../file.js')
 const version = require('../../package.json').version
 const fs = require('fs')
+const network = require('../network.js')
 const dialog = require('electron').remote.dialog
 
 function init() {
@@ -32,7 +33,9 @@ function init() {
         file.storeAll('sent',[])
         file.storeAll('error-log',[])
         document.getElementById('ca-save').classList.remove('hidden')
+        document.getElementById('connections').textContent = 0
         console.warn('All files wiped')
+        network.connect(false)
     })
 }
 

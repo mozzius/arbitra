@@ -693,9 +693,107 @@ This can only really be tested when everything else works, so this will be cover
 
 ##### View recent
 
+This section is very similar to the wallet viewing page, except it reads `recenttx.json` instead. The HTML, `history.html`, looks like this:
+
+```html
+<h1>Transactions</h1>
+
+<h2>Transaction History</h2>
+
+<div class="highlight-box">
+    <h3>Recent Transactions</h3>
+    <button id="create">Make transaction</button>
+    <div class="list" id="tx-list"></div>
+</div>
+```
+
+`history.js` looks like this:
+
+```javascript
+const file = require('../file.js')
+const changePage = require('../changepage').changePage
+
+function init() {
+    document.getElementById('create').addEventListener('click', function () {
+        changePage('make')
+    })
+    file.getAll('recenttx',(data) => {
+        transactions = JSON.parse(data)
+        var txList = document.getElementById('tx-list')
+        var listItem
+        if (transactions) {
+            transactions.forEach((tx) => {
+                var balance = 0
+                tx.from.forEach((from) => {
+                    balance += from.amount/100000
+                })
+                listItem = document.createElement('div')
+                listItem.classList.add('list-item')
+                // timestamp to date
+                var date = new Date(tx.time).toString()
+                listItem.innerHTML = '<p><b>Time:</b> '+date+'</p><p><b>To:</b> '+tx.to+'</p><p><b>Amount:</b> <span class="money">'+balance+'</span></p>'
+                txList.appendChild(listItem)
+            })
+        }
+    })
+}
+
+exports.init = init
+```
+
+Something of note is the date - since `tx.time` is a timestamp, we need to turn it into something readable before printing it. For this, we use the `Date` class. Creating a `Date` object then using `toString()` turns it into a human-readable date. Initially, I tried to use `toISOString()`, which creates this:
+
+```console
+new Date(Date.now()).toISOString()
+"2018-03-14T14:30:01.112Z"
+```
+
+However, that is not very readable. I soon discovered that I could use `toString() instead:
+
+```console
+new Date(Date.now()).toString()
+"Wed Mar 14 2018 14:29:49 GMT+0000 (GMT Standard Time)"
+```
+
+That is much better, as it is clear what time and date that represents.
+
+Again, since we need to be able to create transactions to see them here, and since we need the blockchain to work in order to do that, we will have to test this at the end.
+
 #### Blockchain
 
+The blockchain pages are a critical aspect of the project, as it is here where we mine the blockchain.
+
 ##### Mining
+
+Mining the blockchain, as mentioned previously, consists of performing hundreds of thousands hash operations to find the one that passes a "difficulty test" - in this case, it passes if the hash begins with a certain number of hashes. Obviously, this is very CPU intensive, and since Node.js is single-threaded this would cripple the performance of the application. This is not desirable, so I looked for alternatives.
+
+###### Multi-threading alternatives
+
+The first option I looked at was to see if there was a multithreading module default to Node.js. This lead me to `child_process`. However, although this appeared to be relevent to my problems, it looked far too complex for this project.
+
+Next, I looked to see if there was anything default to Javascript itself. As it turns out, there is a `Webworker` API which allows you to run a different JS file independantly from the main program, and also communicate between programs.
+
+An example of a `Webworker`:
+
+```javascript
+var worker = new Worker('worker.js')
+
+worker.onmessage = (msg) => {
+    console.log(msg.data)
+}
+```
+
+However, I immediately ran into a problem when I tried to use Node.js functions in the `worker.js` file.
+
+```console
+ReferenceError: require is not defined
+```
+
+Webworkers can only use plain Javascript, and don't have access to Node.js modules or features. This is a massive problem, as we need to use `cryto` module to hash stuff at a minimum. I therefore had to carry on looking.
+
+The next place I looked was in `npm`. Since `Worker()` was exactly what I needed, I looked for Node.js-compatible alternative.
+
+Luckily enough, I found one! `tiny-worker` replaces `Webworker` with the same API but now with access to Node.js functions.
 
 ##### Viewing
 
