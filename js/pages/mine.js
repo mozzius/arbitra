@@ -11,7 +11,7 @@ function init() {
     var pre = document.getElementById('console')
 
     clear.addEventListener('click',() => {
-        pre.textContent = ''
+        pre.innerHTML = ''
     })
 
     button.addEventListener('click',() => {
@@ -21,7 +21,7 @@ function init() {
                     miner = new Worker('js/mining-script.js')
                     miner.onmessage = (msg) => {
                         if(typeof msg.data === 'string') {
-                            pre.innerHTML += msg.data+'<br>'
+                            pre.innerHTML += 'Hello World'
                         } else {
                             console.log(JSON.stringify(msg.data))
                             blockchain.addBlock(msg.data)
