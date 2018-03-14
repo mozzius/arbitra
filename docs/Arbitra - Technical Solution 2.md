@@ -440,7 +440,256 @@ I entered the name "My Wallet" and pressed "Create", which took me back to the `
 
 ##### Create Transaction
 
+To create transactions, we need to be able to add in multiple input sources. This is much more complex than a single dropdown, as since the input sources will need to be added through Javascript, they can't (easily) have unique ids.
 
+First of all, I created the HTML for the page, in `make.html`. `#error` has class `.hidden`, which gives it property `display: none`. When we want to display the error message, we remove this class.
+
+Notice how the `#inputs` div is empty. This is because we will add the dropdowns with in through Javascript.
+
+```html
+<h1>Transactions</h1>
+
+<h2>Make Transactions</h2>
+
+<div class="hidden" id="error">
+    <p><b>Error:</b> missing/incorrect form values</p>
+</div>
+
+<form>
+    <p>To:</p>
+    <input type="text" id="to" placeholder="Address"><br>
+    <p>From:</p>
+    <div id="inputs">
+    </div>
+    <button type="button" id="addInput">Add input</button>
+    <p>Please note that each wallet can only be used once</p>
+    <button type="button" id="send">Send</button>
+</form>
+```
+
+Now, we need to create `make.js`. In the `init()` function, all we do is add event listeners to the buttons. We also import all the necessary functions.
+
+```javascript
+const file = require('../file.js')
+const parse = require('../parse.js')
+const ecdsa = require('../ecdsa.js')
+const network = require('../network.js')
+
+function init() {
+    var add = document.getElementById('addInput')
+    var send = document.getElementById('send')
+    add.addEventListener('click',addInput)
+    send.addEventListener('click',sendTx)
+}
+
+exports.init = init
+```
+
+Now we need to create the function `addInput()`, which is called when the `#addInput` button is pressed. It creates a div with the class `.input-group`. It then adds a dropdown, a line break, and a number input box to that div, and adds a placeholder value to the dropdown. It then appends `.input-group` to `#inputs`.
+
+```javascript
+function addInput() {
+    var inputGroup = document.createElement('div')
+    inputGroup.classList.add('input-group')
+    // add select
+    // <select name="dropdown"></select>
+    var select = document.createElement('select')
+    select.name = 'dropdown'
+    // add placeholder
+    select.innerHTML = '<option value="" selected disabled>Choose a wallet</option>'
+    // add br
+    // <br>
+    var br = document.createElement('br')
+    // add number input
+    // <input name="amount" type="number" placeholder="Amount to send">
+    var number = document.createElement('input')
+    number.type = 'number'
+    number.placeholder = 'Amount to send'
+    number.name = 'amount'
+    // add them all to the page
+    inputGroup.appendChild(select)
+    inputGroup.appendChild(br)
+    inputGroup.appendChild(number)
+    document.getElementById('inputs').appendChild(inputGroup)
+}
+```
+
+However, we need to put the wallets in the dropdown. For this, I created a new function called `populateDropdown()`, which opens `wallets.json` and adds `option` elements to the dropdown with the wallets' name and balance. It also sets the `value` of the option to the public key, which is important, as this is what will be returned when we get the `value` of the dropdown if that option is selected. I also called the function in line 10 of the above snippet.
+
+```javascript
+function populateDropdown(select) {
+    var option
+    // get list of wallets
+    file.getAll('wallets',(data) => {
+        var wallets = JSON.parse(data)
+        wallets.forEach((wallet) => {
+            option = document.createElement('option')
+            option.value = wallet.public
+            option.text = wallet.amount/100000+"au - "+wallet.name
+            select.add(option)
+        })
+    })
+}
+```
+
+Finally, I called `addInput()` in the `init()` function so that the page starts with an input. You can see that this all worked:
+
+![make tx](https://i.imgur.com/bVVNjfW.png)
+
+Now, we just need to add the `sendTx()` function. The reason I had structured the inputs in this way is that I knew that `document.getElementsByClassName()` gives an array of the elements with that class name. Therefore, we can get all the elements with class name `.input-group` and iterate through them. We can then use `childNodes` to get the children of each group, then get their values.
+
+```javascript
+function sendTx() {
+    var to = document.getElementById('to').value
+    var groups = document.getElementsByClassName('input-group')
+    groups.forEach((group) => {
+        var child = group.childNodes
+        var wallet = child[0].value
+        var amount = child[1].value
+        console.log(wallet)
+        console.log(amount)
+    })
+}
+```
+
+However, there are some issues with this - first and foremost, `document.getElementsByClassName()` does not return an array - it returns a `HTMLCollection`, which is similar but we can't iterate through it. Luckily, this is easy to solve by turning it into an array using `Array.from`.
+
+Secondly, there are actually three elements within each group, and therefore `child[1]` returns the `br` rather than the `input` that we want. This is fixed by using `child[2]` instead.
+
+```javascript
+function sendTx() {
+    var to = document.getElementById('to').value
+    // this isn't an array for some reason
+    // we can make it one using Array.from
+    // https://stackoverflow.com/a/37941811/5453419
+    var groups = Array.from(document.getElementsByClassName('input-group'))
+
+    groups.forEach((group) => {
+        var child = group.childNodes
+        var wallet = child[0].value
+        console.log(wallet)
+        // 2 because of the br
+        var amount = child[2].value
+        console.log(amount)
+    })
+}
+```
+
+Now we need to get data from `wallets.json` in order to sign the inputs. However, since `wallets.json` is an array, we can't easily get the private key with the public key, so I decided instead to put the wallets in a new format so you can get the private key from the secret key.
+
+```javascript
+function sendTx() {
+    var to = document.getElementById('to').value
+    // this isn't an array for some reason
+    // we can make it one using Array.from
+    // https://stackoverflow.com/a/37941811/5453419
+    var groups = Array.from(document.getElementsByClassName('input-group'))
+    var message = {
+        "header": {
+            "type": "tx"
+        },
+        "body": {
+            "to": to,
+            "from": []
+        }
+    }
+    file.getAll('wallets',(data) => {
+        var time = Date.now()
+        message.body['time'] = time
+        // converting wallets into a format
+        // where you can enter the public key
+        // and get the private key
+        var convert =  {}
+        var wallets = JSON.parse(data)
+        wallets.forEach((wallet) => {
+            public = wallet.public
+            private = wallet.private
+            convert[public] = private
+        })
+        groups.forEach((group) => {
+            var child = group.childNodes
+            var wallet = child[0].value
+            console.log(wallet)
+            // 2 because of the br
+            var amount = child[2].value
+            console.log(amount)
+        })
+    })
+}
+```
+
+Now we can call `convert[public]` to get the private key. Next we need to create the signatures etc, which is fairly easy, since we have already created the `signMsg()` function. However, I put it all in a `try-catch` statement, and if an error is caught it removes `.hidden` from `#error`.
+
+If the message manages to reach the end without errors, it checks the message using `parse.transaction`, sends the message using `sendToAll()` and finally appends the message body to both `txpool.json` and `recenttx.json`, for mining and for view transaction history, respectively.
+
+```javascript
+function sendTx() {
+    var to = document.getElementById('to').value
+    // this isn't an array for some reason
+    // we can make it one using Array.from
+    // https://stackoverflow.com/a/37941811/5453419
+    var groups = Array.from(document.getElementsByClassName('input-group'))
+    var message = {
+        "header": {
+            "type": "tx"
+        },
+        "body": {
+            "to": to,
+            "from": []
+        }
+    }
+    file.getAll('wallets',(data) => {
+        var time = Date.now()
+        message.body['time'] = time
+        // converting wallets into a format
+        // where you can enter the public key
+        // and get the private key
+        var convert =  {}
+        var wallets = JSON.parse(data)
+        wallets.forEach((wallet) => {
+            public = wallet.public
+            private = wallet.private
+            convert[public] = private
+        })
+        try {
+            groups.forEach((group) => {
+                var child = group.childNodes
+                var wallet = child[0].value
+                console.log(wallet)
+                // 2 because of the br
+                var amount = child[2].value
+                console.log(amount)
+                if (wallet && amount > 0) {
+                    // convert to microau
+                    amount *= 1000000
+                    // the message that is signed
+                    var concat = amount+to+time
+                    var signature = ecdsa.signMsg(concat,convert[wallet],(signature) => {
+                        message.body.from.push({
+                            "wallet": wallet,
+                            "amount": amount,
+                            "signature": signature
+                        })
+                    })
+                } else {
+                    throw 'no amount entered'
+                }
+            })
+            // if it's invalid, it will throw an error and be caught by the try-catch
+            console.log('Transaction: '+JSON.stringify(message))
+            parse.transaction(message.body)
+            network.sendToAll(message)
+            file.append('txpool',message.body)
+            file.append('recenttx',message.body)
+        } catch(e) {
+            document.getElementById('error').classList.remove('hidden')
+            console.warn('Tx failed: '+e)
+        }
+    },'[]')
+}
+```
+
+This can only really be tested when everything else works, so this will be covered in the full testing phase.
 
 ##### View recent
 

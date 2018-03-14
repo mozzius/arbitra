@@ -90,7 +90,7 @@ function sendTx() {
                 console.log(amount)
                 if (wallet && amount > 0) {
                     // convert to microau
-                    amount *= 100000
+                    amount *= 1000000
                     // the message that is signed
                     var concat = amount+to+time
                     var signature = ecdsa.signMsg(concat,convert[wallet],(signature) => {

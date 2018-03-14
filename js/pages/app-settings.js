@@ -28,6 +28,7 @@ function init() {
         file.storeAll('network-settings',{"advertise":"true","target-connections":5})
         file.storeAll('recent-connections',[])
         file.storeAll('txpool',[])
+        file.storeAll('recenttx',[])
         file.storeAll('sent',[])
         file.storeAll('error-log',[])
         document.getElementById('ca-save').classList.remove('hidden')
