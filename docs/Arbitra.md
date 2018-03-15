@@ -1672,11 +1672,13 @@ The message type is a string, and is one of:
 | Transaction               | tx     |
 | Block                     | bk     |
 | Latest block hash request | hr     |
-| Chain                     | br     |
+| Chain request             | cr     |
 | Ping                      | pg     |
 | Node request              | nr     |
 
 #### Message types
+
+For each of the message types, I not only wanted to document it's attributes, but also what the client will do when it receives it, so I made flowcharts.
 
 ##### Transaction
 
@@ -1740,6 +1742,14 @@ Something to note about floating-point operations is that they're not very accur
 
 This is not good for handling transactions like this. We can circumvent this, however, using integers, and then multiplying them by a fixed amount. I decided that the smallest unit an arbitrary unit could be split up into is a micro-Arbitrary unit, or $1\times 10^{-6}$. Then, we don't have to deal with floating point operations, as we can just use integers to define the number of $\mu$au, which we can then convert back to au. For example, to send 50au, the `amount` would be written as `5000000`.
 
+The flowchart looks like this:
+
+```flowchart
+
+```
+
+
+
 ##### Block
 
 Blocks contain transactions, which are objects. We also need to determine the method whereby the miner receives their reward, and the simplest way of doing that is to have a `miner` attribute in the body in which the person who mined the block can put any public key they desire, and it will be rewarded 50au.
@@ -1776,36 +1786,31 @@ Sending a node request asks for the list of recent connections that each client 
 | max  | integer   |      |
 | time | timestamp |      |
 
-##### Block Hash Request
+##### Latest Block Hash Request
 
+This is a small message that a client sends out to check that it's blockchain is up to date.
 
+| name | type      | size |
+| ---- | --------- | ---- |
+| time | timestamp |      |
 
-| name | type       | size |
-| ---- | ---------- | ---- |
-| hash | hex string | 64   |
-| time | timestamp  |      |
+##### Chain Request
 
-
-
-##### Block Request
-
-
+This function asks other nodes for the chain beneath the hash listed in the body. This is typically sent after a hash request.
 
 | name | type       | size |
 | ---- | ---------- | ---- |
 | hash | hex string | 64   |
 | time | timestamp  |      |
-
-
 
 #### Reply types
 
-No only are there messages that are sent out by the client, but there are also the different types of message that are sent back in reply to these messages. Some we have already touched on, such as the block and the ping. However, some messages don't need a specific reply, so they have a generic "received" message. Each reply corresponds to a message:
+Not only are there messages that are sent out by the client, but there are also the different types of message that are sent back in reply to these messages. Some we have already touched on, such as the block and the ping. However, some messages don't need a specific reply, so they have a generic "received" message. Each reply corresponds to a message:
 
 | name       | reply to | string |
 | ---------- | -------- | ------ |
 | Ping       | pg       | pg     |
-| Block      | br       | bk     |
+| Chain      | cr       | cn     |
 | Block Hash | hr       | bh     |
 | Node       | nr       | nd     |
 | Received   | tx, bk   | ok     |
