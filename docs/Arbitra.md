@@ -28,11 +28,13 @@ Arbitra is a cryptocurrency – a way of performing transactions that are guaran
 
 ### Languages and software
 
-The initial plan is to use the [Electron](https://electron.atom.io) framework. This means that the frontend will be using HTML/CSS, and the backend will use Javascript with a bit of [Node.js](https://nodejs.org/en/) ("Node"), the Javascript runtime that is usually used for web server backends. This is helpful because the nature of cryptocurrencies involves a lot of peer-to-peer communication, which Node should excel at.
+The initial plan is to use the Electron framework. This means that the frontend will be using HTML/CSS, and the backend will use Javascript with a bit of Node.js, the Javascript runtime that is usually used for web server backends. This is helpful because the nature of cryptocurrencies involves a lot of peer-to-peer communication, which Node should excel at.
+
+https://electron.atom.io
+
+https://nodejs.org/en/
 
 The reason I chose Javascript and Electron is that I have a lot of experience with web development, but next to no experience in the GUI systems of any other of the languages I know. Given the time constraints, having to learn a new language could be risky because of how long it would take. Electron will allow me to work with HTML and CSS, which I am very comfortable with, and using Javascript has turned out to have other benefits. With access to the Node Package Manager (npm), I should have no problem finding a cryptography package or anything else I might need.
-
-However, this is not set in stone. If a different technology appears to be a better fit, I have no problem changing over. Still, at this stage using Electron seems to be best for me.
 
 Something to consider is that Bitcoin and Litecoin were made in C++ and Ethereum was made in Golang. However, since I have no experience in either of those languages I thought it would be safer to stick with what I am comfortable with. If performance with Javascript turns out to be too much of an issue I could potentially write the performance-critical parts of the application in a lower-level language like C++ but still use Javascript for the UI/networking/other logic.
 
@@ -52,9 +54,9 @@ The reason it is called Arbitra is because I thought it would be funny to have t
 
 ### Research
 
-The [Bitcoin whitepaper](https://bitcoin.org/bitcoin.pdf) was used to understand much of how a cryptocurrency works.
-[This video](https://www.youtube.com/watch?v=bBC-nXj3Ng4) was also very helpful.
-[This article](https://medium.com/developers-writing/building-a-desktop-application-with-electron-204203eeb658) was useful as reference when building the Electron app, as well as the [Electron Quick Start Guide](https://electron.atom.io/docs/tutorial/quick-start/).
+The Bitcoin whitepaper (https://bitcoin.org/bitcoin.pdf) was used to understand much of how a cryptocurrency works.
+"Ever wonder how Bitcoin (and other cryptocurrencies) actually work?" (https://www.youtube.com/watch?v=bBC-nXj3Ng4) by 1Brown3Blue was also very helpful.
+"Building a desktop application with Electron" (https://medium.com/developers-writing/building-a-desktop-application-with-electron-204203eeb658) was useful as reference when building the Electron app, as well as the Electron Quick Start Guide (https://electron.atom.io/docs/tutorial/quick-start/).
 
 ### A brief introduction to Cryptocurrencies
 
@@ -106,7 +108,7 @@ As you can see, there is no need to trust any one central authority in the netwo
 
 #### More on wallets
 
-Something that must be cleared up - a wallet is not like a bank account. All that is needed for a wallet is a private key. Since they can just be mathematically generated, you would typically just generate a new key for every transaction to avoid having too much value in one key. You also don't need to register your wallet with any central authority, once again ensuring the honesty and security of the network. All a wallet is is a random number. It also solves the problem of everyone seeing every transaction - it doesn't matter because your balance is split up amongst a bunch of anonymous keys.
+Something that must be cleared up - a wallet is not like a bank account. All that is needed for a wallet is a private key, which can be created freely. You also don't need to register your wallet with any central authority, once again ensuring the honesty and security of the network. All a wallet is is a random number. It also solves the problem of everyone seeing every transaction - it doesn't matter because your balance is split up amongst a bunch of anonymous keys.
 
 ### Objectives
 
@@ -130,7 +132,7 @@ These objectives estimate what must happen for the project must be a success.
 
 #### Phase 3 - Network
 
-- [ ] Allow the Electron app to construct valid messages
+- [x] Allow the Electron app to construct valid messages
 - [x] Allow the Electron app to receive and process messages
 - [x] Send a transaction message to another system
 - [x] Check a received message's validity and send an error back if it not valid
@@ -155,18 +157,29 @@ From the description of the cryptocurrency, we can determine the format of the m
 Most simply, the basic message types and their contents are:
 
 - Transaction
+
   -- Transaction ID
+
   -- Recipient
+
   -- Amount
+
   -- Signature
+
   -- Timestamp
 
 - Block
+
   -- Previous block’s hash
+  
   -- Timestamp
+  
   -- Nonce
+  
   -- Number of transactions
+  
   -- List of transactions
+  
   -- It's own hash (added after the nonce is found)
 
 - Recognise Request
@@ -329,7 +342,8 @@ However, before we start that we need to understand the operations we can perfor
 
 ##### Point Addition
 
-Point addition is the process of adding two points together to find a third. This is best shown by this [interactive Desmos graph](https://www.desmos.com/calculator/ialhd71we3).
+Point addition is the process of adding two points together to find a third. This is best shown by this interactive Desmos graph:
+https://www.desmos.com/calculator/ialhd71we3
 
 ![desmos point addition](https://i.imgur.com/1Z76fE3.png)
 
@@ -799,9 +813,7 @@ Whilst previously I had been using $(A+B)\bmod C$, I will now be switching to $A
 
 ###### Graphs and mod p
 
-The most important thing about curves in $\mathbb F_p$ is that instead of being a continuous line, they become a bunch of discrete points. The bigger that $p$ is, the more points there are. The axis also only goes from $0$ to $p-1$ (therefore "finite field"), as you can see in these graphs:
-
-![mod 541](http://slideplayer.com/slide/4377224/14/images/21/Elliptic+Curve+mod+p.jpg)
+The most important thing about curves in $\mathbb F_p$ is that instead of being a continuous line, they become a bunch of discrete points. The bigger that $p$ is, the more points there are. The axis also only goes from $0$ to $p-1$ (therefore "finite field").
 
 Something else important to understand about modulus is how it "wraps around". If we were to find $65536\pmod 5$, it doesn't matter that $65536>5$ as it just removes $5$ over and over until the resulting number is less than $5$, which is the remainder. That is why it is know as "clock arithmetic", because if you wanted to find the time 50 hours after 2pm, you would go around the clock until the resulting number is less than 24. We can therefore represent this problem as $2+50\pmod{24}$, which is $4$, and therefore 4am.
 
@@ -1466,7 +1478,7 @@ The first thing I decided to do was to roughly sketch out how I wanted the appli
 
 This concept was designed to be striking, with the purple backdrop drawing the eye. This was made thinking about how cryptocurrency wallet apps look like on mobile devices.
 
-![concept](C:\Users\Mozzi\Pictures\concept.png)
+![concept](https://i.imgur.com/GF1Z6Ff.png)
 
 ##### Concept 2
 
@@ -1474,13 +1486,13 @@ This concept was inspired by this redesign of Windows File Explorer, by Frantise
 
 ![windows file explorer](https://mir-s3-cdn-cf.behance.net/project_modules/1400/7c929753273659.598b0daad9bdd.png)
 
-![concept2](C:\Users\Mozzi\Pictures\concept2.png)
+![concept2](https://i.imgur.com/EhEJdB7.png)
 
 ##### Concept 3
 
 This is a purple/grey version of concept 2.
 
-![concept3](C:\Users\Mozzi\Pictures\concept3.png)
+![concept3](https://i.imgur.com/26s4tgC.png)
 
 #### Pages
 
@@ -1489,7 +1501,7 @@ This is a purple/grey version of concept 2.
 ```mermaid
 graph TD
 	page
-	maybe((potential<br />page))
+	maybe((potential page))
 	idea(feature)
 ```
 
@@ -1547,7 +1559,7 @@ Of course, we need the flowchart to be in more detail than this. First of all, t
 
 ```mermaid
 graph TD
-	input(Input) --> valid{Confirm<br />Validity}
+	input(Input) --> valid{Confirm Validity}
 	valid --Valid--> sort{Sorter}
 	valid --Invalid--> rts(Send error)
 	sort --Transaction--> txstore[Store Transaction]
@@ -1660,7 +1672,7 @@ The message type is a string, and is one of:
 | Transaction               | tx     |
 | Block                     | bk     |
 | Latest block hash request | hr     |
-| Block request             | br     |
+| Chain                     | br     |
 | Ping                      | pg     |
 | Node request              | nr     |
 
@@ -1786,14 +1798,14 @@ Sending a node request asks for the list of recent connections that each client 
 
 
 
-#### Reply types#
+#### Reply types
 
 No only are there messages that are sent out by the client, but there are also the different types of message that are sent back in reply to these messages. Some we have already touched on, such as the block and the ping. However, some messages don't need a specific reply, so they have a generic "received" message. Each reply corresponds to a message:
 
 | name       | reply to | string |
 | ---------- | -------- | ------ |
 | Ping       | pg       | pg     |
-| Block      | br       | bl     |
+| Block      | br       | bk     |
 | Block Hash | hr       | bh     |
 | Node       | nr       | nd     |
 | Received   | tx, bk   | ok     |
