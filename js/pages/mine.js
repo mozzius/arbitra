@@ -21,7 +21,7 @@ function init() {
                     miner = new Worker('js/mining-script.js')
                     miner.onmessage = (msg) => {
                         if(typeof msg.data === 'string') {
-                            pre.innerHTML += 'Hello World'
+                            pre.innerHTML += msg.data+'<br>'
                         } else {
                             console.log(JSON.stringify(msg.data))
                             blockchain.addBlock(msg.data)
