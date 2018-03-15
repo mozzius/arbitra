@@ -158,7 +158,7 @@ function calcBalances() {
 
 ##### getTopBlock
 
-To get the main chain, we need to know what the top block is. Initally, I iterated through them and based it off of `height`, using `time` as a tie-break.
+To get the main chain, we need to know what the top block is. Initally, I iterated through them and based it off of `height`, using `time` as a tie-break. To make it more flexible, I made it so you have to pass the blockchain to the function to avoid repeating reading the file.
 
 ```javascript
 function getTopBlock(fullchain,callback) {
@@ -326,6 +326,18 @@ function addBlock(msg) {
 ```
 
 `parse.block()` is used to make sure that it's valid, and will throw an error if it's not - this is why there is a `try...catch` statment.
+
+Finally, I exported all the functions.
+
+```javascript
+exports.get = getBlock
+exports.checkBalance = checkBalance
+exports.calcBalances = calcBalances
+exports.updateBalances = updateBalances
+exports.addBlock = addBlock
+exports.getTopBlock = getTopBlock
+exports.mainChain = mainChain
+```
 
 ### Pages
 
