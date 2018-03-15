@@ -8,12 +8,12 @@ function init() {
         document.getElementById('curr').textContent = target
     })
 
-    // saving the ping
+    // ping an IP
     document.getElementById('send').addEventListener('click',() => {
         file.get('advertise','network-settings',(data) => {
             var msg = {
                 "header": {
-                    "type": "pg",
+                    "type": "pg"
                 },
                 "body": {
                     "advertise": data
@@ -43,7 +43,9 @@ function init() {
 
     // refreshing the cache
     document.getElementById('refresh').addEventListener('click',() => {
-        network.connect()
+        file.storeAll('connections','[]')
+        document.getElementById('connections').textContent = 0
+        network.connect(false)
         document.getElementById('re-save').classList -= 'hidden'
     })
 }

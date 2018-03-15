@@ -34,6 +34,7 @@ function init() {
         file.storeAll('error-log',[])
         document.getElementById('ca-save').classList.remove('hidden')
         document.getElementById('connections').textContent = 0
+        document.getElementById('height').textContent = 0
         console.warn('All files wiped')
         network.connect(false)
     })

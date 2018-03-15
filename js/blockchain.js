@@ -164,19 +164,17 @@ function mainChain(callback) {
         if (data === '{}') {
             callback({})
         } else {
-            setTimeout(() => {
-                var fullchain = JSON.parse(data)
-                getTopBlock(fullchain,(top) => {
-                    mainchain[top] = fullchain[top]
-                    var current = top
-                    var parent
-                    while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
-                        parent = fullchain[current].parent
-                        mainchain[parent] = fullchain[parent]
-                        current = parent
-                    }
-                    callback(mainchain)
-                })
+            var fullchain = JSON.parse(data)
+            getTopBlock(fullchain,(top) => {
+                mainchain[top] = fullchain[top]
+                var current = top
+                var parent
+                while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    parent = fullchain[current].parent
+                    mainchain[parent] = fullchain[parent]
+                    current = parent
+                }
+                callback(mainchain)
             })
         }
     },'[]')
