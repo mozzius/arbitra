@@ -2973,17 +2973,24 @@ var path = remote.app.getPath('appData')+'/arbitra-client/
 
 We can then store data using the `fs` (File System) module, which will be covered during the Technical Solution phase.
 
-Files will be in JSON (JavaScript Object Notation), because as the name suggests it is directly 
+Files will be in JSON (JavaScript Object Notation), because as the name suggests it is directly compatible with  
 
 #### File Planning
 
 There are several different files that we need to have. The obvious ones are listed here:
 
-| Name |      |      |
-| ---- | ---- | ---- |
-|      |      |      |
-|      |      |      |
-|      |      |      |
+| Name                      | Description                                           | Type |
+| ------------------------- | ----------------------------------------------------- | ---- |
+| `blockchain.json`         | The blockchain                                        | `{}` |
+| `connections.json`        | List of nodes that are currently connected            | `[]` |
+| `recent-connections.json` | Nodes that have been connected to                     | `[]` |
+| `sent.json`               | Sent messages so they aren't resent                   | `[]` |
+| `network-setting.json`    | Settings options                                      | `{}` |
+| `error-log.json`          | Stores error messages                                 | `[]` |
+| `txpool.json`             | Pending transactions that are used to generate blocks | `[]` |
+| `wallets.json`            | Stores wallets                                        | `[]` |
+
+The type indicates if the file will be in Array form or in Object literal form.
 
 ## Technical Solution
 
