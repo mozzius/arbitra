@@ -169,6 +169,24 @@ Something to note about floating-point operations is that they're not very accur
 
 This is not good for handling transactions like this. We can circumvent this, however, using integers, and then multiplying them by a fixed amount. I decided that the smallest unit an arbitrary unit could be split up into is a micro-Arbitrary unit, or $1\times 10^{-6}$. Then, we don't have to deal with floating point operations, as we can just use integers to define the number of $\mu$au, which we can then convert back to au. For example, to send 50au, the `amount` would be written as `5000000`.
 
+When a client receives the flowing, it should do the following:
+
+```flow
+st=>start: Receive Message
+end=>end: Send "ok"
+er=>end: Send "er"
+ver=>condition: Is valid?
+txpool=>condition: Is in chain/txpool?
+sta=>operation: Send to all
+
+
+st->ver
+ver(yes)->txpool
+txpool(yes)->sta->end
+txpool(no)->end
+ver(no)->er
+```
+
 ##### Block
 
 Blocks contain transactions, which are objects. We also need to determine the method whereby the miner receives their reward, and the simplest way of doing that is to have a `miner` attribute in the body in which the person who mined the block can put any public key they desire, and it will be rewarded 50au.
@@ -185,6 +203,26 @@ Blocks contain transactions, which are objects. We also need to determine the me
 
 The `transactions` array would contain the `body` of transaction messages. The `nonce` can be any string that makes the hash of the body meet the required difficulty. The difficulty is determined by how long it took to mine the previous block, but the mechanisms behind that works will have to be determined by testing once block mining is implemented. `parent` is the hash of the block that comes before it in the chain. `height` is the number of blocks it is away from the genesis block.
 
+```flow
+st=>start: Receive Message
+end=>end: Send "ok"
+er=>end: Send "er"
+ver=>condition: Is valid?
+chain=>condition: Is in chain?
+sta=>operation: Send to all
+parent=>condition: Is parent in chain?
+add=>operation: Add to blockchain
+cr=>operation: Send "cr"
+
+st->ver
+ver(yes)->chain
+chain(yes)->e
+chain(no)->parent
+parent(yes)->add->sta->end
+parent(no)->cr->end
+ver(no)->er
+```
+
 ##### Ping
 
 The ping message is a critical part of the network. Sending a ping signals that the node wants to be sent messages that other nodes receive. It also has a Boolean value `advertise`, which means that, if set to true, the node that received the ping will send the IP address of the node that sent it to nodes that send a node request. This should be a toggle that the client can switch if they receive too many messages.
@@ -194,7 +232,18 @@ The ping message is a critical part of the network. Sending a ping signals that 
 | advertise | boolean   |      |
 | time      | timestamp |      |
 
-On receiving a ping, a client will reply with a ping. This shows that they acknowledge each other. 
+On receiving a ping, a client will reply with a ping. This shows that they acknowledge each other.
+
+```flow
+st=>start: Receive Message
+end=>end: Send "pg"
+ver=>condition: Is IP in connections?
+add=>operation: Add to connections
+
+st->ver
+ver(yes)->end
+ver(no)->add->end
+```
 
 ##### Node Request
 

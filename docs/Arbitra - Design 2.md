@@ -287,33 +287,33 @@ This makes it a relative path rather than an absolute path, and so should now li
 Trying again, the application loads properly. This means the function works! We now need to turn the `.items` in the menu to buttons that change the pages. We can implement this using `document.getElementById()`. `() => {...}` is "arrow notation" for a function - it is a shorter way of writing `function() {...}`.
 
 ```javascript
-    // Changing pages
-    // Default is overview
-    changePage("overview")
+// Changing pages
+// Default is overview
+changePage("overview")
 
-    document.getElementById("overview").addEventListener("click", () => {
-      changePage("overview")
-    })
-    document.getElementById("testing").addEventListener("click", () => {
-      changePage("testing")
-    })
+document.getElementById("overview").addEventListener("click", () => {
+    changePage("overview")
+})
+document.getElementById("testing").addEventListener("click", () => {
+    changePage("testing")
+})
 ```
 
 I gave every menu item an ID, so that they can be selected.
 
 ```html
-			<div class="subsec" id="overview">Overview</div>
-			<div class="subsec">Transactions</div>
-			<div class="items" id="make">Make Transactions</div>
-			<div class="items" id="receive">Receive Transactions</div>
-			<div class="items" id="history">Transaction History</div>
-			<div class="subsec">Blockchain</div>
-			<div class="items" id="view">View Blockchain</div>
-			<div class="items" id="mine">Mine for Arbitrary Units</div>
-			<div class="subsec">Settings</div>
-			<div class="items" id="network">Network Settings</div>
-			<div class="items" id="app">Application Settings</div>
-			<div class="subsec" id="testing">Testing</div>
+<div class="subsec" id="overview">Overview</div>
+<div class="subsec">Transactions</div>
+<div class="items" id="make">Make Transactions</div>
+<div class="items" id="receive">Receive Transactions</div>
+<div class="items" id="history">Transaction History</div>
+<div class="subsec">Blockchain</div>
+<div class="items" id="view">View Blockchain</div>
+<div class="items" id="mine">Mine for Arbitrary Units</div>
+<div class="subsec">Settings</div>
+<div class="items" id="network">Network Settings</div>
+<div class="items" id="app">Application Settings</div>
+<div class="subsec" id="testing">Testing</div>
 ```
 
 When we click the Testing button, it changes page! This means that the navigation works, and we can massively simplify the process of creating and changes pages.

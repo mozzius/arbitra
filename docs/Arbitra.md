@@ -1672,7 +1672,7 @@ The message type is a string, and is one of:
 | Transaction               | tx     |
 | Block                     | bk     |
 | Latest block hash request | hr     |
-| Chain                     | br     |
+| Chain request             | cr     |
 | Ping                      | pg     |
 | Node request              | nr     |
 
