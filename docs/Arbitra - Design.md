@@ -254,36 +254,60 @@ Sending a node request asks for the list of recent connections that each client 
 | max  | integer   |      |
 | time | timestamp |      |
 
+```flow
+st=>start: Receive Message
+end=>end: Send "nd"
+gtb=>operation: Get connections where "advertise" = true
+
+st->gtb->end
+```
+
 ##### Block Hash Request
 
-
-
-| name | type       | size |
-| ---- | ---------- | ---- |
-| hash | hex string | 64   |
-| time | timestamp  |      |
-
-
-
-##### Block Request
-
-
+This asks for the hash of the highest block on the blockchain.
 
 | name | type       | size |
 | ---- | ---------- | ---- |
 | hash | hex string | 64   |
 | time | timestamp  |      |
 
+```flow
+st=>start: Receive Message
+end=>end: Send "bh"
+gtb=>operation: Get top block
 
+st->gtb->end
+```
 
-#### Reply types#
+##### Chain Request
+
+This asks for a subsection of the blockchain that is directly beneath the block referred to in the message.
+
+| name | type       | size |
+| ---- | ---------- | ---- |
+| hash | hex string | 64   |
+| time | timestamp  |      |
+
+```flow
+st=>start: Receive Message
+end=>end: Send "cn"
+er=>end: Send "er"
+chain=>operation: Get chain below hash
+ver=>condition: Is hash in chain?
+
+st->ver
+ver(yes)->chain->end
+ver(no)->er
+```
+
+#### Reply types
 
 No only are there messages that are sent out by the client, but there are also the different types of message that are sent back in reply to these messages. Some we have already touched on, such as the block and the ping. However, some messages don't need a specific reply, so they have a generic "received" message. Each reply corresponds to a message:
 
 | name       | reply to | string |
 | ---------- | -------- | ------ |
 | Ping       | pg       | pg     |
-| Block      | br       | bl     |
+| Chain      | br       | cn     |
 | Block Hash | hr       | bh     |
 | Node       | nr       | nd     |
 | Received   | tx, bk   | ok     |
@@ -292,15 +316,16 @@ No only are there messages that are sent out by the client, but there are also t
 
 The ping reply is just another ping.
 
-##### Block
+##### Chain
 
-In reply to a block request. It is just the body of a block and it's associated hash.
+In reply to a chain request. It is just an array of blocks block and it's associated hash.
 
-| name | type       | size |
-| ---- | ---------- | ---- |
-| hash | hex string | 64   |
-| body | object     |      |
-| time | timestamp  |      |
+| name  | type      | size |
+| ----- | --------- | ---- |
+| chain | array     |      |
+| time  | timestamp |      |
+
+When a client receives this message, it verifies each one and if it passes, it adds it to the blockchain.
 
 ##### Block hash
 
@@ -310,6 +335,8 @@ In reply to a block hash request. It is simply the hash from the top of the bloc
 | ---- | ---------- | ---- |
 | hash | hex string | 64   |
 | time | timestamp  |      |
+
+When a client receives a block hash, it checks it to see if it is the same as their top block. If it is not, it sends a chain request to all connections.
 
 ##### Node
 
@@ -321,6 +348,8 @@ In reply to a node request. This is simply an array of nodes from the list of re
 | time  | timestamp |      |
 
 The array is just an array of strings.
+
+When a client receives this message, it sends a ping to each of the IP listed in the message.
 
 ##### Received
 
@@ -350,6 +379,8 @@ The `error` can be one of several strings, that correspond to different errors.
 | amount       | Transaction invalid due to not enough funds      |
 | transaction  | Transaction in a block is invalid                |
 | notfound     | Requested block/data not found                   |
+
+When a client receives an error message, it stores it.
 
 #### Network diagrams
 

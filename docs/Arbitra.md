@@ -1744,11 +1744,21 @@ This is not good for handling transactions like this. We can circumvent this, ho
 
 The flowchart looks like this:
 
-```flowchart
+```flow
+st=>start: Receive Message
+end=>end: Send "ok"
+er=>end: Send "er"
+ver=>condition: Is valid?
+txpool=>condition: Is in chain/txpool?
+sta=>operation: Send to all
 
+
+st->ver
+ver(yes)->txpool
+txpool(yes)->sta->end
+txpool(no)->end
+ver(no)->er
 ```
-
-
 
 ##### Block
 
@@ -1766,6 +1776,26 @@ Blocks contain transactions, which are objects. We also need to determine the me
 
 The `transactions` array would contain the `body` of transaction messages. The `nonce` can be any string that makes the hash of the body meet the required difficulty. The difficulty is determined by how long it took to mine the previous block, but the mechanisms behind that works will have to be determined by testing once block mining is implemented. `parent` is the hash of the block that comes before it in the chain. `height` is the number of blocks it is away from the genesis block.
 
+```flow
+st=>start: Receive Message
+end=>end: Send "ok"
+er=>end: Send "er"
+ver=>condition: Is valid?
+chain=>condition: Is in chain?
+sta=>operation: Send to all
+parent=>condition: Is parent in chain?
+add=>operation: Add to blockchain
+cr=>operation: Send "cr"
+
+st->ver
+ver(yes)->chain
+chain(yes)->e
+chain(no)->parent
+parent(yes)->add->sta->end
+parent(no)->cr->end
+ver(no)->er
+```
+
 ##### Ping
 
 The ping message is a critical part of the network. Sending a ping signals that the node wants to be sent messages that other nodes receive. It also has a Boolean value `advertise`, which means that, if set to true, the node that received the ping will send the IP address of the node that sent it to nodes that send a node request. This should be a toggle that the client can switch if they receive too many messages.
@@ -1775,7 +1805,18 @@ The ping message is a critical part of the network. Sending a ping signals that 
 | advertise | boolean   |      |
 | time      | timestamp |      |
 
-On receiving a ping, a client will reply with a ping. This shows that they acknowledge each other. 
+On receiving a ping, a client will reply with a ping. This shows that they acknowledge each other.
+
+```flow
+st=>start: Receive Message
+end=>end: Send "pg"
+ver=>condition: Is IP in connections?
+add=>operation: Add to connections
+
+st->ver
+ver(yes)->end
+ver(no)->add->end
+```
 
 ##### Node Request
 
@@ -1786,6 +1827,14 @@ Sending a node request asks for the list of recent connections that each client 
 | max  | integer   |      |
 | time | timestamp |      |
 
+```flow
+st=>start: Receive Message
+end=>end: Send "nd"
+gtb=>operation: Get connections where "advertise" = true
+
+st->gtb->end
+```
+
 ##### Latest Block Hash Request
 
 This is a small message that a client sends out to check that it's blockchain is up to date.
@@ -1793,6 +1842,14 @@ This is a small message that a client sends out to check that it's blockchain is
 | name | type      | size |
 | ---- | --------- | ---- |
 | time | timestamp |      |
+
+```flow
+st=>start: Receive Message
+end=>end: Send "bh"
+gtb=>operation: Get top block
+
+st->gtb->end
+```
 
 ##### Chain Request
 
@@ -1802,6 +1859,18 @@ This function asks other nodes for the chain beneath the hash listed in the body
 | ---- | ---------- | ---- |
 | hash | hex string | 64   |
 | time | timestamp  |      |
+
+```flow
+st=>start: Receive Message
+end=>end: Send "cn"
+er=>end: Send "er"
+chain=>operation: Get chain below hash
+ver=>condition: Is hash in chain?
+
+st->ver
+ver(yes)->chain->end
+ver(no)->er
+```
 
 #### Reply types
 
@@ -1819,15 +1888,16 @@ Not only are there messages that are sent out by the client, but there are also 
 
 The ping reply is just another ping.
 
-##### Block
+##### Chain
 
-In reply to a block request. It is just the body of a block and it's associated hash.
+In reply to a chain request. It is just an array of blocks block and it's associated hash.
 
-| name | type       | size |
-| ---- | ---------- | ---- |
-| hash | hex string | 64   |
-| body | object     |      |
-| time | timestamp  |      |
+| name  | type      | size |
+| ----- | --------- | ---- |
+| chain | array     |      |
+| time  | timestamp |      |
+
+When a client receives this message, it verifies each one and if it passes, it adds it to the blockchain.
 
 ##### Block hash
 
@@ -1837,6 +1907,8 @@ In reply to a block hash request. It is simply the hash from the top of the bloc
 | ---- | ---------- | ---- |
 | hash | hex string | 64   |
 | time | timestamp  |      |
+
+When a client receives a block hash, it checks it to see if it is the same as their top block. If it is not, it sends a chain request to all connections.
 
 ##### Node
 
@@ -1848,6 +1920,8 @@ In reply to a node request. This is simply an array of nodes from the list of re
 | time  | timestamp |      |
 
 The array is just an array of strings.
+
+When a client receives this message, it sends a ping to each of the IP listed in the message.
 
 ##### Received
 
