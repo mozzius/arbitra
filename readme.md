@@ -1,6 +1,6 @@
 # Arbitra
 
-bit gay
+a cryptocurrency
 
 ## How to run
 
