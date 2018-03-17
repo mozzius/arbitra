@@ -1,6 +1,6 @@
 {
   "name": "arbitra-client",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "main": "main.js",
   "license": "MIT",
   "repository": {
@@ -11,7 +11,6 @@
     "big-integer": "^1.6.26",
     "electron": "^1.8.3",
     "ip": "^1.1.5",
-    "random-number-csprng": "^1.0.2",
     "tiny-worker": "^2.1.2"
   }
 }

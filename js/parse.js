@@ -20,7 +20,6 @@ function transaction(tx) {
         }
         // this is the "message" for the ecdsa function
         concat = input.amount+tx.to+tx.time
-        console.log(concat)
         ecdsa.verifyMsg(concat,input.signature,input.person,(result) => {
             if (result) {
                 blockchain.checkBalance(input.person,input.amount,(balanceCheck) => {
@@ -87,12 +86,17 @@ function tx(msg,callback) {
     // verify that it works
     transaction(msg.body)
     // add to txpool
-    file.append('txpool',msg.body,() => {
-        // send to contacts
-        sendToAll(msg)
-        // reply
-        callback(reply)
-    })
+    file.getAll('txpool',(data) => {
+        var txpool = JSON.parse(data)
+        if (!txpool.includes(msg.body)) {
+            file.append('txpool',msg.body,() => {
+                // send to contacts
+                sendToAll(msg)
+                // reply
+                callback(reply)
+            })
+        }
+    },'[]')
 }
 
 function bk(msg,callback) {
@@ -110,7 +114,7 @@ function bk(msg,callback) {
 
 function hr(msg,callback) {
     file.getAll('blockchain',(data) => {
-        if (data === null) {
+        if (data === null || data === "{}") {
             throw 'notfound'
         } else {
             blockchain.getTopBlock(JSON.parse(data),(top) => {
@@ -203,21 +207,19 @@ function pgreply(msg,ip) {
 function bh(msg,callback) {
     file.getAll('blockchain',(data) => {
         var mainchain = JSON.parse(data)
-        blockchain.getTopBlock(mainchain,(top) => {
-            if (top !== msg.body.hash && !Object.keys(mainchain).includes(msg.body.hash)) {
-                // if the received top hash is not equal to the one on disk
-                // and it's not in the blockchain, then send out a chain request
-                var chainrequest = {
-                    "header": {
-                        "type": "cr"
-                    },
-                    "body": {
-                        "hash": msg.body.hash
-                    }
+        if (!Object.keys(mainchain).includes(msg.body.hash)) {
+            // if the received top hash is not equal to the one on disk
+            // and it's not in the blockchain, then send out a chain request
+            var chainrequest = {
+                "header": {
+                    "type": "cr"
+                },
+                "body": {
+                    "hash": msg.body.hash
                 }
-                network.sendToAll(chainrequest)
             }
-        })
+            network.sendToAll(chainrequest)
+        }
     },'{}')
 }
 
@@ -278,18 +280,34 @@ function cr(msg,callback) {
             if (block === null) {
                 throw 'notfound'
             } else {
-                blockchain.mainChain((chain) => {
-                    var reply = {
-                        "header": {
-                            "type": "cn"
-                        },
-                        "body": {
-                            "chain": chain
+                blockchain.getChain(msg.body.hash,(chain) => {
+                    if (chain === null) {
+                        throw 'notfound'
+                    } else {
+                        var reply = {
+                            "header": {
+                                "type": "cn"
+                            },
+                            "body": {
+                                "chain": chain
+                            }
                         }
+                        callback(reply)
                     }
-                    callback(reply)
                 })
             }
+        })
+    } else {
+        blockchain.mainChain((chain) => {
+            var reply = {
+                "header": {
+                    "type": "cn"
+                },
+                "body": {
+                    "chain": chain
+                }
+            }
+            callback(reply)
         })
     }
 }

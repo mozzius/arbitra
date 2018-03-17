@@ -80,63 +80,6 @@ function calcBalances() {
     })
 }
 
-function updateBalances(block) {
-    const miningreward = 50000000
-    txs = block.body.transactions
-    file.getAll('balances',(balances) => {
-        // set the most recent block hash
-        balances['latest'] = block.header.hash
-        for (var i = 0, len = txs.length; i < len; i++) {
-            var from = tx[i].from
-            for (var i = 0, len = tx.length; i < len; i++) {
-                // deduct amounts from the inputs
-                if (balances.hasOwnProperty(from.wallet)) {
-                    balances[from.wallet] -= from.amount
-                } else {
-                    balances[from.wallet] = -from.amount
-                }
-                // add amount to the recipient's balance
-                if (balances.hasOwnProperty(tx[i].to)) {
-                    balances[tx[i].to] += from.amount
-                } else {
-                    balances[tx[i].to] = from.amount
-                }
-            }
-        }
-        // mining rewards
-        if (balances.hasOwnProperty(block.miner)) {
-            balances[block.to] += miningreward
-        } else {
-            balances[block.to] = miningreward
-        }
-        // calculating the balance in the corner
-        file.getAll('wallets',(data) => {
-            var wallets = JSON.parse(data)
-            var newWallets = []
-            var balance = 0
-            wallets.forEach((wallet) => {
-                if (balances.hasOwnProperty(block.miner)) {
-                    amount = balances[wallet.public]
-                }
-                // add the au in the wallet to the total balance
-                balance += amount
-                // and set the balance in the wallet
-                newWallets.push({
-                    "name": wallet.name,
-                    "public": wallet.public,
-                    "private": wallet.private,
-                    "amount": amount
-                })
-            })
-            // change microau to au and set the textcontent of the top left thing
-            document.getElementById('current-balance').textContent = balance / 100000
-            // save balances
-            file.storeAll('balances',balances)
-            file.storeAll('wallets',newWallets)
-        },'[]')
-    },'{}')
-}
-
 function addBlock(msg) {
     try {
         parse.block(msg.body)
@@ -177,7 +120,33 @@ function mainChain(callback) {
                 callback(mainchain)
             })
         }
-    },'[]')
+    },'{}')
+}
+
+function getChain(top,callback) {
+    var mainchain = {}
+    file.getAll('blockchain',(data) => {
+        if (data === '{}') {
+            callback(null)
+        } else {
+            try {
+                var fullchain = JSON.parse(data)
+                mainchain[top] = fullchain[top]
+                var current = top
+                var parent
+                while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    parent = fullchain[current].parent
+                    mainchain[parent] = fullchain[parent]
+                    current = parent
+                }
+            } catch(e) {
+                console.warn(e)
+                mainchain = null
+            } finally {
+                callback(mainchain)
+            }
+        }
+    },'{}')
 }
 
 function getTopBlock(fullchain,callback) {

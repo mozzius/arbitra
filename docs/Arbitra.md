@@ -114,42 +114,18 @@ Something that must be cleared up - a wallet is not like a bank account. All tha
 
 These objectives estimate what must happen for the project must be a success.
 
-#### Phase 1 - Protocol
-
-- [x] Define basic message types. Block, Transaction, etc
-- [x] Define data types
-- [x] Define error messages and other miscellaneous messages
-
-#### Phase 2 - Client
-
-- [x] Hash a string [done]
-- [x] Hash the mockup of a block
-- [x] Implement hashing in an Electron app
-- [x] Create a public/private string pair generator
-- [x] Sign and verify a mockup of a transaction message
-- [x] Implement signing into the Electron app
-- [x] Create UI for Electron app
-
-#### Phase 3 - Network
-
-- [x] Allow the Electron app to construct valid messages
-- [x] Allow the Electron app to receive and process messages
-- [x] Send a transaction message to another system
-- [x] Check a received message's validity and send an error back if it not valid
-- [x] Allow the app to create blocks based off of received messages
-- [x] Implement system to send received transactions to other blocks
-- [x] Automate systems to work in conjunction with each other
-- [x] Partial protocol test with multiple clients
-- [x] Complete error handling
-- [x] Full protocol test
-
-#### Phase 4 - The End
-
-- [ ] Feedback from others
-- [x] Final UI polish
-- [x] Genesis block - all systems live
-
-Creating the genesis block is where the currency starts existing. At that point, all systems should work and the implementation phase of the project should be done, bar any minor improvements.
+- The user should be able to construct and send a valid transaction.
+- The program should be able to automatically parse, validate, and deal with messages.
+- The user should be able to mine the blockchain.
+- Users should be rewarded for mining the blockchain.
+- All transactions should be secured through the Elliptic Curve Digital Signature Algorithm.
+- The user should be able to see sent transactions, their wallets, and the blockchain.
+- The user should be able to change basic settings.
+- The program should connect to other clients automatically, and default to a IP that is running the program.
+- The program should be able to detect and reject invalid messages.
+- The blockchain should function as described by the previous section.
+- The user should be able to interact with the program through an easy-to-use UI.
+- The user should be able to save their wallets.
 
 ### Basic Protocol
 
@@ -1507,8 +1483,6 @@ graph TD
 
 The first concept would be quite minimal, therefore there would only be three or so buttons that could be accessed from the main page. Therefore the structure of this app would be quite hierarchical.
 
-
-
 ```mermaid
 graph TD
 	overview --> transactions
@@ -1545,37 +1519,9 @@ graph TD
 	app --> theme((theme))
 ```
 
-### Data Paths
+## Documented Design
 
-We need to map out the flow of data within the application. Since the application is interacting with the network the whole time, the application needs to be able to take in and process data continuously, rather than making a request when the user presses a button for example. We can map this using a flowchart.
-
-```mermaid
-graph TD
-	Input(Parse) --> Parse
-	Parse --> Output(Output)
-```
-
-Of course, we need the flowchart to be in more detail than this. First of all, the app needs to parse and sort incoming messages.
-
-```mermaid
-graph TD
-	input(Input) --> valid{Confirm Validity}
-	valid --Valid--> sort{Sorter}
-	valid --Invalid--> rts(Send error)
-	sort --Transaction--> txstore[Store Transaction]
-	txstore --> sent[List of sent messages]
-	sort --Block--> bc[Add to Blockchain]
-	bc --> sent
-	sort --Misc Request--> rq[Misc request handler]
-	rq --> rts
-	sent --If not already sent--> send(Send to connections)
-```
-
-This flowchart shows the steps that the app will take when it receives a message. However, there is an issue in that the program will need to know the type when seeing whether it is valid or not, so the "Confirm Validity" function and the "Sorter" function would probably be combined into one.
-
-## Design
-
-### How the network works
+### How the network system works
 
 The idea behind how I've structured the protocol is that there are different types of messages, each of which has a different specific reply. Each message is meant to stand alone by itself, and there is no 'conversation' between nodes. For example, if a node want's to check that it's blockchain is up to date, it will send out a message asking for the top block. If someone replies with their top block and it's different to what they have on disk, instead of replying to the same node asking for the blockchain, it will instead send out a chain request to all the nodes it is in contact with. This greatly simplifies complexity of the messaging system, allowing me to develop each function separately from each other.
 
@@ -4255,9 +4201,19 @@ We also need to find the size of the body. I found an answer on [StackOverflow](
     }
 ```
 
-#### Verifying Different Message Types
+#### Parsing Different Message Types
 
-To make things a bit clearer, I decided to split these functions into a new file, `verify.js`, so that `parseMsg()` is more readable. However, this means that each of the functions like `tx()` will be converted to `verify.tx()`.
+To make things a bit clearer, I decided to split these functions into a new file, `parse.js`, so that `parseMsg()` is more readable. However, this means that each of the functions like `tx()` will be converted to `parse.tx()`.
+
+I imported the following files, as all are needed.
+
+```javascript
+const network = require('./network.js')
+const hash = require('./hashing.js')
+const ecdsa = require('./ecdsa.js')
+const blockchain = require('./blockchain.js')
+const file = require('./file.js')
+```
 
 The first of these functions is `pg()`. Since we need the IP of the node that sent it, we pass the IP as well as the message.
 
@@ -4537,6 +4493,376 @@ function pg(msg,ip,callback) {
     })
 }
 ```
+##### tx
+
+Much like `pg()`, we will be reusing the code to verify transactions, so I split it up into a separate function. This way, it can be used across the program and not just in this context.
+
+###### transaction
+
+`transaction()` will take in a message's body, then iterate through the inputs to see if they are valid, using `ecdsa.verifyMsg()`. The message is the amount plus the recipient's address plus the time. It is a subroutine and does not return anything.
+
+```javascript
+function transaction(tx) {
+    var from = tx.from
+    var len = from.length
+    var input
+    var concat
+    // goes through the transaction inputs
+    // and checks that they're all valid
+    for (var i; i < len; ++i) {
+        input = from[i]
+        // this is the "message" for the ecdsa function
+        concat = input.amount+tx.to+tx.time
+        ecdsa.verifyMsg(concat,input.signature,input.person,(result) => {
+            if (result) {
+                // it worked
+            } else {
+                throw 'signature'
+            }
+        })
+    }
+}
+```
+
+It also needs to check that the wallets aren't overspending. To do this, I used a function that will be created later, `blockchain.checkBalance()`. We simply pass it the amount and the wallet, and it will return `true` if the wallet has enough arbitrary units to complete the transaction. However, you could bypass this by using the same wallet twice in the same transaction. Therefore, it throws a `parse` error if a wallet is repeated by adding the wallets to a list and checking each wallet against the list.
+
+```javascript
+function transaction(tx) {
+    var from = tx.from
+    var len = from.length
+    var input
+    var concat
+    var repeats = []
+    // goes through the transaction inputs
+    // and checks that they're all valid
+    for (var i; i < len; ++i) {
+        input = from[i]
+        if (repeats.contains(input)) {
+            // wallets in a transaction must be unique
+            throw 'parse'
+        }
+        // this is the "message" for the ecdsa function
+        concat = input.amount+tx.to+tx.time
+        ecdsa.verifyMsg(concat,input.signature,input.person,(result) => {
+            if (result) {
+                blockchain.checkBalance(input.person,input.amount,(balanceCheck) => {
+                    if (balanceCheck) {
+                        repeats.push(input)
+                    } else {
+                        throw 'amount'
+                    }
+                })
+            } else {
+                throw 'signature'
+            }
+        })
+    }
+}
+```
+
+Now, all `tx()` need to do is call that subroutine, and then add it to `txpool.json`, send it on to all the other nodes, and add it to `txpool.json`, if it's not already there.
+
+```javascript
+function tx(msg,callback) {
+    var reply = {
+        "header": {
+            "type": "ok"
+        },
+        "body": {}
+    }
+    // verify that it works
+    transaction(msg.body)
+    // add to txpool
+    file.getAll('txpool',(data) => {
+        var txpool = JSON.parse(data)
+        if (!txpool.includes(msg.body)) {
+            file.append('txpool',msg.body,() => {
+                // send to contacts
+                sendToAll(msg)
+                // reply
+                callback(reply)
+            })
+        }
+    },'[]')
+}
+```
+
+##### bk
+
+As with `tx()`, I made a separate subroutine to see if a block is valid. This iterates checks the difficulty of a block and then goes through the transactions, calling `transaction()` for each one.
+
+```javascript
+function block(body) {
+    const difficulty = 6
+    var txlist = body.transactions
+    var len = txlist.length
+    var tx
+    var blockhash = hash.sha256hex(JSON.stringify(body))
+    // verify all the transactions
+    var pass = true
+    for (var i = 0; i < body.difficulty; i++) {
+        if (blockhash.charAt(i) !== 'a') {
+            pass = false
+        }
+    }
+    if (body.difficulty === difficulty && pass) {
+        for (var i; i < len; ++i) {
+            tx = txlist[i]
+            try {
+                transaction(tx)
+            } catch(e) {
+                if (e === 'signature' || e === 'amount') {
+                    throw 'transaction'
+                }
+            }
+        }
+    } else {
+        throw 'difficulty'
+    }
+}
+```
+
+The `bk()` function itself is very simple, as it just calls `block()` then `blockchain.addBlock()`, a function that will be covered later.
+
+```javascript
+function bk(msg,callback) {
+    var reply = {
+        "header": {
+            "type": "ok"
+        },
+        "body": {}
+    }
+    block(msg.body)
+    // if nothing has been thrown, add to local blockchain
+    blockchain.addBlock(msg)
+    callback(reply)
+}
+```
+
+##### ok
+
+I didn't even make an `ok()` function, I just had it print `"Message received ok"` into the console back in `parseReply()`.
+
+##### hr
+
+To construct a `bh`, we need to use a function that has not yet been covered, `blockchain.getTopBlock()`. This simply returns the hash of the top block of the blockchain.
+
+```javascript
+function hr(msg,callback) {
+    file.getAll('blockchain',(data) => {
+        if (data === null || data === "{}") {
+            throw 'notfound'
+        } else {
+            blockchain.getTopBlock(JSON.parse(data),(top) => {
+                var reply = {
+                    "header": {
+                        "type": "bh"
+                    },
+                    "body": {
+                        "hash": top
+                    }
+                }
+                callback(reply)
+            })
+        }
+    })
+}
+```
+
+##### bh
+
+This is the reply to a hash request, and is the hash of that client's top block. In this function, we need to check if it's in the blockchain, and if not, send out chain requests. To do this, we use `!Object.keys(mainchain).includes(msg.body.hash)`, which gets all the keys from a block and checks to see if `msg.body.hash` is one of them. If it does, it returns `!true`, which is `false`.
+
+```javascript
+function bh(msg,callback) {
+    file.getAll('blockchain',(data) => {
+        var mainchain = JSON.parse(data)
+        if (!Object.keys(mainchain).includes(msg.body.hash)) {
+            // if the received top hash is not equal to the one on disk
+            // and it's not in the blockchain, then send out a chain request
+            var chainrequest = {
+                "header": {
+                    "type": "cr"
+                },
+                "body": {
+                    "hash": msg.body.hash
+                }
+            }
+            network.sendToAll(chainrequest)
+        }
+    },'{}')
+}
+```
+
+##### nr
+
+For a node request, we simply iterate through connections, and add them to an array if `"advertise"` is `"true"`.
+
+```javascript
+function nr(msg,callback) {
+    var reply = {
+        "header": {
+            "type": "nd"
+        },
+        "body": {
+            "nodes": []
+        }
+    }
+    file.getAll('connections',(data) => {
+        if (data === null) {
+            throw 'notfound'
+        } else {
+            var connections = JSON.parse(connections)
+            connections.forEach((connection) => {
+                if (connection.advertise == "true") {
+                    reply.body.nodes.push(connection.ip)
+                }
+            })
+            callback(reply)
+        }
+    })
+}
+```
+
+#### nd
+
+When we receive these nodes, we need to make sure that we are not pinging nodes that we are already connected to. This means that we need to get the list of nodes and only send `pg` messages to those that aren't on both lists.
+
+The first part of this function is simply constructing the `pg` message.
+
+```javascript
+function nd(msg) {
+    // some nodes we can connect to
+    file.get('advertise','network-settings',(data) => {
+        if (data === 'true' || data === 'false') {
+            var advertise = data
+        } else {
+            var advertise = 'true'
+        }
+        var ping = {
+            "header": {
+                "type": "pg"
+            },
+            "body": {
+                "advertise": advertise
+            }
+        }
+        file.getAll('connections',(data) => {
+            // this must get connection data, as otherwise it wouldn't have received this message
+            var connections = JSON.parse(data)
+            msg.body.nodes.forEach((node) => {
+                var send = true
+                // if we are already connected to the node don't send
+                connections.forEach((connection) => {
+                    if (node.ip === connection) {
+                        send = false
+                    }
+                })
+                // otherwise send a ping
+                if (send) {
+                    network.sendMsg(ping,node.ip)
+                }
+            })
+        })
+    })
+}
+```
+
+##### cr
+
+When a client receives a chain request, there are three possibilites:
+
+1. It asks for a hash, which it has
+2. It asks for a hash, which it doesn't have
+3. It does not ask for a hash
+
+If it asks for a hash and the client does not have that hash, or if the requested hash is not a part of a complete chain, then it should throw a `"notfound"` error. If it asks for a specific hash and it has that hash, then the client will call `blockchain.getChain()` to get the desired chain.
+
+If no hash is requested, then it uses `blockchain.mainChain()` to get the tallest chain.
+
+```javascript
+function cr(msg,callback) {
+    if (msg.body.hasOwnProperty('hash')) {
+        blockchain.get(msg.body.hash,(block) => {
+            if (block === null) {
+                throw 'notfound'
+            } else {
+                blockchain.getChain(msg.body.hash,(chain) => {
+                    if (chain === null) {
+                        throw 'notfound'
+                    } else {
+                        var reply = {
+                            "header": {
+                                "type": "cn"
+                            },
+                            "body": {
+                                "chain": chain
+                            }
+                        }
+                        callback(reply)
+                    }
+                })
+            }
+        })
+    } else {
+        blockchain.mainChain((chain) => {
+            var reply = {
+                "header": {
+                    "type": "cn"
+                },
+                "body": {
+                    "chain": chain
+                }
+            }
+            callback(reply)
+        })
+    }
+}
+```
+
+##### cn
+
+In theory, we should just be able to iterate through the nodes and add them one by one. However, an oversight in the `blockchain.addBlock()` function means that it takes in full messages rather than just the body. I worked around this by putting each block into an object as the `"body"`, like so:
+
+```javascript
+function cn(msg) {
+    for (var key in msg.chain) {
+        // an oversight means we need to give it msg.body
+        var block = {"body":msg.chain[key]}
+        blockchain.addBlock(block)
+    }
+}
+```
+
+##### er
+
+All we need to do here is append the message to `error-logs.json`.
+
+```javascript
+function er(msg) {
+    file.append('error-logs',msg)
+}
+```
+
+#### Exporting functions
+
+Finally, I exported the functions.
+
+```javascript
+exports.tx = tx
+exports.bk = bk
+exports.hr = hr
+exports.nr = nr
+exports.pg = pg
+exports.pgreply = pgreply
+exports.nd = nd
+exports.bh = bh
+exports.cr = cr
+exports.er = er
+exports.cn = cn
+exports.block = block
+exports.transaction = transaction
+```
 
 ### Blockchain
 
@@ -4812,7 +5138,39 @@ function mainChain(callback) {
                 callback(mainchain)
             })
         }
-    },'[]')
+    },'{}')
+}
+```
+
+##### getChain
+
+`getChain()` gets a specific part of the chain under a hash passed to it as a parameter, rather than the one given by `getTopBlock()`. Other than that, it is very similar to `mainChain()`, other than it has more error handling since it is unknown if the requested chain actually reaches the bottom, unlike in `mainChain()`.
+
+```javascript
+function getChain(top,callback) {
+    var mainchain = {}
+    file.getAll('blockchain',(data) => {
+        if (data === '{}') {
+            callback(null)
+        } else {
+            try {
+                var fullchain = JSON.parse(data)
+                mainchain[top] = fullchain[top]
+                var current = top
+                var parent
+                while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    parent = fullchain[current].parent
+                    mainchain[parent] = fullchain[parent]
+                    current = parent
+                }
+            } catch(e) {
+                console.warn(e)
+                mainchain = null
+            } finally {
+                callback(mainchain)
+            }
+        }
+    },'{}')
 }
 ```
 
@@ -5609,6 +5967,8 @@ Navigating to `mine` and clicking "Start" gives:
 
 This shows that it works!
 
+###### Mining Script
+
 We now need to flesh out the mining script. Unfortunately, the following code is very messy, as errors generated in the mining script seemed to disappear or be printed in the command line rather than in the Chromium console, and as such took a great deal of trial and error to get working.
 
 Because of this, I will simply put the final code here rather than go through the process of making it.
@@ -5841,7 +6201,7 @@ var path = remote.app.getPath('appData')+'/arbitra-client/'
 miner.postMessage(path)
 ```
 
-In this code, we get the file path that we need, then post a message to the miner. This way, they can get the path without using `electron.remote`
+In this code, we get the file path that we need, then post a message to the miner. This way, they can get the path without using `electron.remote`.
 
 When the miner posts a message, it is checked to see if it a string or not. If so, it is printed to `#console`. If not, it is assumed to be a block and added to the blockchain and sent to all nodes.
 
@@ -5978,7 +6338,106 @@ getTopBlock() {
 }
 ```
 
+Finally, the most important function `mine()`. When this is called, it will run indefinitely, hashing the block forever.
 
+It first calls our `rand()` function to get the nonce, and adds the nonce to the block, as well as the current time. It then checks the difficulty by hashing the block and iterating through the hash. If it begins with as many `a`s as is stated in the block, then it passes. If so, it sends a message saying that the hash has been found, along with the nonce and the hash. It then sends the block, which will be sent on from `mine.js`. It then clears `txpool.json`, as those messages have now been sent, and increases the height and changes the parent to the hash that was just found.
+
+```javascript
+mine() {
+    // repeatedly hashes with a random nonce
+    while (true) {
+        this.rand((nonce) => {
+            this.block.body['nonce'] = nonce
+            // t2 is updated every loop
+            this.block.body['time'] = this.t2
+            this.hashBlock(this.block.body,(hash) => {
+                this.hashes++
+                this.dhash++
+                // checks difficulty
+                var pass = true
+                for (var i = 0; i < this.block.body.difficulty; i++) {
+                    if (hash.charAt(i) !== 'a') {
+                        pass = false
+                    }
+                }
+                this.t2 = Date.now()
+                // this triggers if the block has passed the difficulty test
+                if (pass) {
+                    postMessage('Hash found! Nonce: '+nonce)
+                    postMessage(hash)
+                    postMessage(this.block)
+                    // get rid of the pending transactions
+                    fs.writeFileSync(this.path+'txpool.json','[]','utf-8')
+                    // set the new block things
+                    this.block.body.transactions = []
+                    var top = this.getTopBlock()
+                    this.block.body['parent'] = hash
+                    this.block.body['height'] += 1 
+                }
+            })
+        })
+    }
+}
+```
+
+However, I also wanted it to print to the console occasionally to show that it was doing something. After much trial and error, I found the best way to do this was to use `this.t1` and `this.t2`. `t2` approximately the current time, and it is updated after every hash. `t1` is set in the constructor. Therefore, finding `this.t2-this.t1` will give time time in milliseconds since it started mining. I used this trigger code to run every 10 seconds - if `this.t2-this.t1` is larger than 10000 milliseconds, then it resets `t1` to the current time, and prints the hashing rate as well as the total number of hashes to the `#console`.
+
+```javascript
+if (pass) {
+    postMessage('Hash found! Nonce: '+nonce)
+    postMessage(hash)
+    postMessage(this.block)
+    // etc
+} else {
+    // printing for the console
+    if ((this.t2-this.t1) > 10000) {
+        // calculate hashes per second (maybe)
+        // *1000 turns it into seconds
+        var hs = (this.dhash/(this.t2-this.t1))*1000
+        this.dhash = 0
+        this.t1 = Date.now()
+        postMessage('Hashing at '+hs.toFixed(3)+' hashes/sec - '+this.hashes+' hashes in '+Math.floor((this.t1-this.tt)/1000)+' seconds')
+    }
+}
+```
+
+To find how fast hashes are being generated, we use `this.dhash`, which is the number of hashes that have happened since the last interval. Dividing that by `this.t2-this.t1` then multiplying by 1000 gives the number of hashes per second. I cropped that to 3 decimal places by using `toFixed(3)`.  I found the total time since it started hashing using `tt`, which is set in the constructor and not changed. `t1-tt` gives the time in milliseconds since the constructor was called, which I then converted to seconds and rounded.
+
+This is also a good opportunity to see if any more transactions have been added to `txpool.json`. We read that file, check to see if it's different, and if it is then we change the transactions in the block. The reason I decided to only do this every ten seconds is that doing that for every hash would slow the whole thing down with the reading operations, and would wear out the hard drive.
+
+```javascript
+// check to see if the block has updated
+fs.readFile(this.path+'txpool.json','utf-8',(err,content) => {
+    if (err) {
+        // if the file doesn't exist, set content to []
+        if (err.code === 'ENOENT') {
+            content = '[]'
+        } else {
+            postMessage('Error opening file')
+            throw err
+        }
+    }
+    var current = JSON.stringify(this.block.body.transactions)
+    // change the transactions if they are different
+    if (current !== content) {
+        var newtx = JSON.parse(content)
+        this.block.body['transactions'] = newtx
+        postMessage('Transactions updated')
+    }
+})
+```
+
+###### Testing
+
+I tested this by navigating to the `mine` page and clicking "Start". After 30 seconds:
+
+![mining](https://i.imgur.com/YGo2qVg.png)
+
+After 420 seconds, it still had not found a block. This either means that the difficulty test doesn't work, or the difficulty is too high.
+
+![420 seconds](https://i.imgur.com/b9UWbyc.png)
+
+I will investigate this later on. However, this does show that the printing function works.
 
 ##### Viewing
 
