@@ -19,12 +19,18 @@
 
 ### Personal Thoughts
 
-Whilst as a project, Arbitra has been very successful, I do not feel that I have made a cryptocurrency worth using. Even though it fulfilled all of the project goals in some capacity, the system is far too unstable. The point of a cryptocurrency is that it is built on trusting the mathematics and the protocols of which it consists, and whilst the maths may hold up (hopefully) the protocols are bugged and incomplete. My biggest issue was in the networking which I thoroughly underestimated the difficulty of, which meant that it took focus away from other parts of the app, most notable the lack of a dynamic difficulty.
+Whilst as a project, Arbitra has been very successful, I do not feel that I have made a cryptocurrency worth using. Even though it fulfilled all of the project goals in some capacity, the system is far too unstable. The point of a cryptocurrency is that it is built on trusting the mathematics and the protocols of which it consists, and whilst the maths may hold up (hopefully) the protocols are buggy and incomplete. My biggest issue was in the networking which I thoroughly underestimated the difficulty of, which meant that it took focus away from other parts of the app, most notable the lack of a dynamic difficulty.
 
 If I were to start over, my biggest focus would be on ensuring that the protocol was fully planned out and tested. There is a surprising lack of information about running peer-to-peer networks using Node.js, and so a lot of the protocol was guesswork based on preconceptions about how things worked. I would also ensure that the mining system was a bit more planned out, as the unsolved bug in the testing phase proved. I would, however, have used the same approach of using Node.js and Electron, as they were powerful and well-suited for the task, for the most part.
 
 I also am disappointed in the lack of focus on functions that deal with the blockchain. Whilst they work, they are very inefficient and I had to brute-force many tasks due to time constraints.
 
-I am very happy with the UI (although it is irritating I couldn't find icons that fit with the Windows aesthetic), and I am very pleased with how the page system worked out. The code is modular and flexible, and I am happy that I did not need any libraries to deal with the UI except Electron. In fact, a personal goal was not to use modules outside of the standard library where possible, and I managed to end up with only four dependencies, including Electron. Whilst this was probably not the best idea if I was trying to make an actual cryptocurrency, it made me deal with a lot of things, especially the cryptography, on a very low level, which I am glad that I did.
+I am very happy with the UI (although it is irritating I couldn't find icons that fit with the Windows aesthetic), and I am very pleased with how the page system worked out. The code is modular and flexible, and I am happy that I did not need any libraries to deal with the UI except Electron. In fact, a personal goal was not to use modules outside of the standard library where possible, and I managed to end up with only four dependencies, including Electron. Whilst this was probably not the best idea if I was trying to make an actual cryptocurrency, it made me deal with a lot of things on a very low level, especially the cryptography, and ultimately made the project more interesting.
 
-However
+If I had more time, I would have:
+
+- Cleaned up the networking aspect and added the dynamic difficulty.
+- Changed the way mining works, possibly using another Electron renderer process instead.
+- Made the styling better match a Windows application.
+- Added a system to give the user more feedback outside of the developer console.
+- Made some of the algorithms more efficient.
