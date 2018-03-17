@@ -5637,8 +5637,6 @@ class Miner {
             }
         }
 
-        // talk about switching to syncronous
-
         var transactions = JSON.parse(fs.readFileSync(this.path+'txpool.json','utf-8'))
         this.block.body['transactions'] = transactions
 
@@ -5846,6 +5844,139 @@ miner.postMessage(path)
 In this code, we get the file path that we need, then post a message to the miner. This way, they can get the path without using `electron.remote`
 
 When the miner posts a message, it is checked to see if it a string or not. If so, it is printed to `#console`. If not, it is assumed to be a block and added to the blockchain and sent to all nodes.
+
+First of all, we need to create the constructor of `Miner()`, which can be seen here. It receives the file path and sets it as a class property. It then creates the block template, and sets all the variables that do not change from block to block. It also sets some properties that are used later to print the hashing rate later on.
+
+An issue I had was similar to the problem I had with the message replies, as the constructor would end with the block still empty. This was because I was misusing callbacks again, and the block would be sent off before the callback had returned. To remedy this issue, instead of using `fs.readFile()` I used `fs.readFileSync()`, which as the name suggests returns syncronously. This meant that it had to wait for the data to return, but since this is running on a new thread it does not matter. This is the reason that I had to change `getTopBlock()` to be syncronous.
+
+```javascript
+class Miner {
+    constructor(path) {
+        const difficulty = 6
+        this.path = path
+        // this is for the printing later
+        this.hashes = 0
+        this.dhash = 0
+        this.t1 = Date.now()
+        this.t2 = Date.now()
+        this.tt = Date.now()
+        // difficulty is static
+        this.block = {
+            "header": {
+                "type": "bk"
+            },
+            "body": {
+                "difficulty": difficulty
+            }
+        }
+
+        var transactions = JSON.parse(fs.readFileSync(this.path+'txpool.json','utf-8'))
+        this.block.body['transactions'] = transactions
+
+        // parent and height
+        var top = this.getTopBlock()
+        if (top === null) {
+            this.block.body['parent'] = '0000000000000000000000000000000000000000000000000000000000000000'
+            this.block.body['height'] = 0
+        } else {
+            var blockchain = JSON.parse(fs.readFileSync(this.path+'blockchain.json','utf8'))
+            this.block.body['parent'] = top
+            this.block.body['height'] = blockchain[top].height+1
+        }
+        // miner
+        var wallets = JSON.parse(fs.readFileSync(this.path+'wallets.json','utf-8'))
+        var miner = wallets[0].public
+        this.block.body['miner'] = miner
+
+        postMessage('Block formed, mining initiated')
+    }
+}
+```
+
+These following functions are a part of the `Miner` class.
+
+To generate a random number for the nonce, I decided to put a wrapper around `Math.random()` so that it generates integers, by multiplying it by a large number. I decided to use `Math.random()` rather than the cryptographically secure alternative because being fast is more important than being completely unpredictable, as it just needs to be different from other people's guesses.
+
+```javascript
+rand(callback) {
+    callback(Math.floor(10000000000000000*Math.random()))
+}
+```
+
+Although mostly unneccessary, I wrapped `hash.sha256hex()` so that I could feed it objects and it would `stringify()` it.
+
+```javascript
+hashBlock(block,callback) {
+    var hashed = hash.sha256hex(JSON.stringify(block))
+    callback(hashed)
+}
+```
+
+Since we can't use `blockchain.getTopBlock()` as it uses `file.js`, I had to repeat it in the `Miner` class. I also changed it so that it was syncronous, as explained earlier.
+
+```javascript
+getTopBlock() {
+    try {
+        var data = fs.readFileSync(this.path+'blockchain.json','utf8')
+    } catch(e) {
+        return null
+    }
+    if (data === '{}' || data === '') {
+        return null
+    }
+    var fullchain = JSON.parse(data)
+    // get the first key in the object
+    // doesn't matter if it's best it just needs to be valid
+    for (var best in fullchain) {
+        // this is the fastest way of getting the first key
+        // even if it's kind of messy looking
+        // Object.keys(fullchain)[0] puts the whole object into memory
+        break
+    }
+    // iterates through the fullchain
+    for (var key in fullchain) {
+        // larger height the better
+        if (fullchain[key].height > fullchain[best].height) {
+            var candidate = true
+            // iterate down the chain to see if you can reach the bottom
+            // if the parent is undefined at any point it is not part of the main chain
+            // run out of time for a more efficient method
+            var current = key
+            var parent
+            while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                parent = fullchain[current].parent
+                if (typeof fullchain[parent] !== 'undefined') {
+                    current = parent
+                } else {
+                    candiate = false
+                }
+            }
+            if (candidate) {
+                best = key
+            }
+        // otherwise, if they're the same pick the oldest one
+        } else if (fullchain[key].height === fullchain[best].height) {
+            if (fullchain[key].time < fullchain[best].time) {
+                // see other comments
+                var candidate = true
+                var current = key
+                while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    parent = fullchain[current].parent
+                    if (typeof fullchain[parent] !== 'undefined') {
+                        current = parent
+                    } else {
+                        candiate = false
+                    }
+                }
+                if (candidate) {
+                    best = key
+                }
+            }
+        }
+    }
+    return best
+}
+```
 
 
 

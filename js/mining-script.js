@@ -21,8 +21,6 @@ class Miner {
             }
         }
 
-        // talk about switching to syncronous
-
         var transactions = JSON.parse(fs.readFileSync(this.path+'txpool.json','utf-8'))
         this.block.body['transactions'] = transactions
 
