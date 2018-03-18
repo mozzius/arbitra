@@ -6,7 +6,7 @@ function init() {
     // since it runs when you start the program
     // might as well check all the files exist
     file.getAll('wallets',(data) => {
-        if (data === null || data === '' || data === '{}') {
+        if (data === null || data === '' || data === '[]') {
             ecdsa.createKeys((public, private, err) => {
                 if(err) {
                     console.error(err)

@@ -6887,7 +6887,7 @@ I also realised that if a person tries to mine the blockchain without a wallet, 
 
 ```javascript
 file.getAll('wallets',(data) => {
-    if (data === null || data === '' || data === '{}') {
+    if (data === null || data === '' || data === '[]') {
         ecdsa.createKeys((public, private, err) => {
             if(err) {
                 console.error(err)
