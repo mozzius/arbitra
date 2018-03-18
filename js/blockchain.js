@@ -210,7 +210,7 @@ function getTopBlock(fullchain,callback) {
 exports.get = getBlock
 exports.checkBalance = checkBalance
 exports.calcBalances = calcBalances
-exports.updateBalances = updateBalances
 exports.addBlock = addBlock
 exports.getTopBlock = getTopBlock
 exports.mainChain = mainChain
+exports.getChain = getChain

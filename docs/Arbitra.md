@@ -581,7 +581,7 @@ On top of this, it forms a sequence of 4 correct, 3 wrong, 4 correct, 4 wrong, w
 I decided to map out 1 to 10, with their binary equivalent, the answer the function gave, and the answer the calculator gave.
 
 | Decimal | Binary | Function            | Calculator | Correct? |
-|---------|--------|---------------------|------------|----------|
+| ------- | ------ | ------------------- | ---------- | -------- |
 | 1       | 1      | 5                   | 5          | Yes      |
 | 2       | 10     | 0.6534090909090917  | 0.6534     | Yes      |
 | 3       | 11     | -1.562727156221965  | -1.56275   | Yes      |
@@ -1579,7 +1579,7 @@ The size does not apply to all types, mainly numbers. JS numbers are all 64bit d
 The JSON object used in the first example above in this format would look like this:
 
 | name      | type       | size |
-|-----------|------------|------|
+| --------- | ---------- | ---- |
 | id        | hex string | 64   |
 | sender    | hex string | 64   |
 | recipient | hex string | 64   |
@@ -1594,7 +1594,7 @@ Please note this is an example and not the final definition of a transaction mes
 Each message has a header. It has the following attributes:
 
 | name    | type       | size |
-|---------|------------|------|
+| ------- | ---------- | ---- |
 | type    | string     | 2    |
 | size    | integer    |      |
 | hash    | hex string | 64   |
@@ -1614,7 +1614,7 @@ However, this does not work for message types where they are relayed (block and 
 The message type is a string, and is one of:
 
 | message type              | string |
-|---------------------------|--------|
+| ------------------------- | ------ |
 | Transaction               | tx     |
 | Block                     | bk     |
 | Latest block hash request | hr     |
@@ -1664,7 +1664,7 @@ Finally, a wallet is a public key, which is a point on the curve. We can convert
 From this, we can make our table for transactions:
 
 | name | type       | size |
-|------|------------|------|
+| ---- | ---------- | ---- |
 | to   | hex string | 128  |
 | from | array      |      |
 | time | timestamp  |      |
@@ -1672,7 +1672,7 @@ From this, we can make our table for transactions:
 The `from` array would contain objects of the form:
 
 | name      | type       | size |
-|-----------|------------|------|
+| --------- | ---------- | ---- |
 | wallet    | hex string | 128  |
 | amount    | integer    |      |
 | signature | hex string | 128  |
@@ -1711,7 +1711,7 @@ ver(no)->er
 Blocks contain transactions, which are objects. We also need to determine the method whereby the miner receives their reward, and the simplest way of doing that is to have a `miner` attribute in the body in which the person who mined the block can put any public key they desire, and it will be rewarded 50au.
 
 | name         | type       | size |
-|--------------|------------|------|
+| ------------ | ---------- | ---- |
 | transactions | array      |      |
 | miner        | hex string | 128  |
 | nonce        | string     |      |
@@ -1747,7 +1747,7 @@ ver(no)->er
 The ping message is a critical part of the network. Sending a ping signals that the node wants to be sent messages that other nodes receive. It also has a Boolean value `advertise`, which means that, if set to true, the node that received the ping will send the IP address of the node that sent it to nodes that send a node request. This should be a toggle that the client can switch if they receive too many messages.
 
 | name      | type      | size |
-|-----------|-----------|------|
+| --------- | --------- | ---- |
 | advertise | boolean   |      |
 | time      | timestamp |      |
 
@@ -1769,7 +1769,7 @@ ver(no)->add->end
 Sending a node request asks for the list of recent connections that each client maintains, provided that the connection has marked itself as willing in the ping message. A node request has an optional value defining the maximum number of nodes that it wants to receive (blank for all). 
 
 | name | type      | size |
-|------|-----------|------|
+| ---- | --------- | ---- |
 | max  | integer   |      |
 | time | timestamp |      |
 
@@ -1786,7 +1786,7 @@ st->gtb->end
 This is a small message that a client sends out to check that it's blockchain is up to date.
 
 | name | type      | size |
-|------|-----------|------|
+| ---- | --------- | ---- |
 | time | timestamp |      |
 
 ```flow
@@ -1802,7 +1802,7 @@ st->gtb->end
 This function asks other nodes for the chain beneath the hash listed in the body. This is typically sent after a hash request.
 
 | name | type       | size |
-|------|------------|------|
+| ---- | ---------- | ---- |
 | hash | hex string | 64   |
 | time | timestamp  |      |
 
@@ -1823,7 +1823,7 @@ ver(no)->er
 Not only are there messages that are sent out by the client, but there are also the different types of message that are sent back in reply to these messages. Some we have already touched on, such as the block and the ping. However, some messages don't need a specific reply, so they have a generic "received" message. Each reply corresponds to a message:
 
 | name       | reply to | string |
-|------------|----------|--------|
+| ---------- | -------- | ------ |
 | Ping       | pg       | pg     |
 | Chain      | cr       | cn     |
 | Block Hash | hr       | bh     |
@@ -1839,7 +1839,7 @@ The ping reply is just another ping.
 In reply to a chain request. It is just an array of blocks block and it's associated hash.
 
 | name  | type      | size |
-|-------|-----------|------|
+| ----- | --------- | ---- |
 | chain | array     |      |
 | time  | timestamp |      |
 
@@ -1850,7 +1850,7 @@ When a client receives this message, it verifies each one and if it passes, it a
 In reply to a block hash request. It is simply the hash from the top of the blockchain.
 
 | name | type       | size |
-|------|------------|------|
+| ---- | ---------- | ---- |
 | hash | hex string | 64   |
 | time | timestamp  |      |
 
@@ -1861,7 +1861,7 @@ When a client receives a block hash, it checks it to see if it is the same as th
 In reply to a node request. This is simply an array of nodes from the list of recent connections that the client maintains that have marked themselves as willing to be broadcast across the network.
 
 | name  | type      | size |
-|-------|-----------|------|
+| ----- | --------- | ---- |
 | nodes | array     |      |
 | time  | timestamp |      |
 
@@ -1874,7 +1874,7 @@ When a client receives this message, it sends a ping to each of the IP listed in
 The received message type is just a confirmation that the message had been received and accepted. Therefore, the only thing in the body is the timestamp.
 
 | name | type      | size |
-|------|-----------|------|
+| ---- | --------- | ---- |
 | time | timestamp |      |
 
 #### Error Message
@@ -1882,14 +1882,14 @@ The received message type is just a confirmation that the message had been recei
 As well as correct replies, we need to messages that a client will reply with if the messages received is incorrect in some way. The message will have type `er`, for error. It also contains the hash of the failed message, if available.
 
 | name  | type       | size |
-|-------|------------|------|
+| ----- | ---------- | ---- |
 | error | string     | 20   |
 | hash  | hex string | 64   |
 
 The `error` can be one of several strings, that correspond to different errors.
 
 | error string | description                                      |
-|--------------|--------------------------------------------------|
+| ------------ | ------------------------------------------------ |
 | parse        | Failed to parse JSON - message is not valid JSON |
 | hash         | Hash does not match                              |
 | signature    | Signature is invalid                             |
@@ -3017,7 +3017,7 @@ Files will be in JSON (JavaScript Object Notation), because as the name suggests
 There are several different files that we need to have. The obvious ones are listed here:
 
 | Name                      | Description                                           | Type |
-|---------------------------|-------------------------------------------------------|------|
+| ------------------------- | ----------------------------------------------------- | ---- |
 | `blockchain.json`         | The blockchain                                        | `{}` |
 | `connections.json`        | List of nodes that are currently connected            | `[]` |
 | `recent-connections.json` | Nodes that have been connected to                     | `[]` |
@@ -6901,6 +6901,31 @@ file.getAll('wallets',(data) => {
 })
 ```
 
+I also wanted the HTML on the page to be a helpful introduction on what is possible with Arbitra. Therefore, I changed `overview.html` to this:
+
+```html
+<h1>Arbitra</h1>
+
+<p>Welcome to Arbitra!</p>
+
+<br>
+
+<h3>You can:</h3>
+
+<p><i class="fa fa-fw fa-envelope" aria-hidden="true"></i> Send a transaction</p>
+<p><i class="fa fa-fw fa-chain" aria-hidden="true"></i> Mine the blockchain for Arbitrary Units</p>
+<p><i class="fa fa-fw fa-eye" aria-hidden="true"></i> View past transactions and the blockchain</p>
+<p><i class="fa fa-fw fa-rss" aria-hidden="true"></i> Connect to other nodes on the network</p>
+
+<br>
+
+<p>Got any questions/feedback? Email me at <a href="mailto:hello@samuelnewman.uk">hello@samuelnewman.uk</a></p>
+```
+
+Which looks like this:
+
+![overview page final](https://i.imgur.com/pw4bFFq.png)
+
 ## Testing
 
 ## Evaluation
@@ -6908,7 +6933,7 @@ file.getAll('wallets',(data) => {
 ### Initial Objectives
 
 | Objective                                                                                                   | Met?   | Comment                                                                                                   |
-|-------------------------------------------------------------------------------------------------------------|--------|-----------------------------------------------------------------------------------------------------------|
+| ----------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------- |
 | The user should be able to construct and send a valid transaction.                                          | Yes    | This does work, provided the wallet has the funds required.                                               |
 | The program should be able to automatically parse, validate, and deal with messages.                        | Yes    | The `parseMsg()` calls functions with deal with all of the message types.                                 |
 | The user should be able to mine the blockchain.                                                             | Yes    | The user can mine the blockchain using the `mine` page.                                                   |
@@ -6939,3 +6964,4 @@ If I had more time, I would have:
 - Made the styling better match a Windows application.
 - Added a system to give the user more feedback outside of the developer console.
 - Made some of the algorithms more efficient.
+- Added a systen where you could request money through the network.

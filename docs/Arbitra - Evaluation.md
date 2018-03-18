@@ -34,3 +34,4 @@ If I had more time, I would have:
 - Made the styling better match a Windows application.
 - Added a system to give the user more feedback outside of the developer console.
 - Made some of the algorithms more efficient.
+- Added a systen where you could request money through the network.
