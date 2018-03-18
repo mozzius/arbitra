@@ -150,15 +150,15 @@ function getChain(top,callback) {
 }
 
 function getTopBlock(fullchain,callback) {
-    // get the first key in the object
-    // doesn't matter if it's best it just needs to be valid
+    const genesis = '0000000000000000000000000000000000000000000000000000000000000000'
+    // get the origin block
+    // as there is nothing under it to be wrong
     for (var best in fullchain) {
-        // this is the fastest way of getting the first key
-        // even if it's kind of messy looking
-        // Object.keys(fullchain)[0] puts the whole object into memory
-        break
+        if (fullchain[best].parent === genesis) {
+            break
+        }
     }
-    if (typeof best !== 'undefined') {
+    if (typeof best !== 'undefined' && fullchain[best].parent === genesis) {
         // iterates through the fullchain
         for (var key in fullchain) {
             // larger height the better
@@ -169,7 +169,7 @@ function getTopBlock(fullchain,callback) {
                 // run out of time for a more efficient method
                 var current = key
                 var parent
-                while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                while (fullchain[current].parent !== genesis) {
                     parent = fullchain[current].parent
                     if (typeof fullchain[parent] !== 'undefined') {
                         current = parent
@@ -186,7 +186,7 @@ function getTopBlock(fullchain,callback) {
                     // see other comments
                     var candidate = true
                     var current = key
-                    while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    while (fullchain[current].parent !== genesis) {
                         parent = fullchain[current].parent
                         if (typeof fullchain[parent] !== 'undefined') {
                             current = parent
@@ -199,7 +199,7 @@ function getTopBlock(fullchain,callback) {
                     }
                 }
             }
-            document.getElementById('height').textContent = fullchain[best].height
+            document.getElementById('height').textContent = fullchain[best].height + 1
         }
     } else {
         best = null

@@ -118,6 +118,7 @@ class Miner {
     }
 
     getTopBlock() {
+        const genesis = '0000000000000000000000000000000000000000000000000000000000000000'
         try {
             var data = fs.readFileSync(this.path+'blockchain.json','utf8')
         } catch(e) {
@@ -127,42 +128,25 @@ class Miner {
             return null
         }
         var fullchain = JSON.parse(data)
-        // get the first key in the object
-        // doesn't matter if it's best it just needs to be valid
+        // get the origin block
+        // as there is nothing under it to be wrong
         for (var best in fullchain) {
-            // this is the fastest way of getting the first key
-            // even if it's kind of messy looking
-            // Object.keys(fullchain)[0] puts the whole object into memory
-            break
+            if (fullchain[best].parent === genesis) {
+                break
+            }
         }
-        // iterates through the fullchain
-        for (var key in fullchain) {
-            // larger height the better
-            if (fullchain[key].height > fullchain[best].height) {
-                var candidate = true
-                // iterate down the chain to see if you can reach the bottom
-                // if the parent is undefined at any point it is not part of the main chain
-                // run out of time for a more efficient method
-                var current = key
-                var parent
-                while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
-                    parent = fullchain[current].parent
-                    if (typeof fullchain[parent] !== 'undefined') {
-                        current = parent
-                    } else {
-                        candiate = false
-                    }
-                }
-                if (candidate) {
-                    best = key
-                }
-            // otherwise, if they're the same pick the oldest one
-            } else if (fullchain[key].height === fullchain[best].height) {
-                if (fullchain[key].time < fullchain[best].time) {
-                    // see other comments
+        if (typeof best !== 'undefined' && fullchain[best].parent === genesis) {
+            // iterates through the fullchain
+            for (var key in fullchain) {
+                // larger height the better
+                if (fullchain[key].height > fullchain[best].height) {
                     var candidate = true
+                    // iterate down the chain to see if you can reach the bottom
+                    // if the parent is undefined at any point it is not part of the main chain
+                    // run out of time for a more efficient method
                     var current = key
-                    while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    var parent
+                    while (fullchain[current].parent !== genesis) {
                         parent = fullchain[current].parent
                         if (typeof fullchain[parent] !== 'undefined') {
                             current = parent
@@ -173,8 +157,29 @@ class Miner {
                     if (candidate) {
                         best = key
                     }
+                // otherwise, if they're the same pick the oldest one
+                } else if (fullchain[key].height === fullchain[best].height) {
+                    if (fullchain[key].time < fullchain[best].time) {
+                        // see other comments
+                        var candidate = true
+                        var current = key
+                        while (fullchain[current].parent !== genesis) {
+                            parent = fullchain[current].parent
+                            if (typeof fullchain[parent] !== 'undefined') {
+                                current = parent
+                            } else {
+                                candiate = false
+                            }
+                        }
+                        if (candidate) {
+                            best = key
+                        }
+                    }
                 }
+                document.getElementById('height').textContent = fullchain[best].height
             }
+        } else {
+            best = null
         }
         return best
     }

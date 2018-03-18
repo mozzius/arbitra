@@ -156,3 +156,22 @@ I missed the first block it mined, so here is the second block
 ![test 6.3](https://i.imgur.com/ci1z7TI.png)
 
 ![test 6.4](https://i.imgur.com/5LIPiMR.png)
+
+#### Issues
+
+Since the `height` of a block is zero-indexed, the block length counter in the top left has an off by one error.
+
+#### Fixes
+
+In `blockchain.js`, change:
+
+```javascript
+document.getElementById('height').textContent = fullchain[best].height
+```
+
+to:
+
+```javascript
+document.getElementById('height').textContent = fullchain[best].height + 1
+```
+
