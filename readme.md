@@ -4,13 +4,14 @@ a cryptocurrency
 
 ## How to run
 
-I haven't built it yet, so just download it, use `npm start` to download the packages, then use the following command:
+I haven't built it yet, so just download it, then use:
 
 ```cmd
-.\node_modules\.bin\electron .
+npm install
+npm start
 ```
 
-The application is under construction, so it doesn't actually do anything (yet)
+The application is still in development, so it's quite buggy.
 
 ## Features
 
