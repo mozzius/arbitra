@@ -23,7 +23,9 @@ Success
 
 #### Proof
 
+![test 1.1](https://i.imgur.com/pw4bFFq.png)
 
+![test 1.2](https://i.imgur.com/aYwC2yD.png)
 
 ### Test 2 - Creating a wallet
 
@@ -45,7 +47,9 @@ Success
 
 #### Proof
 
+![test 2.1](https://i.imgur.com/URbs00w.png)
 
+![test 2.2](https://i.imgur.com/z3tVFT5.png)
 
 ### Test 3 - Pinging a client
 
@@ -69,7 +73,13 @@ Success
 
 #### Proof
 
+![test 3.1](https://i.imgur.com/gt0nLiI.png)
 
+![test 3.2](https://i.imgur.com/9FiYlgW.png)
+
+```json
+[{"ip":"5.81.186.90","advertise":"true"}]
+```
 
 ### Test 4 - Automatic reconnecting
 
@@ -90,7 +100,7 @@ Success
 
 #### Proof
 
-
+![test 4.1](https://i.imgur.com/GfDEi94.png)
 
 ### Test 5 - Connected to backup
 
@@ -105,9 +115,13 @@ Success
 1. After 60 seconds, a ping is sent to the backup server
 2. A ping is sent back and stored etc
 
+#### Test Result
+
+Success
+
 #### Proof
 
-
+![test 5.1](https://i.imgur.com/KFezlva.png)
 
 ### Test 6 - Mine a block
 
@@ -119,5 +133,26 @@ Success
 
 #### Expected Outcomes
 
-1. Out
+1. "Path received" and "Block form, mining initiated" are printed to the console
+2. Hashing rate is printed every ten seconds
+3. When block is found, it is printed to the console and then sent to connections
+4. Receive `ok` message
+5. 50au added to wallet
+6. 50au displayed in the top left
 
+
+#### Test Result
+
+99% Success
+
+#### Proof
+
+![test 6.1](https://i.imgur.com/r6ILNGW.png)
+
+I missed the first block it mined, so here is the second block
+
+![test 6.2](https://i.imgur.com/QDKGdKP.png)
+
+![test 6.3](https://i.imgur.com/ci1z7TI.png)
+
+![test 6.4](https://i.imgur.com/5LIPiMR.png)

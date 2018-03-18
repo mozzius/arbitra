@@ -6479,7 +6479,7 @@ function init() {
             var date = new Date(block.time).toString()
             // pretty printing json
             var txs = JSON.stringify(block.transactions,null,4)
-            listItem.innerHTML = '<p><b>Time:</b> '+date+'</p><p><b>Hash:</b> '+hash+'</p><p><b>Parent:</b> '+block.parent+'</p><p><b>Miner:</b> '+block.miner+'</p><p><b>Height:</b> '+block.height+'</p><p><b>Transactions:</b></p><pre id="console">'+txs+'</pre>'
+            listItem.innerHTML = '<p><b>Time:</b> '+date+'</p><p><b>Hash:</b> '+hash+'</p><p><b>Parent:</b> '+block.parent+'</p><p><b>Miner:</b> '+block.miner+'</p><p><b>Height:</b> '+block.height+'</p><p><b>Transactions:</b></p><pre>'+txs+'</pre>'
             list.appendChild(listItem)
         }
     })
@@ -6490,7 +6490,7 @@ exports.init = init
 
 The only notable differences is that since `blockchain.json` is not an array, I used a for...in loop which gets the keys of the object.
 
-I also printed the transactions as raw JSON in a `pre` tag with id of `#console`, so that it has the styles of the other console. When `stringify()`ing the JSON data, I gave it the extra parameters of `null` and `4` which should indent it with 4 spaces.
+I also printed the transactions as raw JSON in a `pre` element. When `stringify()`ing the JSON data, I gave it the extra parameters of `null` and `4` which should indent it with 4 spaces.
 
 This needs the blockchain to work, so I will cover it in the Testing phase.
 
