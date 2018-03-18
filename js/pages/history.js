@@ -13,7 +13,7 @@ function init() {
             transactions.forEach((tx) => {
                 var balance = 0
                 tx.from.forEach((from) => {
-                    balance += from.amount/100000
+                    balance += from.amount/1000000
                 })
                 listItem = document.createElement('div')
                 listItem.classList.add('list-item')

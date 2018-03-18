@@ -176,7 +176,6 @@ class Miner {
                         }
                     }
                 }
-                document.getElementById('height').textContent = fullchain[best].height
             }
         } else {
             best = null

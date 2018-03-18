@@ -5325,7 +5325,7 @@ function calcBalances() {
                 })
             })
             // change microau to au and set the textcontent of the top left thing
-            document.getElementById('current-balance').textContent = balance / 100000
+            document.getElementById('current-balance').textContent = balance / 1000000
             // save balances
             file.storeAll('wallets',newWallets)
             file.storeAll('balances',balances)
@@ -5586,7 +5586,7 @@ function populateDropdown(select) {
         wallets.forEach((wallet) => {
             option = document.createElement('option')
             option.value = wallet.public
-            option.text = wallet.amount/100000+"au - "+wallet.name
+            option.text = wallet.amount/1000000+"au - "+wallet.name
             select.add(option)
         })
     })
@@ -5786,7 +5786,7 @@ function init() {
             transactions.forEach((tx) => {
                 var balance = 0
                 tx.from.forEach((from) => {
-                    balance += from.amount/100000
+                    balance += from.amount/1000000
                 })
                 listItem = document.createElement('div')
                 listItem.classList.add('list-item')
@@ -6094,6 +6094,7 @@ class Miner {
     }
 
     getTopBlock() {
+        const genesis = '0000000000000000000000000000000000000000000000000000000000000000'
         try {
             var data = fs.readFileSync(this.path+'blockchain.json','utf8')
         } catch(e) {
@@ -6121,7 +6122,7 @@ class Miner {
                     // run out of time for a more efficient method
                     var current = key
                     var parent
-                    while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    while (fullchain[current].parent !== genesis) {
                         parent = fullchain[current].parent
                         if (typeof fullchain[parent] !== 'undefined') {
                             current = parent
@@ -6138,7 +6139,7 @@ class Miner {
                         // see other comments
                         var candidate = true
                         var current = key
-                        while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                        while (fullchain[current].parent !== genesis) {
                             parent = fullchain[current].parent
                             if (typeof fullchain[parent] !== 'undefined') {
                                 current = parent
@@ -6151,26 +6152,9 @@ class Miner {
                         }
                     }
                 }
-                document.getElementById('height').textContent = fullchain[best].height + 1
             }
         } else {
             best = null
-        }
-        // doublecheck that best is valid
-        if (best !== null) {
-            var current = best
-            var parent
-            while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
-                parent = fullchain[current].parent
-                if (typeof fullchain[parent] !== 'undefined') {
-                    current = parent
-                } else {
-                    candiate = false
-                }
-            }
-            if (!candidate) {
-                best = null
-            }
         }
         return best
     }
@@ -6296,6 +6280,7 @@ Since we can't use `blockchain.getTopBlock()` as it uses `file.js`, I had to rep
 
 ```javascript
     getTopBlock() {
+        const genesis = '0000000000000000000000000000000000000000000000000000000000000000'
         try {
             var data = fs.readFileSync(this.path+'blockchain.json','utf8')
         } catch(e) {
@@ -6323,7 +6308,7 @@ Since we can't use `blockchain.getTopBlock()` as it uses `file.js`, I had to rep
                     // run out of time for a more efficient method
                     var current = key
                     var parent
-                    while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    while (fullchain[current].parent !== genesis) {
                         parent = fullchain[current].parent
                         if (typeof fullchain[parent] !== 'undefined') {
                             current = parent
@@ -6340,7 +6325,7 @@ Since we can't use `blockchain.getTopBlock()` as it uses `file.js`, I had to rep
                         // see other comments
                         var candidate = true
                         var current = key
-                        while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                        while (fullchain[current].parent !== genesis) {
                             parent = fullchain[current].parent
                             if (typeof fullchain[parent] !== 'undefined') {
                                 current = parent
@@ -6353,26 +6338,9 @@ Since we can't use `blockchain.getTopBlock()` as it uses `file.js`, I had to rep
                         }
                     }
                 }
-                document.getElementById('height').textContent = fullchain[best].height + 1
             }
         } else {
             best = null
-        }
-        // doublecheck that best is valid
-        if (best !== null) {
-            var current = best
-            var parent
-            while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
-                parent = fullchain[current].parent
-                if (typeof fullchain[parent] !== 'undefined') {
-                    current = parent
-                } else {
-                    candiate = false
-                }
-            }
-            if (!candidate) {
-                best = null
-            }
         }
         return best
     }

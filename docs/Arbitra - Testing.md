@@ -77,6 +77,8 @@ Success
 
 ![test 3.2](https://i.imgur.com/9FiYlgW.png)
 
+`connections.json`:
+
 ```json
 [{"ip":"5.81.186.90","advertise":"true"}]
 ```
@@ -175,3 +177,52 @@ to:
 document.getElementById('height').textContent = fullchain[best].height + 1
 ```
 
+### Test 7 - Make a transaction
+
+#### Method
+
+1. Navigate to `make` page
+2. Enter the public key of "Test Wallet"
+3. Select "My Wallet"
+4. Enter 25
+5. Click "Send"
+
+#### Expected Outcome
+
+1. Transaction is created and sent without errors
+2. Transaction is added to `history` page
+
+#### Test Result
+
+Success
+
+#### Proof
+
+![test 7.1](https://i.imgur.com/slhC3uy.png)
+
+![test 7.2](https://i.imgur.com/eHHlaza.png)
+
+![test 7.3](https://i.imgur.com/9kg2qoS.png)
+
+`txpool.json`:
+
+```json
+[{"to":"bafad16bb7479e2827859c489a38c0bedeef96ce8a1aec201901394d16d1783b-bbddd2a5ef17608dfed16b2d351398ee3d208e215129dfa02b777ee2c801dcc0","from":[{"wallet":"ad003b2393f396d69540886ebf5ab888f0c89e64cbb8415b5ad6ac1a10f890f77c9ec603e255437e6daffe3ed0c67c41f9798778eec952e5214acaa4a6762a16","amount":25000000,"signature":"6bfe755218cd424bfe452e55ccb347604cf0e5c92b238a3f57b1b65e7b3211c51dfa483fcf64e236253256283000b79f582ba151a02a2281acb0af953ca1f5c"}],"time":1521399948482}]
+```
+
+#### Test 8 - Add a transaction to blockchain
+
+#### Method
+
+1. Navigate to the `mine` page
+2. Click "Start"
+3. Wait until a block has been mined
+
+#### Expected Outcomes
+
+1. The balance of the wallets should be split 25 - 125
+2. The transaction should appear in the blockchain viewing page
+
+#### Test Result
+
+Success

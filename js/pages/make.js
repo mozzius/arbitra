@@ -46,7 +46,7 @@ function populateDropdown(select) {
         wallets.forEach((wallet) => {
             option = document.createElement('option')
             option.value = wallet.public
-            option.text = wallet.amount/100000+"au - "+wallet.name
+            option.text = wallet.amount/1000000+"au - "+wallet.name
             select.add(option)
         })
     })
