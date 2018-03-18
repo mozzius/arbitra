@@ -109,6 +109,7 @@ function bk(msg,callback) {
     block(msg.body)
     // if nothing has been thrown, add to local blockchain
     blockchain.addBlock(msg)
+    network.sendToAll(msg)
     callback(reply)
 }
 

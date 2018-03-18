@@ -4635,6 +4635,7 @@ function bk(msg,callback) {
     block(msg.body)
     // if nothing has been thrown, add to local blockchain
     blockchain.addBlock(msg)
+    network.sendToAll(msg)
     callback(reply)
 }
 ```
@@ -6279,35 +6280,52 @@ hashBlock(block,callback) {
 Since we can't use `blockchain.getTopBlock()` as it uses `file.js`, I had to repeat it in the `Miner` class. I also changed it so that it was syncronous, as explained earlier.
 
 ```javascript
-    getTopBlock() {
-        const genesis = '0000000000000000000000000000000000000000000000000000000000000000'
-        try {
-            var data = fs.readFileSync(this.path+'blockchain.json','utf8')
-        } catch(e) {
-            return null
+getTopBlock() {
+    const genesis = '0000000000000000000000000000000000000000000000000000000000000000'
+    try {
+        var data = fs.readFileSync(this.path+'blockchain.json','utf8')
+    } catch(e) {
+        return null
+    }
+    if (data === '{}' || data === '') {
+        return null
+    }
+    var fullchain = JSON.parse(data)
+    // get the origin block
+    // as there is nothing under it to be wrong
+    for (var best in fullchain) {
+        if (fullchain[best].parent === genesis) {
+            break
         }
-        if (data === '{}' || data === '') {
-            return null
-        }
-        var fullchain = JSON.parse(data)
-        // get the origin block
-        // as there is nothing under it to be wrong
-        for (var best in fullchain) {
-            if (fullchain[best].parent === genesis) {
-                break
-            }
-        }
-        if (typeof best !== 'undefined' && fullchain[best].parent === genesis) {
-            // iterates through the fullchain
-            for (var key in fullchain) {
-                // larger height the better
-                if (fullchain[key].height > fullchain[best].height) {
+    }
+    if (typeof best !== 'undefined' && fullchain[best].parent === genesis) {
+        // iterates through the fullchain
+        for (var key in fullchain) {
+            // larger height the better
+            if (fullchain[key].height > fullchain[best].height) {
+                var candidate = true
+                // iterate down the chain to see if you can reach the bottom
+                // if the parent is undefined at any point it is not part of the main chain
+                // run out of time for a more efficient method
+                var current = key
+                var parent
+                while (fullchain[current].parent !== genesis) {
+                    parent = fullchain[current].parent
+                    if (typeof fullchain[parent] !== 'undefined') {
+                        current = parent
+                    } else {
+                        candiate = false
+                    }
+                }
+                if (candidate) {
+                    best = key
+                }
+            // otherwise, if they're the same pick the oldest one
+            } else if (fullchain[key].height === fullchain[best].height) {
+                if (fullchain[key].time < fullchain[best].time) {
+                    // see other comments
                     var candidate = true
-                    // iterate down the chain to see if you can reach the bottom
-                    // if the parent is undefined at any point it is not part of the main chain
-                    // run out of time for a more efficient method
                     var current = key
-                    var parent
                     while (fullchain[current].parent !== genesis) {
                         parent = fullchain[current].parent
                         if (typeof fullchain[parent] !== 'undefined') {
@@ -6319,31 +6337,13 @@ Since we can't use `blockchain.getTopBlock()` as it uses `file.js`, I had to rep
                     if (candidate) {
                         best = key
                     }
-                // otherwise, if they're the same pick the oldest one
-                } else if (fullchain[key].height === fullchain[best].height) {
-                    if (fullchain[key].time < fullchain[best].time) {
-                        // see other comments
-                        var candidate = true
-                        var current = key
-                        while (fullchain[current].parent !== genesis) {
-                            parent = fullchain[current].parent
-                            if (typeof fullchain[parent] !== 'undefined') {
-                                current = parent
-                            } else {
-                                candiate = false
-                            }
-                        }
-                        if (candidate) {
-                            best = key
-                        }
-                    }
                 }
             }
-        } else {
-            best = null
         }
-        return best
+    } else {
+        best = null
     }
+    return best
 }
 ```
 
