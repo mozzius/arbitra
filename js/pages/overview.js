@@ -28,6 +28,11 @@ function init() {
             file.storeAll('txpool',[])
         }
     })
+    file.getAll('recenttx',(data) => {
+        if (data === null || data === '') {
+            file.storeAll('recenttx',[])
+        }
+    })
     file.getAll('network-settings',(data) => {
         if (data === null || data === '') {
             var defaults = {

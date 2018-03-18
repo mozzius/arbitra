@@ -6844,6 +6844,11 @@ function init() {
             file.storeAll('txpool',[])
         }
     })
+    file.getAll('recenttx',(data) => {
+        if (data === null || data === '') {
+            file.storeAll('recenttx',[])
+        }
+    })
     file.getAll('network-settings',(data) => {
         if (data === null || data === '') {
             var defaults = {
@@ -6925,6 +6930,34 @@ I also wanted the HTML on the page to be a helpful introduction on what is possi
 Which looks like this:
 
 ![overview page final](https://i.imgur.com/pw4bFFq.png)
+
+### npm start script
+
+To save me running `.\node_modules\.bin\electron .` every time, I added a script to `package.json`:
+
+```json
+{
+  "name": "arbitra-client",
+  "version": "0.2.0",
+  "main": "main.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Mozzius/arbitra.git"
+  },
+  "dependencies": {
+    "big-integer": "^1.6.26",
+    "electron": "^1.8.3",
+    "ip": "^1.1.5",
+    "tiny-worker": "^2.1.2"
+  },
+  "scripts": {
+    "start": ".\\node_modules\\.bin\\electron ."
+  }
+}
+```
+
+This means that I can use `npm start` in the console to start the application.
 
 ## Testing
 
