@@ -1116,13 +1116,13 @@ However first, we need some finally things.
 
 ##### Picking a curve
 
-I found the very useful website [http://safecurves.cr.yp.to]() (which has a very cool domain name) that has a list of many of the elliptic curves that have been found. It also rates their security based on several different factors. Interestingly `secp256k1`, the curve Bitcoin uses, is not rated as safe.
+I found the very useful website http://safecurves.cr.yp.to that has a list of many of the elliptic curves that have been found. It also rates their security based on several different factors. Interestingly `secp256k1`, the curve Bitcoin uses, is not rated as safe.
 
 However, before we pick a curve, there is something that needs to be mentioned about curves - there are different kinds. All the work so far has been for **Weierstrass curves** - curves with the equation $y^2 = x^3 +ax +b$ that satisfy the equation $4a^3+27b^2 \neq 0$.
 
 Elliptic curves can take other forms, such as the **Edwards curves** of the form $x^2 + y^2 = 1 + dx^2y^2$
 
-Since using other curve forms would require redoing a lot of our maths, and converting from one curve type to another is very complex (I tried), I decided just to use a Weierstrass curve. Although none were deemed safe by [http://safecurves.cr.yp.to/](), I decided on `secp256k1`, which is defined as:
+Since using other curve forms would require redoing a lot of our maths, and converting from one curve type to another is very complex (I tried), I decided just to use a Weierstrass curve. Although none were deemed safe by http://safecurves.cr.yp.to/, I decided on `secp256k1`, which is defined as:
 $$
 y^2 = x^3+7 \pmod {115792089237316195423570985008687907853269984665640564039457584007908834671663}
 $$
@@ -1167,17 +1167,17 @@ ec = elliptic_curve(0,7,11579208923731619542357098500868790785326998466564056403
 
 ##### Creating a signature
 
-Finally, we have all the information to start signing stuff!
+Finally, we have all the functions that we need to start signing messages.
 
 First off, what we're signing needs to be the same bit length as $n$, the subgroup order. Since we hash the messages using `sha256`, and we're using the curve `secp256k1`, they both have the same big length of, unsurprisingly, 256. The message we're signing is denoted as $z$.
 
 We also need a public key and a private key. The private key $w$ is a random integer chosen from $\{1,...,n-1\}$, and the public key $q = wG$ using the scalar multiplication function. I created a Python function to create these:
 
 ```python
-    def createKeys(self):
-        private = randrange(1,self.n)
-        public = self.multiPoints(private,self.g)
-        return (private,public)
+def createKeys(self):
+    private = randrange(1,self.n)
+    public = self.multiPoints(private,self.g)
+    return (private,public)
 ```
 
 `randrange()` is from the `random` module, which I imported at the top of the program using `from random import randint`.
@@ -1198,17 +1198,17 @@ The signature is then $(r,s)$.
 Implementing that in Python, as a part of the `elliptic_curve()` class:
 
 ```python
-    def signMsg(self,msg,w):
-        z = sha256(msg)
-        while True:
-            k = randrange(1,self.n)
-            P = self.multiPoints(k,self.g)
-            xP,yP = P
-            r = xP % self.n
-            if r != 0:
-                s = (self.invMod(k)*(z + r*w) ) % self.n
-                if s != 0:
-                    return (r,s)
+def signMsg(self,msg,w):
+    z = sha256(msg)
+    while True:
+        k = randrange(1,self.n)
+        P = self.multiPoints(k,self.g)
+        xP,yP = P
+        r = xP % self.n
+        if r != 0:
+            s = (self.invMod(k)*(z + r*w) ) % self.n
+            if s != 0:
+                return (r,s)
 ```
 
 ##### Verifying a signature
@@ -1227,13 +1227,13 @@ If $r = x_P \pmod n$, then the signature is valid.
 We can implement this in Python as well:
 
 ```python
-    def verifyMsg(self,msg,signature,q):
-        r,s = signature
-        z = sha256(msg)
-        u1 = (self.invMod(s)*z) % self.n
-        u2 = (self.invMod(s)*z) % self.n
-        x,y = self.addPoints(self.multiPoints(u1,self.g),self.multiPoints(u2,q))
-        return r == x % self.n
+def verifyMsg(self,msg,signature,q):
+    r,s = signature
+    z = sha256(msg)
+    u1 = (self.invMod(s)*z) % self.n
+    u2 = (self.invMod(s)*z) % self.n
+    x,y = self.addPoints(self.multiPoints(u1,self.g),self.multiPoints(u2,q))
+    return r == x % self.n
 ```
 
 ##### Verifying the program
@@ -1343,37 +1343,37 @@ Whilst it's not throwing errors anymore, it is also not the answer we want.
 After a lot of checking, I realised that when we need to find $s = k^{-1} (z + rw) \pmod{n}$, we use the `invMod()` function. However, if we look at `invMod()`:
 
 ```python
-    def invMod(self,n):
-        gcd, x, y = self.eec(n)
-        if gcd == 1:
-            return x % self.p
-        else:
-            raise ValueError(str(p)+" isn't prime (or n = 0)")
+def invMod(self,n):
+    gcd, x, y = self.eec(n)
+    if gcd == 1:
+        return x % self.p
+    else:
+        raise ValueError(str(p)+" isn't prime (or n = 0)")
 ```
 
 It returns `x % self.p`, whereas we want `x % self.n`. To fix this, I changed both `invMod()` and `ecc()` to take both `n` and `p`, where `p` is the value we want for the modulus. The new code looks like this:
 
 ```python
-    def eec(self,a,p):
-        x, old_x = 0, 1
-        y, old_y = 1, 0
-        r, old_r = p, a
+def eec(self,a,p):
+    x, old_x = 0, 1
+    y, old_y = 1, 0
+    r, old_r = p, a
 
-        while r != 0:
-            quot = old_r // r
-            old_r, r = r, old_r - quot * r
-            old_x, x = x, old_x - quot * x
-            old_y, y = y, old_y - quot * y
-        
-        # ax + by = gcd(a,b)
-        # returns (gcd, x, y)
-        return old_r, old_x, old_y
-    def invMod(self,n,p):
-        gcd, x, y = self.eec(n,p)
-        if gcd == 1:
-            return x % p
-        else:
-            raise ValueError(str(p)+" isn't prime (or n = 0)")
+    while r != 0:
+        quot = old_r // r
+        old_r, r = r, old_r - quot * r
+        old_x, x = x, old_x - quot * x
+        old_y, y = y, old_y - quot * y
+    
+    # ax + by = gcd(a,b)
+    # returns (gcd, x, y)
+    return old_r, old_x, old_y
+def invMod(self,n,p):
+    gcd, x, y = self.eec(n,p)
+    if gcd == 1:
+        return x % p
+    else:
+        raise ValueError(str(p)+" isn't prime (or n = 0)")
 ```
 
 This new code is more correct. Unfortunately, the verify function still fails.
@@ -1389,13 +1389,13 @@ After hours of debugging, checking every single function - and rewriting half of
 The problem was... a typo.
 
 ```python
-    def verifyMsg(self,msg,signature,q):
-        r,s = signature
-        z = int(sha256(msg),16)
-        u1 = (self.invMod(s,self.n)*z) % self.n
-        u2 = (self.invMod(s,self.n)*r) % self.n # r used to be z
-        x,y = self.addPoints(self.multiPoints(u1,self.g),self.multiPoints(u2,q))
-        return r % self.n == x % self.n
+def verifyMsg(self,msg,signature,q):
+    r,s = signature
+    z = int(sha256(msg),16)
+    u1 = (self.invMod(s,self.n)*z) % self.n
+    u2 = (self.invMod(s,self.n)*r) % self.n # r used to be z
+    x,y = self.addPoints(self.multiPoints(u1,self.g),self.multiPoints(u2,q))
+    return r % self.n == x % self.n
 ```
 
 I forgot to change `u2` to take `r` instead of `z`. Finally, the function works:
@@ -1544,7 +1544,7 @@ Since this project will be written in Javascript, each packet will use the JavaS
 
 This means that it will be much easier to parse the messages as they are already in a format that Javascript can use.
 
-However, it would be strange to have all of the info in one blob - for example, when checking a hashed block, you would have to remove some of the block's values and then hash it which, while possible, is inefficient and weird. The solution to this is separating each message into a header and a body. The header contains info about the block - who it was send by, what it's hash is, what kind of message it is etc. The body contains the actual message.
+However, it would be strange to have all of the info in one big group - for example, when checking a hashed block, you would have to remove some of the block's values and then hash it which, while possible, is inefficient and overly complex. The solution to this is separating each message into a header and a body. The header contains info about the block - who it was send by, what it's hash is, what kind of message it is etc. The body contains the actual message.
 
 This system is far better because it means that the system can simply check the standardised header to find out what the message is, rather than parse each type of message separately. Also, since a lot of the messages are hashed, we can simply hash the content and put the hash into the header, which makes a lot more sense than having to remove elements from the message before you can confirm the hash.
 
@@ -3919,7 +3919,7 @@ function storeAll(file,data,callback=()=>{}) {
 
 #### append
 
-Append is very similar to `get()`, but rather than the stuff with `Array.isArray()`, it simply appends the data to the file using `jsondata.push()`.
+Append is very similar to `get()`, but rather than dealing with objects that sometimes have arrays as data and using `Array.isArray()`, it simply appends the data to the file using `jsondata.push()` as the file is assumed to be an array rather than an object literal.
 
 ```javascript
 function append(file,data,callback=()=>{}) {
@@ -6158,7 +6158,7 @@ However, I immediately ran into a problem when I tried to use Node.js functions 
 ReferenceError: require is not defined
 ```
 
-Webworkers can only use plain Javascript, and don't have access to Node.js modules or features. This is a massive problem, as we need to use `cryto` module to hash stuff at a minimum. I therefore had to carry on looking.
+Webworkers can only use plain Javascript, and don't have access to Node.js modules or features. This is a massive problem, as we need to use `cryto` module to find the hash of the block at a minimum. I therefore had to carry on looking.
 
 The next place I looked was in `npm`. Since `Worker()` was exactly what I needed, I looked for Node.js-compatible alternative.
 
