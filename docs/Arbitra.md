@@ -206,7 +206,7 @@ This produces the following result:
 '3fc9b689459d738f8c88a3a48aa9e33542016b7a4052e001aaa536fca74813cb'
 ```
 
-It worked! We now can hash any string. Therefore, the next step is to prototype mining. 
+It worked. We now can hash any string. Therefore, the next step is to prototype mining. 
 The next program should then, while the output does not fit a criteria, repeatedly hash a random string with a nonce.
 To fit the criteria, the string must begin with a certain number of zeros.
 
@@ -258,7 +258,7 @@ NONCE: 54395
 HASH: 00001d711101fe4555b9e644cbf85ad205db46d052d4b7af4f28b80d9476c391
 ```
 
-It found a hash that begins with 4 zeros in only 54395 iterations! This took quite a long time (9 minutes 30 seconds).
+It found a hash that begins with 4 zeros in only 54395 iterations. This took quite a long time (9 minutes 30 seconds).
 This is way too long - the target time is (currently) 5 minutes. However, this was only one laptop. With a network of computers around the world checking random nonces and a different difficulty, this can be achieved. In fact, as the overall computing power of the network increases, the difficulty will need to increase with it.
 To confirm that it works, I changed the difficulty to 2 and made it so that it also prints the hash as well as the nonce when it fails.
 
@@ -386,7 +386,7 @@ From the interactive Desmos graph, inputting $x$ values of 1 and 3 gave $(-1.746
 (-1.7462112512353212, 1.2943565281332712)
 ```
 
-The function works! It doesn't handle edge cases yet, but we'll cover that later.
+The function works. It doesn't handle edge cases yet, but we'll cover that later.
 
 ##### Point Doubling
 
@@ -434,7 +434,7 @@ We can verify this result using this tool, from *Elliptic Curve Cryptography: a 
 
 https://cdn.rawgit.com/andreacorbellini/ecc/920b29a/interactive/reals-add.html?px=1&py=2&qx=1&qy=2
 
-Therefore this function works! Before we finish, I wanted to make sure we could easily change the curve, by changing it to $y = x^3 +ax + b$. This means that we have to recalculate some of the maths, most notably the tangent equation:
+Therefore this function works. Before we finish, I wanted to make sure we could easily change the curve, by changing it to $y = x^3 +ax + b$. This means that we have to recalculate some of the maths, most notably the tangent equation:
 $$
 m = \frac{3x^2 + a}{2 \sqrt{x^3+ax+b}} = \frac{3x^2 + a}{2y}
 $$
@@ -969,7 +969,7 @@ https://cdn.rawgit.com/andreacorbellini/ecc/920b29a/interactive/modk-add.html
 
 ![adding points in Fp](https://i.imgur.com/9Rj6OQN.png)
 
-It worked! It should now be simple to convert the point multiplication function.
+It worked. It should now be simple to convert the point multiplication function.
 
 ```python
 def multiPoints(n,P):
@@ -1005,7 +1005,7 @@ Which we can verify with the calculator:
 
 https://cdn.rawgit.com/andreacorbellini/ecc/920b29a/interactive/modk-mul.html
 
-It worked! This is all of the functions that we need to actually create signatures.
+It worked.This is all of the functions that we need to actually create signatures.
 
 ##### Objectifying
 
@@ -1315,7 +1315,7 @@ So clearly, `r * w` is causing an overflow error. I printed both values, and it 
 public,private = ec.createKeys()
 ```
 
-They're the wrong way round! We were passing the public key (a point) as the private key. Once I fixed it:
+They're the wrong way round.We were passing the public key (a point) as the private key. Once I fixed it:
 
 ```
 Traceback (most recent call last):
@@ -2544,7 +2544,7 @@ Finally, we need to install Electron. Since I already had Node.js installed, I u
 
 ![installing Electron](https://i.imgur.com/WFyRqxu.png)
 
-It successfully installed! That image is just the top section of the install process as it outputs a large amount of irrelevant data. All that is left is to start up Electron. According to the Electron Quick Start Guide, the command to do this (from the directory) is `.\node_modules\.bin\electron .`.
+It successfully installed. That image is just the top section of the install process as it outputs a large amount of irrelevant data. All that is left is to start up Electron. According to the Electron Quick Start Guide, the command to do this (from the directory) is `.\node_modules\.bin\electron .`.
 
 ![running the command](https://i.imgur.com/c0dk07k.png)
 
@@ -2747,7 +2747,7 @@ This makes it a relative path rather than an absolute path, and so should now li
 
 ![fs working](https://i.imgur.com/flEdpKu.png)
 
-Trying again, the application loads properly. This means the function works! We now need to turn the `.items` in the menu to buttons that change the pages. We can implement this using `document.getElementById()`. `() => {...}` is "arrow notation" for a function - it is a shorter way of writing `function() {...}`.
+Trying again, the application loads properly. This means the function works. We now need to turn the `.items` in the menu to buttons that change the pages. We can implement this using `document.getElementById()`. `() => {...}` is "arrow notation" for a function - it is a shorter way of writing `function() {...}`.
 
 ```javascript
     // Changing pages
@@ -2779,7 +2779,7 @@ I gave every menu item an ID, so that they can be selected.
 			<div class="subsec" id="testing">Testing</div>
 ```
 
-When we click the Testing button, it changes page! This means that the navigation works, and we can massively simplify the process of creating and changes pages.
+When we click the Testing button, it changes page. This means that the navigation works, and we can massively simplify the process of creating and changes pages.
 
 ![changing page working](https://i.imgur.com/8ZynQDi.png)
 
@@ -3379,7 +3379,7 @@ C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\testing.js:20 30f
 C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\testing.js:22 true
 ```
 
-This means that it works! We can now use `ecdsa.js` to sign and verify messages.
+This means that it works. We can now use `ecdsa.js` to sign and verify messages.
 
 ##### Simplifying Functions
 
@@ -4497,7 +4497,7 @@ C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\parse.js:194 Connect
 C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\parse.js:194 Connection added: localhost
 ```
 
-This looks mostly good! However, I noticed that in the reply, it doesn't reply with a value for `advertise`, which is a problem. Looking again at the code for `pg()`:
+This looks mostly good. However, I noticed that in the reply, it doesn't reply with a value for `advertise`, which is a problem. Looking again at the code for `pg()`:
 
 ```javascript
 function pg(msg,ip,callback) {
@@ -6162,7 +6162,7 @@ Webworkers can only use plain Javascript, and don't have access to Node.js modul
 
 The next place I looked was in `npm`. Since `Worker()` was exactly what I needed, I looked for Node.js-compatible alternative.
 
-Luckily enough, I found one! `tiny-worker` replaces `Webworker` with the same API but now with access to Node.js functions.
+Luckily enough, I found one. `tiny-worker` replaces `Webworker` with the same API but now with access to Node.js functions.
 
 ```shell
 >npm install --save tiny-worker
@@ -7510,11 +7510,9 @@ Success
 
 #### Proof
 
-![test 8.1]()
+![test 8.1](https://i.imgur.com/XMJdajo.png)
 
-![test 8.2]()
-
-![test 8.3]()
+![test 8.2](https://i.imgur.com/Zt2dki8.png)
 
 ### Test 9 - Save wallets.json
 
