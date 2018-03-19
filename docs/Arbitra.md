@@ -6992,7 +6992,7 @@ function init() {
 exports.init = init
 ```
 
-There are some extra inports in this file. We import both `fs` and `file.js`, because `file.js` can only store stuff in `%APPDATA%`. `dialog` is a part of Electron, and as such we need to access it through `electron.remote`.
+There are some extra inports in this file. We import both `fs` and `file.js`, because `file.js` can only store data in `%APPDATA%`. `dialog` is a part of Electron, and as such we need to access it through `electron.remote`.
 
 I retrieved the version number by using `require()` on `package.json`, which is where that is stored. Getting the property `version` from that gives us the application version directly. We then set the version number using:
 
