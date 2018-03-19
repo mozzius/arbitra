@@ -62,7 +62,7 @@ The Bitcoin whitepaper (https://bitcoin.org/bitcoin.pdf) was used to understand 
 
 A transaction, most simply, is a message that says "I want to send this person x arbitrary units". The idea of a cryptocurrency is that rather than having a physical unit that you hand over to someone, you instead have a list of all transactions ever made and determine your account balance from that. This means that everyone can be certain that no-one is forging money or faking transactions - everyone can see the list and validate it. It also removes trust out of the equation - you don't have to just hope that your bank is keeping your money safe. 
 
-To create a transaction, you must have a “wallet” that has some currency in, and use a public/private key pair to cryptographically “sign” your transaction. Public/private key pairs are a cryptographic function that allows a private key to create a message with which one can use the public key to mathematical verify that the message was created with its paired private key. You would then submit your transaction to a node on the network. If your transaction is valid, the node will send it to all other nodes in the network who will add it to a “block” of transactions.
+To create a transaction, you must have a “wallet” that has some currency in, and use a public/private key pair to cryptographically “sign” your transaction. Public/private key pairs are a cryptographic function that allows a private key to create a message with which one can use the public key to mathematical verify that the message was created with it's paired private key. You would then submit your transaction to a node on the network. If your transaction is valid, the node will send it to all other nodes in the network who will add it to a “block” of transactions.
 
 A block consists of all transactions submitted since the previous block, the timestamp, the hash of the block that came before, and a nonce (which I’ll get to). Having the hash of the previous block irrevocably links the block to the one that came before it, and since it is easy to check, it is impossible to change the previous block’s contents without changing all the blocks that have come after. It also ensures that they are ordered. These blocks thereby form a chain from the genesis block, hence “blockchain”.
 
@@ -1603,7 +1603,7 @@ Each message has a header. It has the following attributes:
 
 `size` is the size of the body in bytes. `hash` is the SHA256 hash of the body, and acts as both an identifier and as a checksum. If size becomes a concern, it may become necessary to truncate the hash. The `version` is the version number of the client.
 
-However, not all message types have unique contents, and therefore their hashes would be the same, making the usage of the hash as a unique identifier. I initially though that this can be fixed by appending the timestamp onto the end of the `body` before hashing it.
+However, not all message types have unique contents, and therefore their hashes would be the same, making the usage of the hash as a unique identifier. I initially thought that this can be fixed by appending the timestamp onto the end of the `body` before hashing it.
 
 ```pseudocode
 hash = sha256(msg.body+msg.header.time)
@@ -2652,7 +2652,7 @@ document.onreadystatechange = function () {
 }
 ```
 
-The minimise function is simple, as it simply calls `window.minimize()` to minimise it, which is a function already in Electron. However, it is less simple for maximising the window, as the same button must also return the window to its old size. For this we call `window.isMaximized()`  to see if the window is maximised. If it is, we call `window.unmaximize()`, otherwise we call `window.maximize()`.
+The minimise function is simple, as it simply calls `window.minimize()` to minimise it, which is a function already in Electron. However, it is less simple for maximising the window, as the same button must also return the window to it's old size. For this we call `window.isMaximized()`  to see if the window is maximised. If it is, we call `window.unmaximize()`, otherwise we call `window.maximize()`.
 
 The solution to this problem used this site:
 [http://mylifeforthecode.com/making-the-electron-shell-as-pretty-as-the-visual-studio-shell/](http://mylifeforthecode.com/making-the-electron-shell-as-pretty-as-the-visual-studio-shell/)
@@ -4063,7 +4063,7 @@ But what causes clients to start sending messages in the first place? We need to
 - calculate the number of nodes we are connected to
 - start a loop to continually check for nodes
 
-I decided the best place for this is within the `network.init()` function, after we set the server running. First of all, we need to wipe `connections.json`, as this is meant to contain current connections and it is unknown if those connections are still there. Therefore, we remove it's contents when the application starts. This uses `file.storeAll()`, which again is a function that we have not defined, but stores the second parameter's data in the file with the name of the first parameter. In this case, it stores an empty array.
+I decided the best place for this is within the `network.init()` function, after we set the server running. First of all, we need to wipe `connections.json`, as this is meant to contain current connections and it is unknown if those connections are still there. Therefore, we remove it's contents when the application starts. This uses `file.storeAll()`, which stores an empty array.
 
 ```javascript
     // wipe connections
@@ -4075,7 +4075,151 @@ Next, we need to connect to the nodes listed in `recent-connections.json`, to re
 
 #### connect
 
+This is a fairly simple function, as it simply gets all the nodes in `recent-connections.json` and sends them a ping, if they're not currently connected to. However, I also wanted it to connect to the backup server if it couldn't find any connections. Therefore, after it sends the pings I wanted to see how many connections there are, and if there's none it should attempt to connect to the backup server. First, I ran into the issue of knowing how many connections I had. Initially, I tried a complex callback system but this ultimately failed.
 
+I realised later that I could just use the connection counter in the top left corner. This is increased every time the client receives a ping, so if we read that we can tell how many connections the client has.
+
+The second issue is that pings don't come back instantly. Therefore, I used the `setTimeout()` function to check the number of connections after 10000 milliseconds have passed.
+
+Finally, the backup server is `5.81.186.90`. I also show the "WARNING: No connections" message until the ping has returned.
+
+```javascript
+function connect() {
+    // try to connect to other nodes through old connections
+    file.getAll('recent-connections',(data) => {
+        var connections = JSON.parse(data)
+        file.get('advertise','network-settings',(data) => {
+            if (data === 'true' || data === 'false') {
+                var advertise = data
+            } else {
+                var advertise = 'true'
+            }
+            var ping = {
+                "header": {
+                    "type": "pg"
+                },
+                "body": {
+                    "advertise": advertise
+                }
+            }
+            file.getAll('connections',(curdata) => {
+                var current = JSON.parse(curdata)
+                connections.forEach((node) => {
+                    if (!current.includes(node)) {
+                        sendMsg(ping,node.ip)
+                    }
+                })
+            },'[]')
+            
+            // wait ten seconds to see if any connections have been made
+            setTimeout(() => {
+                // get the number of connections from textContent
+                var connectCount = parseInt(document.getElementById('connections').textContent)
+                if (connectCount === 0) {
+                    console.warn('No connections found!')
+                    document.getElementById('nonodes').classList.remove('hidden')
+                    console.warn('Connecting to backup server')
+                    // wavecalcs.com is friend's server, and should be online for the purposes of this project
+                    // wavecalcs.com = 5.81.186.90
+                    sendMsg(ping,'5.81.186.90')
+                }
+            },10000)
+        })
+    },'[]')
+}
+```
+
+#### setInterval
+
+As per the list, the next thing we need to do is create a loop that sends out hash request messages and pings, where neccessary. Rather than use a `while` loop, I found that a better way of doing it was by using the `setInterval()` function, as then we can set a gap between the loops. I chose 60 seconds, or 60000 milliseconds.
+
+What this function does it get the number of connections from the DOM, as mentioned previously, and also get the target number of connections from the settings file. Then, if the number of connections is less than the number of  target connections, it calls the `connect` function again. It then waits 15 seconds for that function to finish, then gets the number of connections again to see if it's over the threshold yet. If not, it sends out node requests to the connections in an attempt to get more nodes.
+
+```javascript
+    // this is a loop that maintains connections and
+    // sends top hash requests to make sure the client is up to date
+    // it goes on forever, every minute
+    setInterval(() => {
+        console.log('Interval')
+        var connections = parseInt(document.getElementById('connections').textContent)
+        // first check that we have enough connections
+        file.get('target-connections','network-settings',(target) => {
+            // if the current number of of connections is less than the minimum
+            // as defined by user settings, connect
+            if (connections < target) {
+                connect()
+                // if it's still not enough after 15 seconds, send node requests
+                setTimeout(() => {
+                    connections = parseInt(document.getElementById('connections').textContent)
+                    if (connections < target) {
+                        var nr = {
+                            "header": {
+                                "type": "nr"
+                            },
+                            "body": {}
+                        }
+                        sendToAll(nr)
+                    }
+                },15000)
+            }
+        },5) // if it fails to open the file it sets target to five
+    },60000)
+```
+
+I also wanted it to send out hash requests, so I added that. On top of that, if connections is greater than the target, it needs to replace `recent-connections.json` with `connections.json`.
+
+It only sends out hash requests if there are more than one connections. If there are no connections, it removes the `.hidden` classs from the "no connections" warning.
+
+```javascript
+// this is a loop that maintains connections and
+// sends top hash requests to make sure the client is up to date
+// it goes on forever, every minute
+setInterval(() => {
+    console.log('Interval')
+    var connections = parseInt(document.getElementById('connections').textContent)
+    // first check that we have enough connections
+    file.get('target-connections','network-settings',(target) => {
+        // if the current number of of connections is less than the minimum
+        // as defined by user settings, connect
+        if (connections < target) {
+            connect()
+            // if it's still not enough after 15 seconds, send node requests
+            setTimeout(() => {
+                connections = parseInt(document.getElementById('connections').textContent)
+                if (connections < target) {
+                    var nr = {
+                        "header": {
+                            "type": "nr"
+                        },
+                        "body": {}
+                    }
+                    sendToAll(nr)
+                }
+            },15000)
+        } else {
+            // save current connections to recent connections
+            file.getAll('connections',(data) => {
+                if (connections !== null) {
+                    file.storeAll('recent-connections',JSON.parse(data))
+                }
+            })
+        }
+        connections = parseInt(document.getElementById('connections').textContent)
+        if (connections === 0) {
+            document.getElementById('nonodes').classList.remove('hidden')
+        } else {
+            // check that the chain is up to date
+            var hr = {
+                "header": {
+                    "type": "hr"
+                },
+                "body": {}
+            }
+            sendToAll(hr)
+        }
+    },5) // if it fails to open the file it sets target to five
+},60000)
+```
 
 ### Message Parsing/Processing
 
@@ -4121,9 +4265,9 @@ function parseMsg(data,callback) {
         } else if (msg.header.type === 'br') {
             reply = br(msg)
         } else if (msg.header.type === 'pg') {
-            reply = pg(msg)
+            reply = pg(msg,ip)
         } else if (msg.header.type === 'nr') {
-            reply = nr(msg)
+            reply = nr(msg,ip)
         } else {
             reply = er('type')
         }
@@ -4146,59 +4290,59 @@ function parseMsg(data,callback) {
 First however, we can simplify this system slightly. Every message has a hash, so we can verify that once before we start parsing the messages. Therefore, I added the check before the if statements. If it fails, it will call `er()` with the error message of `'hash'`.
 
 ```javascript
-    try {
-        var msg = JSON.parse(data)
-        if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
-            if (msg.header.type === 'tx') {
-                tx(msg)
-            } else if (msg.header.type === 'bk') {
-                ...
-            } else {
-                er('type')
-            }
+try {
+    var msg = JSON.parse(data)
+    if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
+        if (msg.header.type === 'tx') {
+            tx(msg)
+        } else if (msg.header.type === 'bk') {
+            ...
         } else {
-            er('hash')
+            er('type')
         }
+    } else {
+        er('hash')
     }
+}
 ```
 
 I also realised that we could use the `try...catch` statement to set the error reply, rather than using `er()`. If it runs into an error, it simply `throw`s the error, which will then be caught by the catch statement. By throwing what we want the return message to say, we can simply rewrite the `try...catch` statement like so:
 
 ```javascript
-    try {
-        var msg = JSON.parse(data)
-        if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
-            if (msg.header.type === 'tx') {
-                tx(msg)
-            } else if (msg.header.type === 'bk') {
-                ...
-            } else {
-                throw 'type'
-            }
+try {
+    var msg = JSON.parse(data)
+    if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
+        if (msg.header.type === 'tx') {
+            tx(msg)
+        } else if (msg.header.type === 'bk') {
+            ...
         } else {
-            throw 'hash'
+            throw 'type'
         }
-    } catch(e) {
-        console.warn(e)
-        reply.header.type = 'er'
-        if (e.name === 'SyntaxError') {
-            reply.body.err = 'parse'
-        } else {
-            reply.body.err = e
-        }
+    } else {
+        throw 'hash'
     }
+} catch(e) {
+    console.warn(e)
+    reply.header.type = 'er'
+    if (e.name === 'SyntaxError') {
+        reply.body.err = 'parse'
+    } else {
+        reply.body.err = e
+    }
+}
 ```
 
 We also need to find the size of the body. I found an answer on [StackOverflow](https://stackoverflow.com/a/27377098) that answered this question, using Node.js' `Buffer` - `Buffer.byteLength(string,'utf8')`. We put this at the end of the function.
 
 ```javascript
-    finally {
-        reply.body.time = Date.now()
-        reply.header.hash = hash.sha256hex(JSON.stringify(reply.body))
-        reply.header.size = Buffer.byteLength(JSON.stringify(reply.body,'utf8'))
-        var replystr = JSON.stringify(reply)
-        callback(replystr)
-    }
+finally {
+    reply.body.time = Date.now()
+    reply.header.hash = hash.sha256hex(JSON.stringify(reply.body))
+    reply.header.size = Buffer.byteLength(JSON.stringify(reply.body,'utf8'))
+    var replystr = JSON.stringify(reply)
+    callback(replystr)
+}
 ```
 
 #### Parsing Different Message Types
@@ -4438,7 +4582,7 @@ function parseMsg(data,ip,callback) {
                 parse.pg(msg,ip,callback)
             } else if (msg.header.type === 'nr',callback) {
                 // node request
-                parse.nr(msg,callback)
+                parse.nr(msg,ip,callback)
             } else {
                 throw 'type'
             }
@@ -4493,6 +4637,34 @@ function pg(msg,ip,callback) {
     })
 }
 ```
+
+I also had to change the server so that it adds the header attributes onto the message, like the time and the size.
+
+```javascript
+var server = net.createServer((socket) => {
+    var ip = socket.remoteAddress
+    socket.setEncoding('utf8')
+    // when it receives data, send to parseMsg()
+    socket.on('data',(data) => {
+        console.log('Received connection from: '+ip)
+        console.log('Server received: '+data)
+        parseMsg(data,ip,(msg) => {
+            if (msg.header.type !== 'tx' && msg.header.type !== 'bk') {
+                msg.body['time'] = Date.now()
+                msg.header['version'] = version
+                msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
+                msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
+            }
+            var reply = JSON.stringify(msg)
+            console.info('Sending message to '+ip+': '+reply)
+            socket.write(reply)
+            file.append('sent',msg.header.hash)
+            socket.end()
+        })
+    })
+})
+```
+
 ##### tx
 
 Much like `pg()`, we will be reusing the code to verify transactions, so I split it up into a separate function. This way, it can be used across the program and not just in this context.
@@ -4589,7 +4761,7 @@ function tx(msg,callback) {
 
 ##### bk
 
-As with `tx()`, I made a separate subroutine to see if a block is valid. This iterates checks the difficulty of a block and then goes through the transactions, calling `transaction()` for each one.
+As with `tx()`, I made a separate subroutine to see if a block is valid. This iterates checks the difficulty of a block and then goes through the transactions, calling `transaction()` for each one. However, I ran into a major problem, in that I could not figure out how to verify the difficulty if it could change. At the moment, the system only lets blocks into `blockchain.json` if the block is valid. However, with dynamic difficulties, the block could be invalid (by having a difficulty that's too small) but still be in `blockchain.json` if we don't have it's parent on disk to verify that. This would lead to a lot of issues if the blocks in `blockchain.json` could not be trusted, and would require an extremely complex restructuring of the whole system, or would require running this subroutine on the whole blockchain every time a block is valid, which would be far too resource-intensive. I could not figure out how to solve this issue, so unfortunatly I had to instead set the difficulty to 6, permanantly. I set the difficulty as a `const` at the top of the program.
 
 ```javascript
 function block(body) {
@@ -4640,10 +4812,6 @@ function bk(msg,callback) {
 }
 ```
 
-##### ok
-
-I didn't even make an `ok()` function, I just had it print `"Message received ok"` into the console back in `parseReply()`.
-
 ##### hr
 
 To construct a `bh`, we need to use a function that has not yet been covered, `blockchain.getTopBlock()`. This simply returns the hash of the top block of the blockchain.
@@ -4670,101 +4838,36 @@ function hr(msg,callback) {
 }
 ```
 
-##### bh
-
-This is the reply to a hash request, and is the hash of that client's top block. In this function, we need to check if it's in the blockchain, and if not, send out chain requests. To do this, we use `!Object.keys(mainchain).includes(msg.body.hash)`, which gets all the keys from a block and checks to see if `msg.body.hash` is one of them. If it does, it returns `!true`, which is `false`.
-
-```javascript
-function bh(msg,callback) {
-    file.getAll('blockchain',(data) => {
-        var mainchain = JSON.parse(data)
-        if (!Object.keys(mainchain).includes(msg.body.hash)) {
-            // if the received top hash is not equal to the one on disk
-            // and it's not in the blockchain, then send out a chain request
-            var chainrequest = {
-                "header": {
-                    "type": "cr"
-                },
-                "body": {
-                    "hash": msg.body.hash
-                }
-            }
-            network.sendToAll(chainrequest)
-        }
-    },'{}')
-}
-```
-
 ##### nr
 
-For a node request, we simply iterate through connections, and add them to an array if `"advertise"` is `"true"`.
+For a node request, we simply iterate through connections, and add them to an array if `"advertise"` is `"true"`, the IP is not the same as the node that sent us this message, and if the number of connections is less than the number that was requested. We also need to make sure that if `msg.max` does not exist, we use `Infinity` instead since `i` will always be less than `Infinity`.
 
 ```javascript
-function nr(msg,callback) {
-    var reply = {
-        "header": {
-            "type": "nd"
-        },
-        "body": {
-            "nodes": []
-        }
+function nr(msg,ip,callback) {
+    var max = Infinity
+    if (msg.hasOwnProperty('max')) {
+        var max = msg.max
     }
+    var nodes = []
     file.getAll('connections',(data) => {
         if (data === null) {
             throw 'notfound'
-        } else {
-            var connections = JSON.parse(connections)
-            connections.forEach((connection) => {
-                if (connection.advertise == "true") {
-                    reply.body.nodes.push(connection.ip)
-                }
-            })
-            callback(reply)
         }
-    })
-}
-```
-
-#### nd
-
-When we receive these nodes, we need to make sure that we are not pinging nodes that we are already connected to. This means that we need to get the list of nodes and only send `pg` messages to those that aren't on both lists.
-
-The first part of this function is simply constructing the `pg` message.
-
-```javascript
-function nd(msg) {
-    // some nodes we can connect to
-    file.get('advertise','network-settings',(data) => {
-        if (data === 'true' || data === 'false') {
-            var advertise = data
-        } else {
-            var advertise = 'true'
-        }
-        var ping = {
+        var connections = JSON.parse(data)
+        connections.forEach((connection,i) => {
+            if (connection.ip !== ip && i < max && connection.advertise === "true") {
+                nodes.push(connections)
+            }
+        })
+        var reply = {
             "header": {
-                "type": "pg"
+                "type": "nd"
             },
             "body": {
-                "advertise": advertise
+                "nodes": nodes
             }
         }
-        file.getAll('connections',(data) => {
-            // this must get connection data, as otherwise it wouldn't have received this message
-            var connections = JSON.parse(data)
-            msg.body.nodes.forEach((node) => {
-                var send = true
-                // if we are already connected to the node don't send
-                connections.forEach((connection) => {
-                    if (node.ip === connection) {
-                        send = false
-                    }
-                })
-                // otherwise send a ping
-                if (send) {
-                    network.sendMsg(ping,node.ip)
-                }
-            })
-        })
+        callback(reply)
     })
 }
 ```
@@ -4821,6 +4924,135 @@ function cr(msg,callback) {
 }
 ```
 
+#### Sending Messages
+
+We now need to update the `sendMsg()` function, so that it automatically adds the time, the version number, the hash and the size to the header and body. It also needs to check that the message has not already been sent by checking the hash against `sent.json`.
+
+I also had an unexplained bug where it would fail to parse `sent.json`, so line 6-8 detects and fixes that, as I was not able to find a proper fix.
+
+```javascript
+function sendMsg(msg,ip,callback) {
+    // for checking that the message hasn't already been sent
+    file.getAll('sent',(data) => {
+        // for some reason, sent.json sometimes ends with [...]]
+        // until I find the source of the bug, this will do
+        if (data[data.length-1] === data[data.length-2]) {
+            data = data.slice(0,-1)
+        }
+        var sent = JSON.parse(data)
+        if (msg.header.type !== 'bk' && msg.header.type !== 'tx') {
+            // don't want to affect the body of a block
+            // and the time of the tx is crucial as well
+            // as it will throw off the hash
+            msg.body['time'] = Date.now()
+        }
+        msg.header['version'] = version
+        msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
+        msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
+
+        // check that the message hasn't already been sent
+        if (!sent.includes(msg.header.hash)) {
+            var sendMe = JSON.stringify(msg)
+            console.info('Sending message to '+ip+': '+sendMe)
+
+            // actually go send the message
+            var client = new net.Socket()
+            client.connect(port,ip,() => {
+                client.write(sendMe)
+                // add the hash to the sent messages file
+                file.append('sent',msg.header.hash)
+                client.on('data',(data) => {
+                    console.log('Client received: '+data)
+                    parseReply(data,ip,() => {
+                        client.destroy()
+                    })
+                })
+                client.on('close',() => {
+                })
+                client.on('timeout',() => {
+                    console.warn('Client timed out')
+                    client.destroy()
+                })
+                client.on('error',(e) => {
+                    console.warn('Client timed out')
+                    client.destroy()
+                })
+            })
+        } else {
+            console.log('Message already sent')
+        }
+    },'[]')
+}
+```
+
+I also created a function called `sendToAll()`, which I have used previously. Unsuprisingly, it reads `connections.json` and sends a message using `sendMsg()` to each of the nodes.
+
+```javascript
+function sendToAll(msg) {
+    file.getAll('connections',(data) => {
+        // doesn't do anything if there's no connections
+        if (data !== null || data === '' || data === '[]') {
+            nodes = JSON.parse(data)
+            // go through connections and send a message to each
+            nodes.forEach((node) => {
+                sendMsg(msg,node.ip)
+            })
+        }
+    })
+}
+```
+
+#### Parsing replies
+
+Now we need to make the equivalent function to `parseMsg()` for replies, which is `parseReply()`. It is nearly identical except it doesn't send a reply back, so is simpler. All it does in the case of error is save the message to `error-log.json`.
+
+```javascript
+function parseReply(data,ip,callback=()=>{}) {
+    // parse incoming replies
+    // by calling parse functions
+    try {
+        var msg = JSON.parse(data)
+        if (msg.header.hash == hash.sha256hex(JSON.stringify(msg.body))) {
+            if (msg.header.type === 'cn') {
+                // chain
+                parse.cn(msg)
+            } else if (msg.header.type === 'bh') {
+                // top hash
+                parse.bh(msg)
+            } else if (msg.header.type === 'nd') {
+                // nodes
+                parse.nd(msg)
+            } else if (msg.header.type === 'pg') {
+                // ping
+                parse.pgreply(msg,ip)
+            } else if (msg.header.type === 'ok') {
+                // message received ok
+                console.info('message recieved ok')
+            } else if (msg.header.type === 'er') {
+                // error (uh oh)
+                console.warn('We recieved an error')
+                parse.er(msg)
+            } else {
+                throw 'type'
+            }
+
+        } else {
+            throw 'hash'
+        }
+    } catch(e) {
+        console.warn('Reply error: '+e)
+        file.append('error-log',msg)
+    } finally {
+        // call the callback, if needed
+        callback()
+    }
+}
+```
+
+#### Parsing different reply types
+
+Now we need to make the parsing functions for the replies, in `parse.js`. I have already covered `parse.pgreply()` in the previous section.
+
 ##### cn
 
 In theory, we should just be able to iterate through the nodes and add them one by one. However, an oversight in the `blockchain.addBlock()` function means that it takes in full messages rather than just the body. I worked around this by putting each block into an object as the `"body"`, like so:
@@ -4834,6 +5066,79 @@ function cn(msg) {
     }
 }
 ```
+
+##### nd
+
+When we receive these nodes, we need to make sure that we are not pinging nodes that we are already connected to. This means that we need to get the list of nodes and only send `pg` messages to those that aren't on both lists.
+
+The first part of this function is simply constructing the `pg` message.
+
+```javascript
+function nd(msg) {
+    // some nodes we can connect to
+    file.get('advertise','network-settings',(data) => {
+        if (data === 'true' || data === 'false') {
+            var advertise = data
+        } else {
+            var advertise = 'true'
+        }
+        var ping = {
+            "header": {
+                "type": "pg"
+            },
+            "body": {
+                "advertise": advertise
+            }
+        }
+        file.getAll('connections',(data) => {
+            // this must get connection data, as otherwise it wouldn't have received this message
+            var connections = JSON.parse(data)
+            msg.body.nodes.forEach((node) => {
+                var send = true
+                // if we are already connected to the node don't send
+                connections.forEach((connection) => {
+                    if (node.ip === connection) {
+                        send = false
+                    }
+                })
+                // otherwise send a ping
+                if (send) {
+                    network.sendMsg(ping,node.ip)
+                }
+            })
+        })
+    })
+}
+```
+
+##### bh
+
+This is the reply to a hash request, and is the hash of that client's top block. In this function, we need to check if it's in the blockchain, and if not, send out chain requests. To do this, we use `!Object.keys(mainchain).includes(msg.body.hash)`, which gets all the keys from a block and checks to see if `msg.body.hash` is one of them. If it does, it returns `!true`, which is `false`.
+
+```javascript
+function bh(msg,callback) {
+    file.getAll('blockchain',(data) => {
+        var mainchain = JSON.parse(data)
+        if (!Object.keys(mainchain).includes(msg.body.hash)) {
+            // if the received top hash is not equal to the one on disk
+            // and it's not in the blockchain, then send out a chain request
+            var chainrequest = {
+                "header": {
+                    "type": "cr"
+                },
+                "body": {
+                    "hash": msg.body.hash
+                }
+            }
+            network.sendToAll(chainrequest)
+        }
+    },'{}')
+}
+```
+
+##### ok
+
+I didn't even make an `ok()` function, I just had it print `"Message received ok"` into the console back in `parseReply()`.
 
 ##### er
 
@@ -5974,6 +6279,8 @@ We now need to flesh out the mining script. Unfortunately, the following code is
 
 Because of this, I will simply put the final code here rather than go through the process of making it.
 
+As mentioned previously, the difficulty is static, as I could not figure out how to verify it if it could change
+
 ```javascript
 const hash = require(__dirname+'/js/hashing.js')
 const fs = require('fs')
@@ -6733,7 +7040,7 @@ document.getElementById('clear').addEventListener('click',() => {
 })
 ```
 
-Notice that `network-settings.json` has its default values set.
+Notice that `network-settings.json` has it's default values set.
 
 ### Final Touches
 
@@ -6969,6 +7276,289 @@ To save me running `.\node_modules\.bin\electron .` every time, I added a script
 This means that I can use `npm start` in the console to start the application.
 
 ## Testing
+
+In this section, I will attempt to verify that the application and the network work to the standard of the inital objectives.
+
+For some of the tests, I installed Arbitra on a friend's PC, which was running 24/7 anyway for their project. Luckily for me, they had a static IP, so I used that for the backup server.
+
+### Test 1 - Application fresh start#
+
+#### Method
+
+1. Delete the `arbitra-client` folder in `%APPDATA%\Roaming\arbitra-client`
+2. Call `npm start`
+
+#### Expected Outcomes
+
+1. Application opens
+2. `overview` page is automatically opened
+3. A wallet is automatically created
+
+#### Test Result
+
+Success
+
+#### Proof
+
+![test 1.1](https://i.imgur.com/pw4bFFq.png)
+
+![test 1.2](https://i.imgur.com/aYwC2yD.png)
+
+### Test 2 - Creating a wallet
+
+#### Method
+
+1. Navigate to `wallets` page
+2. Click on "Create new wallets"
+3. Enter the name "Test Wallet"
+4. Click "Create Wallet"
+
+#### Expected Outcomes
+
+1. `wallets-create` page opens
+2. A wallet is created with the name "Test Wallet"
+
+#### Test Result
+
+Success
+
+#### Proof
+
+![test 2.1](https://i.imgur.com/URbs00w.png)
+
+![test 2.2](https://i.imgur.com/z3tVFT5.png)
+
+### Test 3 - Pinging a client
+
+#### Method
+
+1. Go to the `network-settings` page
+2. Enter a valid IP
+3. Click "Ping"
+
+#### Expected Outcomes
+
+1. A `pg` message is sent to the correct IP on port 2018
+2. The hash of the message is added to `sent.json`
+3. The client replies with a `pg` message
+4. The IP is added to `connections.json`
+5. The connections counter is incremented
+
+#### Test Result
+
+Success
+
+#### Proof
+
+![test 3.1](https://i.imgur.com/gt0nLiI.png)
+
+![test 3.2](https://i.imgur.com/9FiYlgW.png)
+
+`connections.json`:
+
+```json
+[{"ip":"5.81.186.90","advertise":"true"}]
+```
+
+### Test 4 - Automatic reconnecting
+
+#### Method
+
+1. Restart the application
+2. Wait a few seconds
+
+#### Expected Outcomes
+
+1. The IP pinged in the last test is pinged again
+2. The IP is added to `connections.json`
+3. The connections counter is incremented
+
+#### Test Result
+
+Success
+
+#### Proof
+
+![test 4.1](https://i.imgur.com/GfDEi94.png)
+
+### Test 5 - Connected to backup
+
+#### Method
+
+1. Go to `app-settings` and click "Clear cache"
+2. Restart the application
+3. Wait
+
+#### Expected Outcomes
+
+1. After 60 seconds, a ping is sent to the backup server
+2. A ping is sent back and stored etc
+
+#### Test Result
+
+Success
+
+#### Proof
+
+![test 5.1](https://i.imgur.com/KFezlva.png)
+
+### Test 6 - Mine a block
+
+#### Method
+
+1. Navigate to the `mine` page
+2. Click "Start"
+3. Wait
+
+#### Expected Outcomes
+
+1. "Path received" and "Block form, mining initiated" are printed to the console
+2. Hashing rate is printed every ten seconds
+3. When block is found, it is printed to the console and then sent to connections
+4. Receive `ok` message
+5. 50au added to wallet
+6. 50au displayed in the top left
+
+
+#### Test Result
+
+Success with minor visual bug
+
+#### Proof
+
+![test 6.1](https://i.imgur.com/r6ILNGW.png)
+
+I missed the first block it mined, so here is the second block
+
+![test 6.2](https://i.imgur.com/QDKGdKP.png)
+
+![test 6.3](https://i.imgur.com/ci1z7TI.png)
+
+![test 6.4](https://i.imgur.com/5LIPiMR.png)
+
+#### Issues
+
+Since the `height` of a block is zero-indexed, the block length counter in the top left has an off by one error.
+
+#### Fixes
+
+In `blockchain.js`, change:
+
+```javascript
+document.getElementById('height').textContent = fullchain[best].height
+```
+
+to:
+
+```javascript
+document.getElementById('height').textContent = fullchain[best].height + 1
+```
+
+### Test 7 - Make a transaction
+
+#### Method
+
+1. Navigate to `make` page
+2. Enter the public key of "Test Wallet"
+3. Select "My Wallet"
+4. Enter 25
+5. Click "Send"
+
+#### Expected Outcome
+
+1. Transaction is created and sent without errors
+2. Transaction is added to `history` page
+
+#### Test Result
+
+Success
+
+#### Proof
+
+![test 7.1](https://i.imgur.com/slhC3uy.png)
+
+![test 7.2](https://i.imgur.com/eHHlaza.png)
+
+![test 7.3](https://i.imgur.com/9kg2qoS.png)
+
+`txpool.json`:
+
+```json
+[{"to":"bafad16bb7479e2827859c489a38c0bedeef96ce8a1aec201901394d16d1783b-bbddd2a5ef17608dfed16b2d351398ee3d208e215129dfa02b777ee2c801dcc0","from":[{"wallet":"ad003b2393f396d69540886ebf5ab888f0c89e64cbb8415b5ad6ac1a10f890f77c9ec603e255437e6daffe3ed0c67c41f9798778eec952e5214acaa4a6762a16","amount":25000000,"signature":"6bfe755218cd424bfe452e55ccb347604cf0e5c92b238a3f57b1b65e7b3211c51dfa483fcf64e236253256283000b79f582ba151a02a2281acb0af953ca1f5c"}],"time":1521399948482}]
+```
+
+### Test 8 - Add a transaction to blockchain
+
+#### Method
+
+1. Navigate to the `mine` page
+2. Click "Start"
+3. Wait until a block has been mined
+
+#### Expected Outcomes
+
+1. The balance of the wallets should be split 25 - 125
+2. The transaction should appear in the blockchain viewing page
+
+#### Test Result
+
+Success
+
+#### Proof
+
+![test 8.1]()
+
+![test 8.2]()
+
+![test 8.3]()
+
+### Test 9 - Save wallets.json
+
+#### Method
+
+1. Navigate to the `app-settings` page
+2. Click "Save wallets"
+
+#### Expected Outcomes
+
+1. Save dialog appears
+2. `wallets.json` is saved to the place selected
+
+#### Test Result
+
+Success
+
+#### Proof
+
+![test 9.1](https://i.imgur.com/T3PVRGw.png)
+
+`C:\Users\Mozzi\Documents\wallets.json`:
+
+```json
+[{"name":"My Wallet","public":"71870e4352b2d266cbac8ffa88cc92c1b9c93b9c532ad972fa066404bb080010-beae4c7d8995824d2d600d09b4e4784a6a013973202154e28b134ad2c3efc937","private":"732e33449bf91ae9dcf4d7eef791301280bd64935b4cee6854d0d582db7bcd69","amount":100},{"name":"Test Wallet","public":"6bcfc9193ac2b8db237583afa9bb8a347f28ea1af6fb78856f077d3569a26e074fb62fbf8e7f8ad4842ef39da8490953b87b1492c4c219cdfe83a2743dbdc01e","private":"aee7882724828734665fd7810b4caaedbfbaf2e53c713bd919f98dd18657caf4","amount":0}]
+```
+
+### Test 10 - Invalid transaction
+
+#### Method
+
+1. Navigate to the `make` page
+2. Enter amount that exceed's the wallet's total amount
+3. Click "Send"
+
+#### Expected Outcomes
+
+1. Error message displayed
+
+#### Test Result
+
+Success
+
+#### Proof
+
+![test 10.1](https://i.imgur.com/yyJQa7H.png)
+
+![test 10.2](https://i.imgur.com/JIucRGw.png)
 
 ## Evaluation
 

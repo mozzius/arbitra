@@ -133,30 +133,6 @@ function hr(msg,callback) {
     })
 }
 
-function nr(msg,callback) {
-    var reply = {
-        "header": {
-            "type": "nd"
-        },
-        "body": {
-            "nodes": []
-        }
-    }
-    file.getAll('connections',(data) => {
-        if (data === null) {
-            throw 'notfound'
-        } else {
-            var connections = JSON.parse(connections)
-            connections.forEach((connection) => {
-                if (connection.advertise == "true") {
-                    reply.body.nodes.push(connection.ip)
-                }
-            })
-            callback(reply)
-        }
-    })
-}
-
 function pg(msg,ip,callback) {
     // store the connection
     pgreply(msg,ip)
@@ -224,15 +200,28 @@ function bh(msg,callback) {
     },'{}')
 }
 
-function nr(msg,callback) {
+function nr(msg,ip,callback) {
+    var max = Infinity
+    if (msg.hasOwnProperty('max')) {
+        var max = msg.max
+    }
+    var nodes = []
     file.getAll('connections',(data) => {
+        if (data === null) {
+            throw 'notfound'
+        }
         var connections = JSON.parse(data)
+        connections.forEach((connection,i) => {
+            if (connection.ip !== ip && i < max && connection.advertise === "true") {
+                nodes.push(connections)
+            }
+        })
         var reply = {
             "header": {
                 "type": "nd"
             },
             "body": {
-                "nodes": connections
+                "nodes": nodes
             }
         }
         callback(reply)

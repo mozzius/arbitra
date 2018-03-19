@@ -43,9 +43,8 @@ function init() {
     // wipe connections
     // this will be populated with connections that succeed
     file.storeAll('connections',[])
-    // inital connection attempt, false makes sure it doesn't try to
-    // connect to backup server on the first try
-    connect(false)
+    // inital connection attempt as setInterval runs at then end of the 60 seconds
+    connect()
     
     try {
         blockchain.calcBalances()
@@ -65,7 +64,7 @@ function init() {
             // as defined by user settings, connect
             if (connections < target) {
                 connect()
-                // if it's still not enough after 3 seconds, send node requests
+                // if it's still not enough after 15 seconds, send node requests
                 setTimeout(() => {
                     connections = parseInt(document.getElementById('connections').textContent)
                     if (connections < target) {
@@ -77,7 +76,7 @@ function init() {
                         }
                         sendToAll(nr)
                     }
-                },3000)
+                },15000)
             } else {
                 // save current connections to recent connections
                 file.getAll('connections',(data) => {
@@ -103,7 +102,7 @@ function init() {
     },60000)
 }
 
-function connect(backup=true) {
+function connect() {
     // try to connect to other nodes through old connections
     file.getAll('recent-connections',(data) => {
         var connections = JSON.parse(data)
@@ -130,16 +129,19 @@ function connect(backup=true) {
                 })
             },'[]')
             
-            // get the number of connections from textContent
-            var connectCount = parseInt(document.getElementById('connections').textContent)
-            if (connectCount === 0 && backup) {
-                console.warn('No connections found!')
-                document.getElementById('nonodes').classList.remove('hidden')
-                console.warn('Connecting to backup server')
-                // wavecalcs.com is friend's server, and should be online for the purposes of this project
-                // wavecalcs.com = 5.81.186.90
-                sendMsg(ping,'5.81.186.90')
-            }
+            // wait ten seconds to see if any connections have been made
+            setTimeout(() => {
+                // get the number of connections from textContent
+                var connectCount = parseInt(document.getElementById('connections').textContent)
+                if (connectCount === 0) {
+                    console.warn('No connections found!')
+                    document.getElementById('nonodes').classList.remove('hidden')
+                    console.warn('Connecting to backup server')
+                    // wavecalcs.com is friend's server, and should be online for the purposes of this project
+                    // wavecalcs.com = 5.81.186.90
+                    sendMsg(ping,'5.81.186.90')
+                }
+            },10000)
         })
     },'[]')
 }
@@ -221,7 +223,7 @@ function parseMsg(data,ip,callback) {
                 parse.pg(msg,ip,callback)
             } else if (msg.header.type === 'nr',callback) {
                 // node request
-                parse.nr(msg,callback)
+                parse.nr(msg,ip,callback)
             } else {
                 throw 'type'
             }
