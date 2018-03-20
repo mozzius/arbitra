@@ -1,8 +1,4 @@
-# Arbitra
-
-An A-level Computer Science project by Samuel Newman
-
-## Technical Solution - Networking and Parsing
+## Technical Solution
 
 ### Converting Python Code
 
@@ -84,7 +80,7 @@ function randomNum(min=1,max=curve.n) {
 
 Note this function can be passed minimum and  maximum values, but default to $1$ and $n$, as that is all we need the function for.
 
-##### sha256
+##### `sha256()`
 
 We need to convert the `sha256()` function we made earlier to return `bigInt`s. This is relatively easy.
 
@@ -96,7 +92,7 @@ function sha256(data) {
 }
 ```
 
-##### onCurve
+##### `onCurve()`
 
 This one is pretty simple to translate. However, we have to use `big-integer`, so that means using `.minus()` instead of simply `-` etc.
 
@@ -114,11 +110,11 @@ function onCurve(point) {
 }
 ```
 
-##### invMod
+##### `invMod()`
 
 `big-integer` has an `modInv()` function which is identical, but is designed to work specifically with `bigInt`s, so I decided to use that instead.
 
-##### addPoints
+##### `addPoints()`
 
 Now we have the other functions, we can implement `addPoints()`. Due to `big-integer`, it looks incredibly messy, although I tried to separate out the expressions a bit
 
@@ -161,7 +157,7 @@ function addPoints(P1,P2) {
 
 ```
 
-##### multiPoints
+##### `multiPoints()`
 
 With `multiPoints()`, we need to convert a number to binary then iterate through it. First of all, we need to get the binary number. Luckily, when we use `.toString()`, we can specify the base, in this case `.toString(2)`. Otherwise, the function is very similar to the Python version. `yranib` is the word "binary" reversed.
 
@@ -188,7 +184,7 @@ function multiPoints(n, P) {
 }
 ```
 
-##### createKeys
+##### `createKeys()`
 
 Now for the key creation function. Here is where we use `randomNum()`.
 
@@ -219,7 +215,7 @@ function createKeys(callback) {
 
 This is now much simpler and should work much better down the road.
 
-##### signMsg
+##### `signMsg()`
 
 `signMsg()` also uses callbacks. It also catches any errors in the `multiPoints()` function, which would appear if `w` was an invalid number, and return a error to the callback. I also restructured the function around a while loop which is much easier to understand.
 
@@ -246,7 +242,7 @@ function signMsg(msg,w,callback) {
 }
 ```
 
-##### verifyMsg
+##### `verifyMsg()`
 
 `verifyMsg()` is also similar to it's Python equivalent
 
@@ -350,7 +346,7 @@ C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\testing.js:20 30f
 C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\js\testing.js:22 true
 ```
 
-This means that it works! We can now use `ecdsa.js` to sign and verify messages.
+This means that it works. We can now use `ecdsa.js` to sign and verify messages.
 
 ##### Simplifying Functions
 
@@ -426,7 +422,7 @@ By using the hash as a key, we can simply use `file[hash]` to retrieve the array
 
 The method by which you read and write to files in Node.js is using the `fs`  (file system) module, a default library. However, it is powerful but quite clumsy, so I created some functions that wrap around `fs`' functions that are better adapted to this project's needs. These are stored in `file.js`.
 
-#### store
+#### `store()`
 
 First we need to import `fs` and `electron.remote` into `file.js`, since we need `remote` to get the file path of the `%APPDATA%` folder where the JSON files will be located.
 
@@ -479,7 +475,6 @@ function store(key,data) {
         }
     })
 }
-
 ```
 
 However, this will throw an error if `sent.json` doesn't exist. We can fix this by catching the corresponding error (`ENOENT`) and creating a new file if that's the case. We do however have to put `content` into an array so it is in the correct format.
@@ -759,7 +754,7 @@ We can now test the array concatenation. Calling `store('test',['data2','data3']
 
 It worked!
 
-#### get
+#### `get()`
 
 Now we need to retrieve data. This function is very similar, except instead of writing to the file at the end, it just calls the callback with the data it retrieved.
 
@@ -846,7 +841,7 @@ I realised that it would be helpful to add some more functions to deal with othe
 - `storeAll()`, the corresponding wrapper around `fs.writeFile()`
 - `append()`, which appends data to a file which contains an array rather than an object literal.
 
-#### getAll
+#### `getAll()`
 
 This is simply stripping the complicated parts out of `get()`.
 
@@ -873,9 +868,9 @@ function getAll(file,callback,fail=null) {
 exports.getAll = getAll
 ```
 
-#### storeAll
+#### `storeAll()`
 
-`storeAll()` is even simpler.
+`storeAll()` is even simpler, as it just wraps `fs.writeFile()`.
 
 ```javascript
 function storeAll(file,data,callback=()=>{}) {
@@ -888,9 +883,9 @@ function storeAll(file,data,callback=()=>{}) {
 }
 ```
 
-#### append
+#### `append()`
 
-Append is very similar to `get()`, but rather than the stuff with `Array.isArray()`, it simply appends the data to the file using `jsondata.push()`.
+Append is very similar to `get()`, but rather than dealing with objects that sometimes have arrays as data and using `Array.isArray()`, it simply appends the data to the file using `jsondata.push()` as the file is assumed to be an array rather than an object literal.
 
 ```javascript
 function append(file,data,callback=()=>{}) {
@@ -1036,7 +1031,7 @@ But what causes clients to start sending messages in the first place? We need to
 - calculate the number of nodes we are connected to
 - start a loop to continually check for nodes
 
-I decided the best place for this is within the `network.init()` function, after we set the server running. First of all, we need to wipe `connections.json`, as this is meant to contain current connections and it is unknown if those connections are still there. Therefore, we remove it's contents when the application starts. This uses `file.storeAll()`, which again is a function that we have not defined, but stores the second parameter's data in the file with the name of the first parameter. In this case, it stores an empty array.
+I decided the best place for this is within the `network.init()` function, after we set the server running. First of all, we need to wipe `connections.json`, as this is meant to contain current connections and it is unknown if those connections are still there. Therefore, we remove it's contents when the application starts. This uses `file.storeAll()`, which stores an empty array.
 
 ```javascript
     // wipe connections
@@ -1046,9 +1041,153 @@ I decided the best place for this is within the `network.init()` function, after
 
 Next, we need to connect to the nodes listed in `recent-connections.json`, to reaffirm that they are still around. I decided to put this in a function called `connect()`.
 
-#### connect
+#### `connect()`
 
+This is a fairly simple function, as it simply gets all the nodes in `recent-connections.json` and sends them a ping, if they're not currently connected to. However, I also wanted it to connect to the backup server if it couldn't find any connections. Therefore, after it sends the pings I wanted to see how many connections there are, and if there's none it should attempt to connect to the backup server. First, I ran into the issue of knowing how many connections I had. Initially, I tried a complex callback system but this ultimately failed.
 
+I realised later that I could just use the connection counter in the top left corner. This is increased every time the client receives a ping, so if we read that we can tell how many connections the client has.
+
+The second issue is that pings don't come back instantly. Therefore, I used the `setTimeout()` function to check the number of connections after 10000 milliseconds have passed.
+
+Finally, the backup server is `5.81.186.90`. I also show the "WARNING: No connections" message until the ping has returned.
+
+```javascript
+function connect() {
+    // try to connect to other nodes through old connections
+    file.getAll('recent-connections',(data) => {
+        var connections = JSON.parse(data)
+        file.get('advertise','network-settings',(data) => {
+            if (data === 'true' || data === 'false') {
+                var advertise = data
+            } else {
+                var advertise = 'true'
+            }
+            var ping = {
+                "header": {
+                    "type": "pg"
+                },
+                "body": {
+                    "advertise": advertise
+                }
+            }
+            file.getAll('connections',(curdata) => {
+                var current = JSON.parse(curdata)
+                connections.forEach((node) => {
+                    if (!current.includes(node)) {
+                        sendMsg(ping,node.ip)
+                    }
+                })
+            },'[]')
+            
+            // wait ten seconds to see if any connections have been made
+            setTimeout(() => {
+                // get the number of connections from textContent
+                var connectCount = parseInt(document.getElementById('connections').textContent)
+                if (connectCount === 0) {
+                    console.warn('No connections found!')
+                    document.getElementById('nonodes').classList.remove('hidden')
+                    console.warn('Connecting to backup server')
+                    // wavecalcs.com is friend's server, and should be online for the purposes of this project
+                    // wavecalcs.com = 5.81.186.90
+                    sendMsg(ping,'5.81.186.90')
+                }
+            },10000)
+        })
+    },'[]')
+}
+```
+
+#### `setInterval()`
+
+As per the list, the next thing we need to do is create a loop that sends out hash request messages and pings, where neccessary. Rather than use a `while` loop, I found that a better way of doing it was by using the `setInterval()` function, as then we can set a gap between the loops. I chose 60 seconds, or 60000 milliseconds.
+
+What this function does it get the number of connections from the DOM, as mentioned previously, and also get the target number of connections from the settings file. Then, if the number of connections is less than the number of  target connections, it calls the `connect` function again. It then waits 15 seconds for that function to finish, then gets the number of connections again to see if it's over the threshold yet. If not, it sends out node requests to the connections in an attempt to get more nodes.
+
+```javascript
+    // this is a loop that maintains connections and
+    // sends top hash requests to make sure the client is up to date
+    // it goes on forever, every minute
+    setInterval(() => {
+        console.log('Interval')
+        var connections = parseInt(document.getElementById('connections').textContent)
+        // first check that we have enough connections
+        file.get('target-connections','network-settings',(target) => {
+            // if the current number of of connections is less than the minimum
+            // as defined by user settings, connect
+            if (connections < target) {
+                connect()
+                // if it's still not enough after 15 seconds, send node requests
+                setTimeout(() => {
+                    connections = parseInt(document.getElementById('connections').textContent)
+                    if (connections < target) {
+                        var nr = {
+                            "header": {
+                                "type": "nr"
+                            },
+                            "body": {}
+                        }
+                        sendToAll(nr)
+                    }
+                },15000)
+            }
+        },5) // if it fails to open the file it sets target to five
+    },60000)
+```
+
+I also wanted it to send out hash requests, so I added that. On top of that, if connections is greater than the target, it needs to replace `recent-connections.json` with `connections.json`.
+
+It only sends out hash requests if there are more than one connections. If there are no connections, it removes the `.hidden` classs from the "no connections" warning.
+
+```javascript
+// this is a loop that maintains connections and
+// sends top hash requests to make sure the client is up to date
+// it goes on forever, every minute
+setInterval(() => {
+    console.log('Interval')
+    var connections = parseInt(document.getElementById('connections').textContent)
+    // first check that we have enough connections
+    file.get('target-connections','network-settings',(target) => {
+        // if the current number of of connections is less than the minimum
+        // as defined by user settings, connect
+        if (connections < target) {
+            connect()
+            // if it's still not enough after 15 seconds, send node requests
+            setTimeout(() => {
+                connections = parseInt(document.getElementById('connections').textContent)
+                if (connections < target) {
+                    var nr = {
+                        "header": {
+                            "type": "nr"
+                        },
+                        "body": {}
+                    }
+                    sendToAll(nr)
+                }
+            },15000)
+        } else {
+            // save current connections to recent connections
+            file.getAll('connections',(data) => {
+                if (connections !== null) {
+                    file.storeAll('recent-connections',JSON.parse(data))
+                }
+            })
+        }
+        connections = parseInt(document.getElementById('connections').textContent)
+        if (connections === 0) {
+            document.getElementById('nonodes').classList.remove('hidden')
+        } else {
+            // check that the chain is up to date
+            var hr = {
+                "header": {
+                    "type": "hr"
+                },
+                "body": {}
+            }
+            sendToAll(hr)
+        }
+    },5) // if it fails to open the file it sets target to five
+},60000)
+```
 
 ### Message Parsing/Processing
 
@@ -1076,7 +1215,7 @@ var message = {
 
 This is  a JSON object that represents a transaction. Whilst it is not at all correct, we can use it for testing the system as we build it. The function that the server calls is called `parseMsg()`, and it takes the received data and a callback function. First of all, we need to be able to store sent transactions.
 
-#### parseMsg
+#### `parseMsg()`
 
 The best way of doing this that I can think of is having a function for each message type. First, we need to create the if statement that handles this. First, it creates an object literal for the reply. It then attempts to parse the message into JSON. If it doesn't parse, it catches the error and calls the `er()` function, which takes the error message, which should set the reply to an error message. Otherwise, it checks the header type and calls the corresponding function. After the reply has been constructed, the header is created and then the reply is turned back to a string. Finally, it is passed to the callback function where it will be sent back to the sender.
 
@@ -1094,9 +1233,9 @@ function parseMsg(data,callback) {
         } else if (msg.header.type === 'br') {
             reply = br(msg)
         } else if (msg.header.type === 'pg') {
-            reply = pg(msg)
+            reply = pg(msg,ip)
         } else if (msg.header.type === 'nr') {
-            reply = nr(msg)
+            reply = nr(msg,ip)
         } else {
             reply = er('type')
         }
@@ -1119,68 +1258,78 @@ function parseMsg(data,callback) {
 First however, we can simplify this system slightly. Every message has a hash, so we can verify that once before we start parsing the messages. Therefore, I added the check before the if statements. If it fails, it will call `er()` with the error message of `'hash'`.
 
 ```javascript
-    try {
-        var msg = JSON.parse(data)
-        if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
-            if (msg.header.type === 'tx') {
-                tx(msg)
-            } else if (msg.header.type === 'bk') {
-                ...
-            } else {
-                er('type')
-            }
+try {
+    var msg = JSON.parse(data)
+    if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
+        if (msg.header.type === 'tx') {
+            tx(msg)
+        } else if (msg.header.type === 'bk') {
+            ...
         } else {
-            er('hash')
+            er('type')
         }
+    } else {
+        er('hash')
     }
+}
 ```
 
 I also realised that we could use the `try...catch` statement to set the error reply, rather than using `er()`. If it runs into an error, it simply `throw`s the error, which will then be caught by the catch statement. By throwing what we want the return message to say, we can simply rewrite the `try...catch` statement like so:
 
 ```javascript
-    try {
-        var msg = JSON.parse(data)
-        if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
-            if (msg.header.type === 'tx') {
-                tx(msg)
-            } else if (msg.header.type === 'bk') {
-                ...
-            } else {
-                throw 'type'
-            }
+try {
+    var msg = JSON.parse(data)
+    if (msg.header.hash === hash.sha256hex(JSON.stringify(msg.body))) {
+        if (msg.header.type === 'tx') {
+            tx(msg)
+        } else if (msg.header.type === 'bk') {
+            ...
         } else {
-            throw 'hash'
+            throw 'type'
         }
-    } catch(e) {
-        console.warn(e)
-        reply.header.type = 'er'
-        if (e.name === 'SyntaxError') {
-            reply.body.err = 'parse'
-        } else {
-            reply.body.err = e
-        }
+    } else {
+        throw 'hash'
     }
+} catch(e) {
+    console.warn(e)
+    reply.header.type = 'er'
+    if (e.name === 'SyntaxError') {
+        reply.body.err = 'parse'
+    } else {
+        reply.body.err = e
+    }
+}
 ```
 
 We also need to find the size of the body. I found an answer on [StackOverflow](https://stackoverflow.com/a/27377098) that answered this question, using Node.js' `Buffer` - `Buffer.byteLength(string,'utf8')`. We put this at the end of the function.
 
 ```javascript
-    finally {
-        reply.body.time = Date.now()
-        reply.header.hash = hash.sha256hex(JSON.stringify(reply.body))
-        reply.header.size = Buffer.byteLength(JSON.stringify(reply.body,'utf8'))
-        var replystr = JSON.stringify(reply)
-        callback(replystr)
-    }
+finally {
+    reply.body.time = Date.now()
+    reply.header.hash = hash.sha256hex(JSON.stringify(reply.body))
+    reply.header.size = Buffer.byteLength(JSON.stringify(reply.body,'utf8'))
+    var replystr = JSON.stringify(reply)
+    callback(replystr)
+}
 ```
 
-#### Verifying Different Message Types
+#### Parsing Different Message Types
 
-To make things a bit clearer, I decided to split these functions into a new file, `verify.js`, so that `parseMsg()` is more readable. However, this means that each of the functions like `tx()` will be converted to `verify.tx()`.
+To make things a bit clearer, I decided to split these functions into a new file, `parse.js`, so that `parseMsg()` is more readable. However, this means that each of the functions like `tx()` will be converted to `parse.tx()`.
+
+I imported the following files, as all are needed.
+
+```javascript
+const network = require('./network.js')
+const hash = require('./hashing.js')
+const ecdsa = require('./ecdsa.js')
+const blockchain = require('./blockchain.js')
+const file = require('./file.js')
+```
 
 The first of these functions is `pg()`. Since we need the IP of the node that sent it, we pass the IP as well as the message.
 
-##### pg
+##### `pg()`
 
 What we need to achieve with this function is:
 
@@ -1314,7 +1463,7 @@ C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\parse.js:194 Connect
 C:\Users\Mozzi\Documents\Programming\arbitra\arbitra-client\parse.js:194 Connection added: localhost
 ```
 
-This looks mostly good! However, I noticed that in the reply, it doesn't reply with a value for `advertise`, which is a problem. Looking again at the code for `pg()`:
+This looks mostly good. However, I noticed that in the reply, it doesn't reply with a value for `advertise`, which is a problem. Looking again at the code for `pg()`:
 
 ```javascript
 function pg(msg,ip,callback) {
@@ -1368,7 +1517,7 @@ function pg(msg,ip,callback) {
 
 However, since the callback is itself a function, this is simply returning `reply` to where it is called in `file.get()` rather than returning it back to `parseMsg()`. I struggled with this issue for quite a while, as I didn't know how to get the data from `file.get()` to return syncronously.
 
-###### Restructuring parseMsg
+###### Restructuring `parseMsg()`
 
 The solution, it turned out, does not use returns. Going back to `parseMsg()`, the callback is effectively a function that sends a reply. Therefore, rather than getting each file to return a reply, it is better to pass `callback()` to each of the `type` functions. Then, it creates a reply and passes it to the callback, rather than returning it back down to `parseMsg()`
 
@@ -1401,7 +1550,7 @@ function parseMsg(data,ip,callback) {
                 parse.pg(msg,ip,callback)
             } else if (msg.header.type === 'nr',callback) {
                 // node request
-                parse.nr(msg,callback)
+                parse.nr(msg,ip,callback)
             } else {
                 throw 'type'
             }
@@ -1456,3 +1605,2642 @@ function pg(msg,ip,callback) {
     })
 }
 ```
+
+I also had to change the server so that it adds the header attributes onto the message, like the time and the size.
+
+```javascript
+var server = net.createServer((socket) => {
+    var ip = socket.remoteAddress
+    socket.setEncoding('utf8')
+    // when it receives data, send to parseMsg()
+    socket.on('data',(data) => {
+        console.log('Received connection from: '+ip)
+        console.log('Server received: '+data)
+        parseMsg(data,ip,(msg) => {
+            if (msg.header.type !== 'tx' && msg.header.type !== 'bk') {
+                msg.body['time'] = Date.now()
+                msg.header['version'] = version
+                msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
+                msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
+            }
+            var reply = JSON.stringify(msg)
+            console.info('Sending message to '+ip+': '+reply)
+            socket.write(reply)
+            file.append('sent',msg.header.hash)
+            socket.end()
+        })
+    })
+})
+```
+
+##### `tx()`
+
+Much like `pg()`, we will be reusing the code to verify transactions, so I split it up into a separate function. This way, it can be used across the program and not just in this context.
+
+###### `transaction()`
+
+`transaction()` will take in a message's body, then iterate through the inputs to see if they are valid, using `ecdsa.verifyMsg()`. The message is the amount plus the recipient's address plus the time. It is a subroutine and does not return anything.
+
+```javascript
+function transaction(tx) {
+    var from = tx.from
+    var len = from.length
+    var input
+    var concat
+    // goes through the transaction inputs
+    // and checks that they're all valid
+    for (var i; i < len; ++i) {
+        input = from[i]
+        // this is the "message" for the ecdsa function
+        concat = input.amount+tx.to+tx.time
+        ecdsa.verifyMsg(concat,input.signature,input.person,(result) => {
+            if (result) {
+                // it worked
+            } else {
+                throw 'signature'
+            }
+        })
+    }
+}
+```
+
+It also needs to check that the wallets aren't overspending. To do this, I used a function that will be created later, `blockchain.checkBalance()`. We simply pass it the amount and the wallet, and it will return `true` if the wallet has enough arbitrary units to complete the transaction. However, you could bypass this by using the same wallet twice in the same transaction. Therefore, it throws a `parse` error if a wallet is repeated by adding the wallets to a list and checking each wallet against the list.
+
+```javascript
+function transaction(tx) {
+    var from = tx.from
+    var len = from.length
+    var input
+    var concat
+    var repeats = []
+    // goes through the transaction inputs
+    // and checks that they're all valid
+    for (var i; i < len; ++i) {
+        input = from[i]
+        if (repeats.contains(input)) {
+            // wallets in a transaction must be unique
+            throw 'parse'
+        }
+        // this is the "message" for the ecdsa function
+        concat = input.amount+tx.to+tx.time
+        ecdsa.verifyMsg(concat,input.signature,input.person,(result) => {
+            if (result) {
+                blockchain.checkBalance(input.person,input.amount,(balanceCheck) => {
+                    if (balanceCheck) {
+                        repeats.push(input)
+                    } else {
+                        throw 'amount'
+                    }
+                })
+            } else {
+                throw 'signature'
+            }
+        })
+    }
+}
+```
+
+Now, all `tx()` need to do is call that subroutine, and then add it to `txpool.json`, send it on to all the other nodes, and add it to `txpool.json`, if it's not already there.
+
+```javascript
+function tx(msg,callback) {
+    var reply = {
+        "header": {
+            "type": "ok"
+        },
+        "body": {}
+    }
+    // verify that it works
+    transaction(msg.body)
+    // add to txpool
+    file.getAll('txpool',(data) => {
+        var txpool = JSON.parse(data)
+        if (!txpool.includes(msg.body)) {
+            file.append('txpool',msg.body,() => {
+                // send to contacts
+                sendToAll(msg)
+                // reply
+                callback(reply)
+            })
+        }
+    },'[]')
+}
+```
+
+##### `bk()`
+
+As with `tx()`, I made a separate subroutine to see if a block is valid. This iterates checks the difficulty of a block and then goes through the transactions, calling `transaction()` for each one. However, I ran into a major problem, in that I could not figure out how to verify the difficulty if it could change. At the moment, the system only lets blocks into `blockchain.json` if the block is valid. However, with dynamic difficulties, the block could be invalid (by having a difficulty that's too small) but still be in `blockchain.json` if we don't have it's parent on disk to verify that. This would lead to a lot of issues if the blocks in `blockchain.json` could not be trusted, and would require an extremely complex restructuring of the whole system, or would require running this subroutine on the whole blockchain every time a block is valid, which would be far too resource-intensive. I could not figure out how to solve this issue, so unfortunatly I had to instead set the difficulty to 6, permanantly. I set the difficulty as a `const` at the top of the program.
+
+```javascript
+function block(body) {
+    const difficulty = 6
+    var txlist = body.transactions
+    var len = txlist.length
+    var tx
+    var blockhash = hash.sha256hex(JSON.stringify(body))
+    // verify all the transactions
+    var pass = true
+    for (var i = 0; i < body.difficulty; i++) {
+        if (blockhash.charAt(i) !== 'a') {
+            pass = false
+        }
+    }
+    if (body.difficulty === difficulty && pass) {
+        for (var i; i < len; ++i) {
+            tx = txlist[i]
+            try {
+                transaction(tx)
+            } catch(e) {
+                if (e === 'signature' || e === 'amount') {
+                    throw 'transaction'
+                }
+            }
+        }
+    } else {
+        throw 'difficulty'
+    }
+}
+```
+
+The `bk()` function itself is very simple, as it just calls `block()` then `blockchain.addBlock()`, a function that will be covered later.
+
+```javascript
+function bk(msg,callback) {
+    var reply = {
+        "header": {
+            "type": "ok"
+        },
+        "body": {}
+    }
+    block(msg.body)
+    // if nothing has been thrown, add to local blockchain
+    blockchain.addBlock(msg)
+    network.sendToAll(msg)
+    callback(reply)
+}
+```
+
+##### `hr()`
+
+To construct a `bh`, we need to use a function that has not yet been covered, `blockchain.getTopBlock()`. This simply returns the hash of the top block of the blockchain.
+
+```javascript
+function hr(msg,callback) {
+    file.getAll('blockchain',(data) => {
+        if (data === null || data === "{}") {
+            throw 'notfound'
+        } else {
+            blockchain.getTopBlock(JSON.parse(data),(top) => {
+                var reply = {
+                    "header": {
+                        "type": "bh"
+                    },
+                    "body": {
+                        "hash": top
+                    }
+                }
+                callback(reply)
+            })
+        }
+    })
+}
+```
+
+##### `nr()`
+
+For a node request, we simply iterate through connections, and add them to an array if `"advertise"` is `"true"`, the IP is not the same as the node that sent us this message, and if the number of connections is less than the number that was requested. We also need to make sure that if `msg.max` does not exist, we use `Infinity` instead since `i` will always be less than `Infinity`.
+
+```javascript
+function nr(msg,ip,callback) {
+    var max = Infinity
+    if (msg.hasOwnProperty('max')) {
+        var max = msg.max
+    }
+    var nodes = []
+    file.getAll('connections',(data) => {
+        if (data === null) {
+            throw 'notfound'
+        }
+        var connections = JSON.parse(data)
+        connections.forEach((connection,i) => {
+            if (connection.ip !== ip && i < max && connection.advertise === "true") {
+                nodes.push(connections)
+            }
+        })
+        var reply = {
+            "header": {
+                "type": "nd"
+            },
+            "body": {
+                "nodes": nodes
+            }
+        }
+        callback(reply)
+    })
+}
+```
+
+##### `cr()`
+
+When a client receives a chain request, there are three possibilites:
+
+1. It asks for a hash, which it has
+2. It asks for a hash, which it doesn't have
+3. It does not ask for a hash
+
+If it asks for a hash and the client does not have that hash, or if the requested hash is not a part of a complete chain, then it should throw a `"notfound"` error. If it asks for a specific hash and it has that hash, then the client will call `blockchain.getChain()` to get the desired chain.
+
+If no hash is requested, then it uses `blockchain.mainChain()` to get the tallest chain.
+
+```javascript
+function cr(msg,callback) {
+    if (msg.body.hasOwnProperty('hash')) {
+        blockchain.get(msg.body.hash,(block) => {
+            if (block === null) {
+                throw 'notfound'
+            } else {
+                blockchain.getChain(msg.body.hash,(chain) => {
+                    if (chain === null) {
+                        throw 'notfound'
+                    } else {
+                        var reply = {
+                            "header": {
+                                "type": "cn"
+                            },
+                            "body": {
+                                "chain": chain
+                            }
+                        }
+                        callback(reply)
+                    }
+                })
+            }
+        })
+    } else {
+        blockchain.mainChain((chain) => {
+            var reply = {
+                "header": {
+                    "type": "cn"
+                },
+                "body": {
+                    "chain": chain
+                }
+            }
+            callback(reply)
+        })
+    }
+}
+```
+
+#### Sending Messages
+
+We now need to update the `sendMsg()` function, so that it automatically adds the time, the version number, the hash and the size to the header and body. It also needs to check that the message has not already been sent by checking the hash against `sent.json`.
+
+I also had an unexplained bug where it would fail to parse `sent.json`, so line 6-8 detects and fixes that, as I was not able to find a proper fix.
+
+```javascript
+function sendMsg(msg,ip,callback) {
+    // for checking that the message hasn't already been sent
+    file.getAll('sent',(data) => {
+        // for some reason, sent.json sometimes ends with [...]]
+        // until I find the source of the bug, this will do
+        if (data[data.length-1] === data[data.length-2]) {
+            data = data.slice(0,-1)
+        }
+        var sent = JSON.parse(data)
+        if (msg.header.type !== 'bk' && msg.header.type !== 'tx') {
+            // don't want to affect the body of a block
+            // and the time of the tx is crucial as well
+            // as it will throw off the hash
+            msg.body['time'] = Date.now()
+        }
+        msg.header['version'] = version
+        msg.header['size'] = Buffer.byteLength(JSON.stringify(msg.body))
+        msg.header['hash'] = hash.sha256hex(JSON.stringify(msg.body))
+
+        // check that the message hasn't already been sent
+        if (!sent.includes(msg.header.hash)) {
+            var sendMe = JSON.stringify(msg)
+            console.info('Sending message to '+ip+': '+sendMe)
+
+            // actually go send the message
+            var client = new net.Socket()
+            client.connect(port,ip,() => {
+                client.write(sendMe)
+                // add the hash to the sent messages file
+                file.append('sent',msg.header.hash)
+                client.on('data',(data) => {
+                    console.log('Client received: '+data)
+                    parseReply(data,ip,() => {
+                        client.destroy()
+                    })
+                })
+                client.on('close',() => {
+                })
+                client.on('timeout',() => {
+                    console.warn('Client timed out')
+                    client.destroy()
+                })
+                client.on('error',(e) => {
+                    console.warn('Client timed out')
+                    client.destroy()
+                })
+            })
+        } else {
+            console.log('Message already sent')
+        }
+    },'[]')
+}
+```
+
+I also created a function called `sendToAll()`, which I have used previously. Unsuprisingly, it reads `connections.json` and sends a message using `sendMsg()` to each of the nodes.
+
+```javascript
+function sendToAll(msg) {
+    file.getAll('connections',(data) => {
+        // doesn't do anything if there's no connections
+        if (data !== null || data === '' || data === '[]') {
+            nodes = JSON.parse(data)
+            // go through connections and send a message to each
+            nodes.forEach((node) => {
+                sendMsg(msg,node.ip)
+            })
+        }
+    })
+}
+```
+
+#### Parsing replies
+
+Now we need to make the equivalent function to `parseMsg()` for replies, which is `parseReply()`. It is nearly identical except it doesn't send a reply back, so is simpler. All it does in the case of error is save the message to `error-log.json`.
+
+```javascript
+function parseReply(data,ip,callback=()=>{}) {
+    // parse incoming replies
+    // by calling parse functions
+    try {
+        var msg = JSON.parse(data)
+        if (msg.header.hash == hash.sha256hex(JSON.stringify(msg.body))) {
+            if (msg.header.type === 'cn') {
+                // chain
+                parse.cn(msg)
+            } else if (msg.header.type === 'bh') {
+                // top hash
+                parse.bh(msg)
+            } else if (msg.header.type === 'nd') {
+                // nodes
+                parse.nd(msg)
+            } else if (msg.header.type === 'pg') {
+                // ping
+                parse.pgreply(msg,ip)
+            } else if (msg.header.type === 'ok') {
+                // message received ok
+                console.info('message recieved ok')
+            } else if (msg.header.type === 'er') {
+                // error (uh oh)
+                console.warn('We recieved an error')
+                parse.er(msg)
+            } else {
+                throw 'type'
+            }
+
+        } else {
+            throw 'hash'
+        }
+    } catch(e) {
+        console.warn('Reply error: '+e)
+        file.append('error-log',msg)
+    } finally {
+        // call the callback, if needed
+        callback()
+    }
+}
+```
+
+#### Parsing different reply types
+
+Now we need to make the parsing functions for the replies, in `parse.js`. I have already covered `parse.pgreply()` in the previous section.
+
+##### `cn()`
+
+In theory, we should just be able to iterate through the nodes and add them one by one. However, an oversight in the `blockchain.addBlock()` function means that it takes in full messages rather than just the body. I worked around this by putting each block into an object as the `"body"`, like so:
+
+```javascript
+function cn(msg) {
+    for (var key in msg.chain) {
+        // an oversight means we need to give it msg.body
+        var block = {"body":msg.chain[key]}
+        blockchain.addBlock(block)
+    }
+}
+```
+
+##### `nd()`
+
+When we receive these nodes, we need to make sure that we are not pinging nodes that we are already connected to. This means that we need to get the list of nodes and only send `pg` messages to those that aren't on both lists.
+
+The first part of this function is simply constructing the `pg` message.
+
+```javascript
+function nd(msg) {
+    // some nodes we can connect to
+    file.get('advertise','network-settings',(data) => {
+        if (data === 'true' || data === 'false') {
+            var advertise = data
+        } else {
+            var advertise = 'true'
+        }
+        var ping = {
+            "header": {
+                "type": "pg"
+            },
+            "body": {
+                "advertise": advertise
+            }
+        }
+        file.getAll('connections',(data) => {
+            // this must get connection data, as otherwise it wouldn't have received this message
+            var connections = JSON.parse(data)
+            msg.body.nodes.forEach((node) => {
+                var send = true
+                // if we are already connected to the node don't send
+                connections.forEach((connection) => {
+                    if (node.ip === connection) {
+                        send = false
+                    }
+                })
+                // otherwise send a ping
+                if (send) {
+                    network.sendMsg(ping,node.ip)
+                }
+            })
+        })
+    })
+}
+```
+
+##### `bh()`
+
+This is the reply to a hash request, and is the hash of that client's top block. In this function, we need to check if it's in the blockchain, and if not, send out chain requests. To do this, we use `!Object.keys(mainchain).includes(msg.body.hash)`, which gets all the keys from a block and checks to see if `msg.body.hash` is one of them. If it does, it returns `!true`, which is `false`.
+
+```javascript
+function bh(msg,callback) {
+    file.getAll('blockchain',(data) => {
+        var mainchain = JSON.parse(data)
+        if (!Object.keys(mainchain).includes(msg.body.hash)) {
+            // if the received top hash is not equal to the one on disk
+            // and it's not in the blockchain, then send out a chain request
+            var chainrequest = {
+                "header": {
+                    "type": "cr"
+                },
+                "body": {
+                    "hash": msg.body.hash
+                }
+            }
+            network.sendToAll(chainrequest)
+        }
+    },'{}')
+}
+```
+
+##### `ok()`
+
+I didn't even make an `ok()` function, I just had it print `"Message received ok"` into the console back in `parseReply()`.
+
+##### `er()`
+
+All we need to do here is append the message to `error-logs.json`.
+
+```javascript
+function er(msg) {
+    file.append('error-logs',msg)
+}
+```
+
+#### Exporting functions
+
+Finally, I exported the functions.
+
+```javascript
+exports.tx = tx
+exports.bk = bk
+exports.hr = hr
+exports.nr = nr
+exports.pg = pg
+exports.pgreply = pgreply
+exports.nd = nd
+exports.bh = bh
+exports.cr = cr
+exports.er = er
+exports.cn = cn
+exports.block = block
+exports.transaction = transaction
+```
+
+### Blockchain
+
+We now need to tackle the blockchain, which is a critical part of the project. It it basically a cool name for a linked list. We need to create the following functions to process it:
+
+- Getting a block
+- Check how many au a wallet has
+- Adding a block
+- Getting the top block in the chain
+- Getting all the blocks between the top block and the genesis block
+
+To aid with the first function, I decided to structure the blockchain as an object literal rather than an array, with the hash of the block as the key. In this way, we don't need to store the header, and to get a block we simply use `blockchain[hash_of_block]`.
+
+I creates all these functions in a file called `blockchain.js`. The blockchain itself is stored in `blockchain.json`, in `%APPDATA%`. First of all, I created `getBlock()`.
+
+#### `getBlock()`
+
+This simply uses `file.get()` to get the block
+
+```javascript
+const file = require('./file.js')
+
+function getBlock(hash,callback) {
+    file.get(hash,'blockchain',callback)
+}
+```
+
+#### Balances
+
+Since we don't want to have to trawl through the blockchain to check every input of every transaction, I decided to store just the balances in a new file called `balances.json`. This file is again a dictionary-style object, with the wallet as the key storing the amount assigned to them. This is much more efficient for getting the amount assigned to a block. We will only need to generate this file when the blockchain changes. To generate it, I created a function called `calcBalances()`
+
+##### `calcBalances()`
+
+`calcBalances()` needs to iterate through all the inputs in each transaction in each block in the blockchain. I decided to use `forEach()` to do this, as although it is technically slower, it is much clearer to see what is happening. In each input, it sees if `balances`, the object that stores the balances, contains the wallet referred to in the input, using `hasOwnProperty()` which returns `true` if the property has a value assigned to it. If that's case, it deducts the amount defined in the input, and increases the recipient's balance by the same amount.
+
+```javascript
+function calcBalances() {
+    file.getAll((data) => {
+        var chain = JSON.parse(data)
+        var balances = {}
+        // iterate through the blocks
+        for (var key in chain) {
+            var block = chain[key]
+            transactions = block.transactions
+            // iterate through each block to find each transaction
+            transactions.forEach((transaction) => {
+                // iterate through the inputs
+                transaction.from.forEach((from) => {
+                    // deduct amounts from the inputs
+                    if (balances.hasOwnProperty(from.wallet)) {
+                        balances[from.wallet] -= from.amount
+                    } else {
+                        balances[from.wallet] = -from.amount
+                    }
+                    // add amount to the recipient's balance
+                    if (balances.hasOwnProperty(transaction.to)) {
+                        balances[transaction.to] += from.amount
+                    } else {
+                        balances[transaction.to] = from.amount
+                    }
+                })
+            })
+        }
+        file.storeAll('balances',balances)
+    })
+}
+```
+
+However, we also need to accound for the mining reward. I set this as a `const` at the top of the function. Since it is in microau, it is set to 50000000. For each block, we add the mining reward to the miner's wallet.
+
+```javascript
+function calcBalances() {
+    const miningreward = 50000000
+    file.getAll((data) => {
+        var chain = JSON.parse(data)
+        var balances = {}
+        // iterate through the blocks
+        for (var key in chain) {
+            var block = chain[key]
+            transactions = block.transactions
+            // iterate through each block to find each transaction
+            transactions.forEach((transaction) => {
+                // iterate through the inputs
+                transaction.from.forEach((from) => {
+                    // deduct amounts from the inputs
+                    if (balances.hasOwnProperty(from.wallet)) {
+                        balances[from.wallet] -= from.amount
+                    } else {
+                        balances[from.wallet] = -from.amount
+                    }
+                    // add amount to the recipient's balance
+                    if (balances.hasOwnProperty(transaction.to)) {
+                        balances[transaction.to] += from.amount
+                    } else {
+                        balances[transaction.to] = from.amount
+                    }
+                })
+            })
+            // mining rewards
+            if (balances.hasOwnProperty(block.miner)) {
+                balances[block.miner] += miningreward
+            } else {
+                balances[block.miner] = miningreward
+            }
+        }
+        file.storeAll('balances',balances)
+    })
+}
+```
+
+However, we have a problem. In it's current state, it calculates the balance of *every* block rather than those under the top block, which is incorrect. What we need is a function which gets the top block then returns a subsection of the blockchain containing only blocks under the top block. This function will be called `mainChain()`, and will be defined later. For now, we will pretend that it exists (as I made these functions at the same time).
+
+```javascript
+function calcBalances() {
+    const miningreward = 50000000
+    // mainChain gets the longest chain, as only the blocks under the highest
+    // actually count
+    mainChain((chain) => {
+        var balances = {}
+        // iterate through the blocks
+        for (var key in chain) {
+            var block = chain[key]
+            transactions = block.transactions
+            // iterate through each block to find each transaction
+            transactions.forEach((transaction) => {
+                // iterate through the inputs
+                transaction.from.forEach((from) => {
+                    // deduct amounts from the inputs
+                    if (balances.hasOwnProperty(from.wallet)) {
+                        balances[from.wallet] -= from.amount
+                    } else {
+                        balances[from.wallet] = -from.amount
+                    }
+                    // add amount to the recipient's balance
+                    if (balances.hasOwnProperty(transaction.to)) {
+                        balances[transaction.to] += from.amount
+                    } else {
+                        balances[transaction.to] = from.amount
+                    }
+                })
+            })
+            // mining rewards
+            if (balances.hasOwnProperty(block.miner)) {
+                balances[block.miner] += miningreward
+            } else {
+                balances[block.miner] = miningreward
+            }
+        }
+        file.storeAll('balances',balances)
+    })
+}
+```
+
+##### `getTopBlock()`
+
+To get the main chain, we need to know what the top block is. Initally, I iterated through them and based it off of `height`, using `time` as a tie-break. To make it more flexible, I made it so you have to pass the blockchain to the function to avoid repeating reading the file.
+
+```javascript
+function getTopBlock(fullchain,callback) {
+    // get the first key in the object
+    // doesn't matter if it's best it just needs to be valid
+    for (var best in fullchain) {
+        // this is the fastest way of getting the first key
+        // even if it's kind of messy looking
+        // Object.keys(fullchain)[0] puts the whole object into memory
+        break
+    }
+    if (typeof best !== 'undefined') {
+        // iterates through the fullchain
+        for (var key in fullchain) {
+            // larger height the better
+            if (fullchain[key].height > fullchain[best].height) {
+                best = key
+            }
+            // otherwise, if they're the same pick the oldest one
+            } else if (fullchain[key].height === fullchain[best].height) {
+                if (fullchain[key].time < fullchain[best].time) {
+                        best = key
+                    }
+                }
+            }
+        }
+    } else {
+        best = null
+    }
+    callback(best)
+}
+```
+
+However, someone could submit a phoney block that has a really high height, without actually being connected to the genesis block through the chain. Whilst it is not the most efficient solution, I decided to only consider a block as the `best` if I could iterate down to the genesis block, which has `parent` of `'0000000000000000000000000000000000000000000000000000000000000000'`. I also made it start with the genesis block.
+
+```javascript
+function getTopBlock(fullchain,callback) {
+    const genesis = '0000000000000000000000000000000000000000000000000000000000000000'
+    // get the origin block
+    // as there is nothing under it to be wrong
+    for (var best in fullchain) {
+        if (fullchain[best].parent === genesis) {
+            break
+        }
+    }
+    if (typeof best !== 'undefined' && fullchain[best].parent === genesis) {
+        // iterates through the fullchain
+        for (var key in fullchain) {
+            // larger height the better
+            if (fullchain[key].height > fullchain[best].height) {
+                var candidate = true
+                // iterate down the chain to see if you can reach the bottom
+                // if the parent is undefined at any point it is not part of the main chain
+                // run out of time for a more efficient method
+                var current = key
+                var parent
+                while (fullchain[current].parent !== genesis) {
+                    parent = fullchain[current].parent
+                    if (typeof fullchain[parent] !== 'undefined') {
+                        current = parent
+                    } else {
+                        candiate = false
+                    }
+                }
+                if (candidate) {
+                    best = key
+                }
+            // otherwise, if they're the same pick the oldest one
+            } else if (fullchain[key].height === fullchain[best].height) {
+                if (fullchain[key].time < fullchain[best].time) {
+                    // see other comments
+                    var candidate = true
+                    var current = key
+                    while (fullchain[current].parent !== genesis) {
+                        parent = fullchain[current].parent
+                        if (typeof fullchain[parent] !== 'undefined') {
+                            current = parent
+                        } else {
+                            candiate = false
+                        }
+                    }
+                    if (candidate) {
+                        best = key
+                    }
+                }
+            }
+            document.getElementById('height').textContent = fullchain[best].height
+        }
+    } else {
+        best = null
+    }
+    callback(best)
+}
+```
+
+##### `mainChain()`
+
+`mainChain()` pretty much repeats what `getTopBlock()` does to verify that a block is a part of the chain, except it stores the blocks that it finds, to create a subsection of the chain. Only this part of the chain is valid, which is why it is so important.
+
+```javascript
+function mainChain(callback) {
+    var mainchain = {}
+    file.getAll('blockchain',(data) => {
+        if (data === '{}') {
+            callback({})
+        } else {
+            var fullchain = JSON.parse(data)
+            getTopBlock(fullchain,(top) => {
+                mainchain[top] = fullchain[top]
+                var current = top
+                var parent
+                while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    parent = fullchain[current].parent
+                    mainchain[parent] = fullchain[parent]
+                    current = parent
+                }
+                callback(mainchain)
+            })
+        }
+    },'{}')
+}
+```
+
+##### `getChain()`
+
+`getChain()` gets a specific part of the chain under a hash passed to it as a parameter, rather than the one given by `getTopBlock()`. Other than that, it is very similar to `mainChain()`, other than it has more error handling since it is unknown if the requested chain actually reaches the bottom, unlike in `mainChain()`.
+
+```javascript
+function getChain(top,callback) {
+    var mainchain = {}
+    file.getAll('blockchain',(data) => {
+        if (data === '{}') {
+            callback(null)
+        } else {
+            try {
+                var fullchain = JSON.parse(data)
+                mainchain[top] = fullchain[top]
+                var current = top
+                var parent
+                while (fullchain[current].parent !== '0000000000000000000000000000000000000000000000000000000000000000') {
+                    parent = fullchain[current].parent
+                    mainchain[parent] = fullchain[parent]
+                    current = parent
+                }
+            } catch(e) {
+                console.warn(e)
+                mainchain = null
+            } finally {
+                callback(mainchain)
+            }
+        }
+    },'{}')
+}
+```
+
+##### `checkBalance()`
+
+We need a function which checks the balance of a wallet to see if it greater than or equal to some amount. This function is called `checkBalance()`.
+
+```javascript
+function checkBalance(key,amount,callback) {
+    file.get(key,'balances',(balance) => {
+        // returns true if the wallet's balance is
+        // less than or equal to the amount requested
+        callback(balance >= amount)
+    },0)
+}
+```
+
+#### `addBlock()`
+
+The `addBlock()` function is fairly simple, as all it needs to do is check if it's valid, append the block to `blockchain.json` and then call `calcBalances()`. However, we also need to remove any transactions from `txpool` that are in the block. To do this, we iterate through the transactions listed in the block and use `splice()` and `indexOf()` to remove the transaction from `txpool`, if it is there.
+
+We then store `txpool`.
+
+```javascript
+function addBlock(msg) {
+    try {
+        parse.block(msg.body)
+        // if it failed the test, an error will have been thrown
+        file.store(hash.sha256hex(JSON.stringify(msg.body)),msg.body,'blockchain')
+        console.log('Block added')
+        file.getAll('txpool',(data) => {
+            var txpool = JSON.parse(data)
+            msg.body.transactions.forEach((tx) => {
+                // remove pending transactions if they're in the received block
+                txpool.splice(txpool.indexOf(tx),1)
+            })
+            file.storeAll('txpool',txpool)
+            calcBalances()
+        },'[]')
+    } catch(e) {
+        console.warn('Block failed:',JSON.stringify(msg))
+        console.warn(e)
+    }
+}
+```
+
+`parse.block()` is used to make sure that it's valid, and will throw an error if it's not - this is why there is a `try...catch` statment.
+
+Finally, I exported all the functions.
+
+```javascript
+exports.get = getBlock
+exports.checkBalance = checkBalance
+exports.calcBalances = calcBalances
+exports.updateBalances = updateBalances
+exports.addBlock = addBlock
+exports.getTopBlock = getTopBlock
+exports.mainChain = mainChain
+```
+
+### Pages
+
+Before we start creating the pages, I decided to restructure the application slightly. I moved all the Javascript files relating to any of the pages - `overview.js`, `wallets.js` etc - to a subfolder in `js`, `pages`. I also moved the `changePage()` function from `renderer.js` to it's own file, then imported it back into `renderer.js`. I also modified it to account for the new location of the Javascript files.
+
+```javascript
+const remote = require('electron').remote
+const fs = require('fs')
+
+function changePage(name) {
+    var path = 'pages/' + name + '.html'
+    fs.readFile(path,'utf-8',(err, data) => {
+        if (err) {
+            alert('An error ocurred reading the file: '+name)
+            console.warn('An error ocurred reading the file: '+err.message)
+            return
+        }
+        document.getElementById('body').innerHTML = data
+        try {
+            const pageJS = require('./pages/'+name+'.js')
+            pageJS.init()
+        } catch(e) {
+            console.error(e)
+        }
+    })
+}
+
+exports.changePage = changePage
+```
+
+I imported it back into `renderer.js` like so:
+
+```javascript
+const changePage = require('./js/changepage.js').changePage
+```
+
+Now that the Javascript files for pages are a folder deeper than the other files, we have to import these other files like so:
+
+```javascript
+const file = require('../file.js')
+```
+
+#### Transactions
+
+##### Wallets
+
+The Wallets page will contain a list of all the wallets that the user has stored. The user can interact with each one. The options they will have will be:
+
+- Create transaction from wallet
+- View private key
+- Copy key
+
+First, we need to store the wallets. Each wallet has four attributes:
+
+- User-defined name
+- Public key
+- Private key
+- Amount
+
+The first three are static. However, the money in the wallet is dependent on the blockchain, which we do not want to have to trawl through every time to find the value of each wallet. Therefore, I decided to update the wallets every time `calcBalances()` is called. It iterates through `wallets.json`, which is where the wallets will be found, and finds the total amount for each wallet. While doing this, I realised that we could take this opportunity to calculate the balance counter in the corner of the application. For each wallet that is iterated through, the amount calculated for each wallets is added to a counter, and the total in the corner is set to this amount.
+
+Finally, the new wallet's values are stored in `wallets.json`.
+
+```javascript
+function calcBalances() {
+    const miningreward = 50000000
+    // mainChain gets the longest chain, as only the blocks under the highest
+    // actually count
+    mainChain((chain) => {
+        var balances = {}
+        // iterate through the blocks
+        // removed in this example as nothing has changed
+        for (var key in chain) {...}
+        // calculating the balance in the corner
+        file.getAll('wallets',(data) => {
+            var wallets = JSON.parse(data)
+            var newWallets = []
+            var balance = 0
+            wallets.forEach((wallet) => {
+                if (balances.hasOwnProperty(wallet.public)) {
+                    amount = balances[wallet.public]
+                } else {
+                    amount = 0
+                }
+                // add the au in the wallet to the total balance
+                balance += amount
+                // and set the balance in the wallet
+                newWallets.push({
+                    "name": wallet.name,
+                    "public": wallet.public,
+                    "private": wallet.private,
+                    "amount": amount
+                })
+            })
+            // change microau to au and set the textcontent of the top left thing
+            document.getElementById('current-balance').textContent = balance / 1000000
+            // save balances
+            file.storeAll('wallets',newWallets)
+            file.storeAll('balances',balances)
+        },'[]')
+    })
+}
+```
+
+Finally, we can start displaying the wallets in `wallets.html`. The HTML structure of the page is like so:
+
+```html
+<h1>Transactions</h1>
+
+<h2>Wallets</h2>
+
+<div class="highlight-box">
+    <h3>My wallets</h3>
+    <button id="create">Create new wallet</button>
+    <div class="list" id="wallet-list"></div>
+</div>
+```
+
+The button with an id of `create` needs to link to the page where wallets are generated, so we will need to import `changePage()` into `wallets.js`. `#wallet-list` is the html object where we will be adding the wallets. `.list` is a CSS class like so:
+
+```css
+.list {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+```
+
+This means that if the contents of `#wallet-list` is too wide it will simply be hidden, but if it too tall it will create a scroll bar.
+
+Elements within `.list` will have class `.list-item`, which has the following properties:
+
+```css
+.list-item {
+    overflow-x: auto;
+    width: calc(100% - 12px);
+    background-color: white;
+    margin: 5px 0;
+    padding: 5px;
+    border: 1px solid #333;
+    border-radius: 5px;
+    white-space: nowrap;
+}
+```
+
+In `wallets.js`, we first import `file` and `changePage()`, and add an event listener to change the page to `wallets-create` when the button is clicked. This will be the page where we can create a wallet.
+
+```javascript
+const file = require('../file.js')
+const changePage = require('../changepage').changePage
+
+function init() {
+    document.getElementById('create').addEventListener('click',() => {
+        changePage('wallets-create')
+    })
+}
+
+exports.init = init
+```
+
+We now need to populate `#wallet-list`. This is done by getting the wallets and iterating through them, appending a new `div` for each wallet, which is done by calling `document.createElement()` and using `appendChild()` to place it inside of the `#wallet-list` element. I also called `blockchain.calcBalances()` to ensure the wallets are up to date.
+
+```javascript
+const file = require('../file.js')
+const changePage = require('../changepage').changePage
+const blockchain = require('../blockchain.js')
+
+function init() {
+    document.getElementById('create').addEventListener('click',() => {
+        changePage('wallets-create')
+    })
+    blockchain.calcBalances()
+    file.getAll('wallets',(data) => {
+        wallets = JSON.parse(data)
+        var walletList = document.getElementById('wallet-list')
+        var listItem
+        wallets.forEach((wallet) => {
+            listItem = document.createElement('div')
+            walletList.appendChild(listItem)
+        })
+    },'[]')
+}
+
+exports.init = init
+```
+
+We now need to add the class `.list-item` to the child element, and add the data. The first is achieved by calling `listItem.classList.add('list-item')`. The second part however, using the method above of creating new elements using Javascript and appending them one by one, is cumbersome with the large number of sub-elements we need. Therefore, I decided instead to create a string and use `innerHTML`, which takes a string instead.
+
+```javascript
+wallets.forEach((wallet) => {
+    listItem = document.createElement('div')
+    listItem.classList.add('list-item')
+    listItem.innerHTML = '<p><b>Name:</b> '+wallet.name+'</p><p><b>Public:</b> '+wallet.public+'</p><p><b>Amount:</b> <span class="money">'+wallet.amount/1000000+'</span></p>'
+    walletList.appendChild(listItem)
+})
+```
+
+Notice how `wallet.amount` is divided by 1000000 - this is because `wallet.amount` is in $\mu$au, and we need to convert it to au.
+
+Now, to see if it works, we need to make a way to create wallets.
+
+##### Creating Wallets
+
+I created a new page called `create-wallets`, which was linked to earlier. The HTML for `create-wallets` is like so:
+
+```html
+<h1>Transactions</h1>
+
+<h2>Create a Wallet</h2>
+
+<p>Wallet Name:</p>
+<input type="text"  id="name" placeholder="My Wallet"><br>
+<p>Public Key:</p>
+<div class="list-item" id="public"></div>
+<p>Private Key (DO NOT SHARE!):</p>
+<div class="list-item" id="private"></div>
+<button id="create">Create Wallet</button>
+```
+
+It turns out we can reuse the `.list-item` class as a kind of highlight box. What `wallets-create.js` will need to do is populate `#public` and `#private` with the appropriate key, then add these and the name to a wallet when `#create` is clicked.
+
+To do this, we need to use the `ecdsa` module, as well as `file` and `changePage`. This is where we can use `ecdsa.createKeys()` to create the public and private keys.
+
+```javascript
+const ecdsa = require('../ecdsa.js')
+const changePage = require('../changepage').changePage
+const file = require('../file.js')
+
+function init() {
+    ecdsa.createKeys((public, private, err) => {
+        if (err) {
+            console.error(err)
+            changePage('wallets')
+        } else {
+            document.getElementById('public').innerText = public
+            document.getElementById('private').innerText = private
+        }
+    })
+    document.getElementById('create').addEventListener('click',() => {
+        var name = document.getElementById('name').value
+        console.log('Creating wallet: '+name)
+        var data = {}
+        data['name'] = name
+        data['public'] = document.getElementById('public').textContent
+        data['private'] = document.getElementById('private').textContent
+        data['amount'] = 0
+        console.log(JSON.stringify(data))
+        file.append('wallets',data,() => {
+            changePage('wallets')
+        })
+    })
+}
+
+exports.init = init
+```
+
+###### Testing
+
+We can now test both `wallets` and `wallets-create`. First, I navigated to `wallets`.
+
+![Wallets page](https://i.imgur.com/cJGwxw0.png)
+
+As you can see, there's nothing there. So, I clicked on the "create" button, which takes us to `wallets-create`.
+
+![wallets-create page](https://i.imgur.com/14WSrWD.png)
+
+I entered the name "My Wallet" and pressed "Create", which took me back to the `wallets` page - except now, it had a wallet called "My Wallet", which means that it worked!
+
+![Wallets with a wallet in it](https://i.imgur.com/UMolFuM.png)
+
+##### Create Transaction
+
+To create transactions, we need to be able to add in multiple input sources. This is much more complex than a single dropdown, as since the input sources will need to be added through Javascript, they can't (easily) have unique ids.
+
+First of all, I created the HTML for the page, in `make.html`. `#error` has class `.hidden`, which gives it property `display: none`. When we want to display the error message, we remove this class.
+
+Notice how the `#inputs` div is empty. This is because we will add the dropdowns with in through Javascript.
+
+```html
+<h1>Transactions</h1>
+
+<h2>Make Transactions</h2>
+
+<div class="hidden" id="error">
+    <p><b>Error:</b> missing/incorrect form values</p>
+</div>
+
+<form>
+    <p>To:</p>
+    <input type="text" id="to" placeholder="Address"><br>
+    <p>From:</p>
+    <div id="inputs">
+    </div>
+    <button type="button" id="addInput">Add input</button>
+    <p>Please note that each wallet can only be used once</p>
+    <button type="button" id="send">Send</button>
+</form>
+```
+
+Now, we need to create `make.js`. In the `init()` function, all we do is add event listeners to the buttons. We also import all the necessary functions.
+
+```javascript
+const file = require('../file.js')
+const parse = require('../parse.js')
+const ecdsa = require('../ecdsa.js')
+const network = require('../network.js')
+
+function init() {
+    var add = document.getElementById('addInput')
+    var send = document.getElementById('send')
+    add.addEventListener('click',addInput)
+    send.addEventListener('click',sendTx)
+}
+
+exports.init = init
+```
+
+Now we need to create the function `addInput()`, which is called when the `#addInput` button is pressed. It creates a div with the class `.input-group`. It then adds a dropdown, a line break, and a number input box to that div, and adds a placeholder value to the dropdown. It then appends `.input-group` to `#inputs`.
+
+```javascript
+function addInput() {
+    var inputGroup = document.createElement('div')
+    inputGroup.classList.add('input-group')
+    // add select
+    // <select name="dropdown"></select>
+    var select = document.createElement('select')
+    select.name = 'dropdown'
+    // add placeholder
+    select.innerHTML = '<option value="" selected disabled>Choose a wallet</option>'
+    // add br
+    // <br>
+    var br = document.createElement('br')
+    // add number input
+    // <input name="amount" type="number" placeholder="Amount to send">
+    var number = document.createElement('input')
+    number.type = 'number'
+    number.placeholder = 'Amount to send'
+    number.name = 'amount'
+    // add them all to the page
+    inputGroup.appendChild(select)
+    inputGroup.appendChild(br)
+    inputGroup.appendChild(number)
+    document.getElementById('inputs').appendChild(inputGroup)
+}
+```
+
+However, we need to put the wallets in the dropdown. For this, I created a new function called `populateDropdown()`, which opens `wallets.json` and adds `option` elements to the dropdown with the wallets' name and balance. It also sets the `value` of the option to the public key, which is important, as this is what will be returned when we get the `value` of the dropdown if that option is selected. I also called the function in line 10 of the above snippet.
+
+```javascript
+function populateDropdown(select) {
+    var option
+    // get list of wallets
+    file.getAll('wallets',(data) => {
+        var wallets = JSON.parse(data)
+        wallets.forEach((wallet) => {
+            option = document.createElement('option')
+            option.value = wallet.public
+            option.text = wallet.amount/1000000+"au - "+wallet.name
+            select.add(option)
+        })
+    })
+}
+```
+
+Finally, I called `addInput()` in the `init()` function so that the page starts with an input. You can see that this all worked:
+
+![make tx](https://i.imgur.com/bVVNjfW.png)
+
+Now, we just need to add the `sendTx()` function. The reason I had structured the inputs in this way is that I knew that `document.getElementsByClassName()` gives an array of the elements with that class name. Therefore, we can get all the elements with class name `.input-group` and iterate through them. We can then use `childNodes` to get the children of each group, then get their values.
+
+```javascript
+function sendTx() {
+    var to = document.getElementById('to').value
+    var groups = document.getElementsByClassName('input-group')
+    groups.forEach((group) => {
+        var child = group.childNodes
+        var wallet = child[0].value
+        var amount = child[1].value
+        console.log(wallet)
+        console.log(amount)
+    })
+}
+```
+
+However, there are some issues with this - first and foremost, `document.getElementsByClassName()` does not return an array - it returns a `HTMLCollection`, which is similar but we can't iterate through it. Luckily, this is easy to solve by turning it into an array using `Array.from`.
+
+Secondly, there are actually three elements within each group, and therefore `child[1]` returns the `br` rather than the `input` that we want. This is fixed by using `child[2]` instead.
+
+```javascript
+function sendTx() {
+    var to = document.getElementById('to').value
+    // this isn't an array for some reason
+    // we can make it one using Array.from
+    // https://stackoverflow.com/a/37941811/5453419
+    var groups = Array.from(document.getElementsByClassName('input-group'))
+
+    groups.forEach((group) => {
+        var child = group.childNodes
+        var wallet = child[0].value
+        console.log(wallet)
+        // 2 because of the br
+        var amount = child[2].value
+        console.log(amount)
+    })
+}
+```
+
+Now we need to get data from `wallets.json` in order to sign the inputs. However, since `wallets.json` is an array, we can't easily get the private key with the public key, so I decided instead to put the wallets in a new format so you can get the private key from the secret key.
+
+```javascript
+function sendTx() {
+    var to = document.getElementById('to').value
+    // this isn't an array for some reason
+    // we can make it one using Array.from
+    // https://stackoverflow.com/a/37941811/5453419
+    var groups = Array.from(document.getElementsByClassName('input-group'))
+    var message = {
+        "header": {
+            "type": "tx"
+        },
+        "body": {
+            "to": to,
+            "from": []
+        }
+    }
+    file.getAll('wallets',(data) => {
+        var time = Date.now()
+        message.body['time'] = time
+        // converting wallets into a format
+        // where you can enter the public key
+        // and get the private key
+        var convert =  {}
+        var wallets = JSON.parse(data)
+        wallets.forEach((wallet) => {
+            public = wallet.public
+            private = wallet.private
+            convert[public] = private
+        })
+        groups.forEach((group) => {
+            var child = group.childNodes
+            var wallet = child[0].value
+            console.log(wallet)
+            // 2 because of the br
+            var amount = child[2].value
+            console.log(amount)
+        })
+    })
+}
+```
+
+Now we can call `convert[public]` to get the private key. Next we need to create the signatures etc, which is fairly easy, since we have already created the `signMsg()` function. However, I put it all in a `try-catch` statement, and if an error is caught it removes `.hidden` from `#error`.
+
+If the message manages to reach the end without errors, it checks the message using `parse.transaction`, sends the message using `sendToAll()` and finally appends the message body to both `txpool.json` and `recenttx.json`, for mining and for view transaction history, respectively.
+
+```javascript
+function sendTx() {
+    var to = document.getElementById('to').value
+    // this isn't an array for some reason
+    // we can make it one using Array.from
+    // https://stackoverflow.com/a/37941811/5453419
+    var groups = Array.from(document.getElementsByClassName('input-group'))
+    var message = {
+        "header": {
+            "type": "tx"
+        },
+        "body": {
+            "to": to,
+            "from": []
+        }
+    }
+    file.getAll('wallets',(data) => {
+        var time = Date.now()
+        message.body['time'] = time
+        // converting wallets into a format
+        // where you can enter the public key
+        // and get the private key
+        var convert =  {}
+        var wallets = JSON.parse(data)
+        wallets.forEach((wallet) => {
+            public = wallet.public
+            private = wallet.private
+            convert[public] = private
+        })
+        try {
+            groups.forEach((group) => {
+                var child = group.childNodes
+                var wallet = child[0].value
+                console.log(wallet)
+                // 2 because of the br
+                var amount = child[2].value
+                console.log(amount)
+                if (wallet && amount > 0) {
+                    // convert to microau
+                    amount *= 1000000
+                    // the message that is signed
+                    var concat = amount+to+time
+                    var signature = ecdsa.signMsg(concat,convert[wallet],(signature) => {
+                        message.body.from.push({
+                            "wallet": wallet,
+                            "amount": amount,
+                            "signature": signature
+                        })
+                    })
+                } else {
+                    throw 'no amount entered'
+                }
+            })
+            // if it's invalid, it will throw an error and be caught by the try-catch
+            console.log('Transaction: '+JSON.stringify(message))
+            parse.transaction(message.body)
+            network.sendToAll(message)
+            file.append('txpool',message.body)
+            file.append('recenttx',message.body)
+        } catch(e) {
+            document.getElementById('error').classList.remove('hidden')
+            console.warn('Tx failed: '+e)
+        }
+    },'[]')
+}
+```
+
+This can only really be tested when everything else works, so this will be covered in the full testing phase.
+
+##### View recent
+
+This section is very similar to the wallet viewing page, except it reads `recenttx.json` instead. The HTML, `history.html`, looks like this:
+
+```html
+<h1>Transactions</h1>
+
+<h2>Transaction History</h2>
+
+<div class="highlight-box">
+    <h3>Recent Transactions</h3>
+    <button id="create">Make transaction</button>
+    <div class="list" id="tx-list"></div>
+</div>
+```
+
+`history.js` looks like this:
+
+```javascript
+const file = require('../file.js')
+const changePage = require('../changepage').changePage
+
+function init() {
+    document.getElementById('create').addEventListener('click', function () {
+        changePage('make')
+    })
+    file.getAll('recenttx',(data) => {
+        transactions = JSON.parse(data)
+        var txList = document.getElementById('tx-list')
+        var listItem
+        if (transactions) {
+            transactions.forEach((tx) => {
+                var balance = 0
+                tx.from.forEach((from) => {
+                    balance += from.amount/1000000
+                })
+                listItem = document.createElement('div')
+                listItem.classList.add('list-item')
+                // timestamp to date
+                var date = new Date(tx.time).toString()
+                listItem.innerHTML = '<p><b>Time:</b> '+date+'</p><p><b>To:</b> '+tx.to+'</p><p><b>Amount:</b> <span class="money">'+balance+'</span></p>'
+                txList.appendChild(listItem)
+            })
+        }
+    })
+}
+
+exports.init = init
+```
+
+Something of note is the date - since `tx.time` is a timestamp, we need to turn it into something readable before printing it. For this, we use the `Date` class. Creating a `Date` object then using `toString()` turns it into a human-readable date. Initially, I tried to use `toISOString()`, which creates this:
+
+```console
+new Date(Date.now()).toISOString()
+"2018-03-14T14:30:01.112Z"
+```
+
+However, that is not very readable. I soon discovered that I could use `toString() instead:
+
+```console
+new Date(Date.now()).toString()
+"Wed Mar 14 2018 14:29:49 GMT+0000 (GMT Standard Time)"
+```
+
+That is much better, as it is clear what time and date that represents.
+
+Again, since we need to be able to create transactions to see them here, and since we need the blockchain to work in order to do that, we will have to test this at the end.
+
+#### Blockchain
+
+The blockchain pages are a critical aspect of the project, as it is here where we mine the blockchain.
+
+##### Mining
+
+Mining the blockchain, as mentioned previously, consists of performing hundreds of thousands hash operations to find the one that passes a "difficulty test" - in this case, it passes if the hash begins with a certain number of hashes. Obviously, this is very CPU intensive, and since Node.js is single-threaded this would cripple the performance of the application. This is not desirable, so I looked for alternatives.
+
+###### Multi-threading alternatives
+
+The first option I looked at was to see if there was a multithreading module default to Node.js. This lead me to `child_process`. However, although this appeared to be relevent to my problems, it looked far too complex for this project.
+
+Next, I looked to see if there was anything default to Javascript itself. As it turns out, there is a `Webworker` API which allows you to run a different JS file independantly from the main program, and also communicate between programs.
+
+An example of a `Webworker`:
+
+```javascript
+var worker = new Worker('worker.js')
+
+worker.onmessage = (msg) => {
+    console.log(msg.data)
+}
+```
+
+However, I immediately ran into a problem when I tried to use Node.js functions in the `worker.js` file.
+
+```console
+ReferenceError: require is not defined
+```
+
+Webworkers can only use plain Javascript, and don't have access to Node.js modules or features. This is a massive problem, as we need to use `cryto` module to find the hash of the block at a minimum. I therefore had to carry on looking.
+
+The next place I looked was in `npm`. Since `Worker()` was exactly what I needed, I looked for Node.js-compatible alternative.
+
+Luckily enough, I found one. `tiny-worker` replaces `Webworker` with the same API but now with access to Node.js functions.
+
+```shell
+>npm install --save tiny-worker
+```
+
+###### Mining page
+
+The idea behind the mining page is that we have a `pre` element acting as a console, and then also have a button to toggle the miner.
+
+```html
+<h1>Blockchain</h1>
+
+<h2>Mine for Arbitrary Units</h2>
+
+<button id="toggle" style="margin-right:5px">Start</button><button id="clear">Clear</button> <b>Please note:</b> Mining is very CPU intensive
+
+<pre id="console"></pre>
+```
+
+I also added a button to clear the console.
+
+The console has the following CSS, to make sure that it is the right size, and has a monospace font.
+
+```css
+#console {
+    box-sizing: border-box;
+    width: 100%;
+    height: calc(100% - 180px);
+    min-height: 300px;
+    background-color: #ececec;
+    border-radius: 5px;
+    border: 1px solid #333;
+    padding: 5px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-family: 'Courier New', 'Courier', monospace;
+}
+```
+
+Next I created `mine.js` in `/js/pages`.
+
+```js
+const Worker = require('tiny-worker')
+const blockchain = require('../blockchain.js')
+const network = require('../network.js')
+const file = require('../file.js')
+
+function init() {
+    var miner = null
+    var button = document.getElementById('toggle')
+    var clear = document.getElementById('clear')
+    var pre = document.getElementById('console')
+
+    clear.addEventListener('click',() => {
+        pre.innerHTML = ''
+    })
+
+    button.addEventListener('click',() => {
+        if (button.textContent == 'Start') {
+            pre.innerHTML += 'Start'
+            button.textContent = 'Stop'
+        } else {
+            pre.innerHTML += 'Mining stopped<br>'
+            button.textContent = 'Start'
+        }
+    })
+}
+
+exports.init = init
+```
+
+`init()` adds event listeners to `#toggle` and to `#clear`. `#clear` simply sets the content of `#console` to an empty string. For `#toggle`, I created an if statement that switches the text content of the button between `'Start'` and `'Stop'`. This way, we can do one thing when the button says "Start" and a different thing when it says "Stop".
+
+The next stage is to create the `Worker`. If the button is set to "Start", then it checks to see if the miner exists already. If not, it creates a new instance of `Worker` and sets it to `miner`. It sets `miner`'s `onmessage` function to add any received data to `#console`. If the button is set to "Stop", then it sets `miner` to `null` and then adds "Mining stopped" to the `#console`. After both, it toggles the text content of the button.
+
+```javascript
+button.addEventListener('click',() => {
+    if (button.textContent == 'Start') {
+        if (miner === null) {
+            try {
+                miner = new Worker('js/mining-script.js')
+                miner.onmessage = (msg) => {
+                    pre.innerHTML += msg.data+'<br>'
+                }
+            } catch(e) {
+                pre.innerHTML = 'Problem starting mining script, sorry :/'
+            }
+        }
+        button.textContent = 'Stop'
+    } else {
+        if (miner !== null) {
+            miner.terminate()
+            miner = null
+        }
+        pre.innerHTML += 'Mining stopped<br>'
+        button.textContent = 'Start'
+    }
+})
+```
+
+Next we need to create `mining-script.js`, in the `/js` folder. For the time being, I just made it post "Hello World" back to the main program.
+
+```javascript
+postMessage('Hello World')
+```
+
+Navigating to `mine` and clicking "Start" gives:
+
+![Hello World](https://i.imgur.com/wQRhtad.png)
+
+This shows that it works!
+
+###### Mining Script
+
+We now need to flesh out the mining script. Unfortunately, the following code is very messy, as errors generated in the mining script seemed to disappear or be printed in the command line rather than in the Chromium console, and as such took a great deal of trial and error to get working.
+
+Because of this, I will simply put the final code here rather than go through the process of making it.
+
+As mentioned previously, the difficulty is static, as I could not figure out how to verify it if it could change
+
+```javascript
+const hash = require(__dirname+'/js/hashing.js')
+const fs = require('fs')
+
+class Miner {
+    constructor(path) {
+        const difficulty = 6
+        this.path = path
+        // this is for the printing later
+        this.hashes = 0
+        this.dhash = 0
+        this.t1 = Date.now()
+        this.t2 = Date.now()
+        this.tt = Date.now()
+        // difficulty is static
+        this.block = {
+            "header": {
+                "type": "bk"
+            },
+            "body": {
+                "difficulty": difficulty
+            }
+        }
+
+        var transactions = JSON.parse(fs.readFileSync(this.path+'txpool.json','utf-8'))
+        this.block.body['transactions'] = transactions
+
+        // parent and height
+        var top = this.getTopBlock()
+        if (top === null) {
+            this.block.body['parent'] = '0000000000000000000000000000000000000000000000000000000000000000'
+            this.block.body['height'] = 0
+        } else {
+            var blockchain = JSON.parse(fs.readFileSync(this.path+'blockchain.json','utf8'))
+            this.block.body['parent'] = top
+            this.block.body['height'] = blockchain[top].height+1
+        }
+        // miner
+        var wallets = JSON.parse(fs.readFileSync(this.path+'wallets.json','utf-8'))
+        var miner = wallets[0].public
+        this.block.body['miner'] = miner
+
+        postMessage('Block formed, mining initiated')
+    }
+
+    mine() {
+        // repeatedly hashes with a random nonce
+        while (true) {
+            this.rand((nonce) => {
+                this.block.body['nonce'] = nonce
+                // t2 is updated every loop
+                this.block.body['time'] = this.t2
+                this.hashBlock(this.block.body,(hash) => {
+                    this.hashes++
+                    this.dhash++
+                    // checks difficulty
+                    var pass = true
+                    for (var i = 0; i < this.block.body.difficulty; i++) {
+                        if (hash.charAt(i) !== 'a') {
+                            pass = false
+                        }
+                    }
+                    this.t2 = Date.now()
+                    // this triggers if the block has passed the difficulty test
+                    if (pass) {
+                        postMessage('Hash found! Nonce: '+nonce)
+                        postMessage(hash)
+                        postMessage(this.block)
+                        // get rid of the pending transactions
+                        fs.writeFileSync(this.path+'txpool.json','[]','utf-8')
+                        // set the new block things
+                        this.block.body.transactions = []
+                        var top = this.getTopBlock()
+                        this.block.body['parent'] = hash
+                        this.block.body['height'] += 1 
+                    } else {
+                        // printing for the console
+                        if ((this.t2-this.t1) > 10000) {
+                            // calculate hashes per second (maybe)
+                            // *1000 turns it into seconds
+                            var hs = (this.dhash/(this.t2-this.t1))*1000
+                            this.dhash = 0
+                            this.t1 = Date.now()
+                            postMessage('Hashing at '+hs.toFixed(3)+' hashes/sec - '+this.hashes+' hashes in '+Math.floor((this.t1-this.tt)/1000)+' seconds')
+
+                            // check to see if the block has updated
+                            fs.readFile(this.path+'txpool.json','utf-8',(err,content) => {
+                                if (err) {
+                                    // if the file doesn't exist, set content to []
+                                    if (err.code === 'ENOENT') {
+                                        content = '[]'
+                                    } else {
+                                        postMessage('Error opening file')
+                                        throw err
+                                    }
+                                }
+                                var current = JSON.stringify(this.block.body.transactions)
+                                // change the transactions if they are different
+                                if (current !== content) {
+                                    var newtx = JSON.parse(content)
+                                    this.block.body['transactions'] = newtx
+                                    postMessage('Transactions updated')
+                                }
+                            })
+                        }
+                    }
+                })
+            })
+        }
+    }
+
+    rand(callback) {
+        callback(Math.floor(10000000000000000*Math.random()))
+    }
+    
+    hashBlock(block,callback) {
+        var hashed = hash.sha256hex(JSON.stringify(block))
+        callback(hashed)
+    }
+
+    getTopBlock() {
+        const genesis = '0000000000000000000000000000000000000000000000000000000000000000'
+        try {
+            var data = fs.readFileSync(this.path+'blockchain.json','utf8')
+        } catch(e) {
+            return null
+        }
+        if (data === '{}' || data === '') {
+            return null
+        }
+        var fullchain = JSON.parse(data)
+        // get the origin block
+        // as there is nothing under it to be wrong
+        for (var best in fullchain) {
+            if (fullchain[best].parent === genesis) {
+                break
+            }
+        }
+        if (typeof best !== 'undefined' && fullchain[best].parent === genesis) {
+            // iterates through the fullchain
+            for (var key in fullchain) {
+                // larger height the better
+                if (fullchain[key].height > fullchain[best].height) {
+                    var candidate = true
+                    // iterate down the chain to see if you can reach the bottom
+                    // if the parent is undefined at any point it is not part of the main chain
+                    // run out of time for a more efficient method
+                    var current = key
+                    var parent
+                    while (fullchain[current].parent !== genesis) {
+                        parent = fullchain[current].parent
+                        if (typeof fullchain[parent] !== 'undefined') {
+                            current = parent
+                        } else {
+                            candiate = false
+                        }
+                    }
+                    if (candidate) {
+                        best = key
+                    }
+                // otherwise, if they're the same pick the oldest one
+                } else if (fullchain[key].height === fullchain[best].height) {
+                    if (fullchain[key].time < fullchain[best].time) {
+                        // see other comments
+                        var candidate = true
+                        var current = key
+                        while (fullchain[current].parent !== genesis) {
+                            parent = fullchain[current].parent
+                            if (typeof fullchain[parent] !== 'undefined') {
+                                current = parent
+                            } else {
+                                candiate = false
+                            }
+                        }
+                        if (candidate) {
+                            best = key
+                        }
+                    }
+                }
+            }
+        } else {
+            best = null
+        }
+        return best
+    }
+}
+
+onmessage = (path) => {
+    postMessage('Path recieved')
+    try {
+        var miner = new Miner(path.data)
+        miner.mine()
+    } catch(e) {
+        postMessage('Error caught')
+        if (typeof e !== 'string') {
+            e = e.message
+        }
+        postMessage(e)
+    }
+}
+```
+
+I created a `Miner` class, which has multiple functions to recreate some of the functions that exist in the main program.
+
+Starting from the top, the first issue I ran into was that this too seemed unable to `require` modules. As it turns out, I had to put the absolute file path for it to work, which is why I `require` the hash module like so:
+
+```javascript
+const hash = require(__dirname+'/js/hashing.js')
+```
+
+`__dirname` gets the path up to `/arbitra-client`, and then we concatenate `/js/hashing.js` to that to get the path to the file we want.
+
+The next issue I ran into was trying to `file.js` working. I imported it the same way I imported `hashing.js`, but it kept on throwing an error that was approximately "`remote` is undefined". This took a great deal of debugging, but I eventually realised that since it was not an Electron renderer process, it did not have access to `electron.remote`. This was a real issue, as this is required to get the file path for `%APPDATA%`.
+
+The solution was to get the file path in `mine.js`, and send it to the mining script using `postMessage()`. Since `network.js` also relies on `file.js`, I realised that in order to send the block it would need to be sent from `mine.js`. Therefore, in `mine.js`, I changed the part of the code that initalises the miner to this:
+
+```javascript
+miner = new Worker('js/mining-script.js')
+miner.onmessage = (msg) => {
+    if(typeof msg.data === 'string') {
+        pre.innerHTML += 'Hello World'
+    } else {
+        console.log(JSON.stringify(msg.data))
+        blockchain.addBlock(msg.data)
+        network.sendToAll(msg.data)
+    }
+}
+// Workers can't get remote so we need to send them the path manually
+var path = remote.app.getPath('appData')+'/arbitra-client/'
+miner.postMessage(path)
+```
+
+In this code, we get the file path that we need, then post a message to the miner. This way, they can get the path without using `electron.remote`.
+
+When the miner posts a message, it is checked to see if it a string or not. If so, it is printed to `#console`. If not, it is assumed to be a block and added to the blockchain and sent to all nodes.
+
+First of all, we need to create the constructor of `Miner()`, which can be seen here. It receives the file path and sets it as a class property. It then creates the block template, and sets all the variables that do not change from block to block. It also sets some properties that are used later to print the hashing rate later on.
+
+An issue I had was similar to the problem I had with the message replies, as the constructor would end with the block still empty. This was because I was misusing callbacks again, and the block would be sent off before the callback had returned. To remedy this issue, instead of using `fs.readFile()` I used `fs.readFileSync()`, which as the name suggests returns syncronously. This meant that it had to wait for the data to return, but since this is running on a new thread it does not matter. This is the reason that I had to change `getTopBlock()` to be syncronous.
+
+```javascript
+class Miner {
+    constructor(path) {
+        const difficulty = 6
+        this.path = path
+        // this is for the printing later
+        this.hashes = 0
+        this.dhash = 0
+        this.t1 = Date.now()
+        this.t2 = Date.now()
+        this.tt = Date.now()
+        // difficulty is static
+        this.block = {
+            "header": {
+                "type": "bk"
+            },
+            "body": {
+                "difficulty": difficulty
+            }
+        }
+
+        var transactions = JSON.parse(fs.readFileSync(this.path+'txpool.json','utf-8'))
+        this.block.body['transactions'] = transactions
+
+        // parent and height
+        var top = this.getTopBlock()
+        if (top === null) {
+            this.block.body['parent'] = '0000000000000000000000000000000000000000000000000000000000000000'
+            this.block.body['height'] = 0
+        } else {
+            var blockchain = JSON.parse(fs.readFileSync(this.path+'blockchain.json','utf8'))
+            this.block.body['parent'] = top
+            this.block.body['height'] = blockchain[top].height+1
+        }
+        // miner
+        var wallets = JSON.parse(fs.readFileSync(this.path+'wallets.json','utf-8'))
+        var miner = wallets[0].public
+        this.block.body['miner'] = miner
+
+        postMessage('Block formed, mining initiated')
+    }
+}
+```
+
+These following functions are a part of the `Miner` class.
+
+To generate a random number for the nonce, I decided to put a wrapper around `Math.random()` so that it generates integers, by multiplying it by a large number. I decided to use `Math.random()` rather than the cryptographically secure alternative because being fast is more important than being completely unpredictable, as it just needs to be different from other people's guesses.
+
+```javascript
+rand(callback) {
+    callback(Math.floor(10000000000000000*Math.random()))
+}
+```
+
+Although mostly unneccessary, I wrapped `hash.sha256hex()` so that I could feed it objects and it would `stringify()` it.
+
+```javascript
+hashBlock(block,callback) {
+    var hashed = hash.sha256hex(JSON.stringify(block))
+    callback(hashed)
+}
+```
+
+Since we can't use `blockchain.getTopBlock()` as it uses `file.js`, I had to repeat it in the `Miner` class. I also changed it so that it was syncronous, as explained earlier.
+
+```javascript
+getTopBlock() {
+    const genesis = '0000000000000000000000000000000000000000000000000000000000000000'
+    try {
+        var data = fs.readFileSync(this.path+'blockchain.json','utf8')
+    } catch(e) {
+        return null
+    }
+    if (data === '{}' || data === '') {
+        return null
+    }
+    var fullchain = JSON.parse(data)
+    // get the origin block
+    // as there is nothing under it to be wrong
+    for (var best in fullchain) {
+        if (fullchain[best].parent === genesis) {
+            break
+        }
+    }
+    if (typeof best !== 'undefined' && fullchain[best].parent === genesis) {
+        // iterates through the fullchain
+        for (var key in fullchain) {
+            // larger height the better
+            if (fullchain[key].height > fullchain[best].height) {
+                var candidate = true
+                // iterate down the chain to see if you can reach the bottom
+                // if the parent is undefined at any point it is not part of the main chain
+                // run out of time for a more efficient method
+                var current = key
+                var parent
+                while (fullchain[current].parent !== genesis) {
+                    parent = fullchain[current].parent
+                    if (typeof fullchain[parent] !== 'undefined') {
+                        current = parent
+                    } else {
+                        candiate = false
+                    }
+                }
+                if (candidate) {
+                    best = key
+                }
+            // otherwise, if they're the same pick the oldest one
+            } else if (fullchain[key].height === fullchain[best].height) {
+                if (fullchain[key].time < fullchain[best].time) {
+                    // see other comments
+                    var candidate = true
+                    var current = key
+                    while (fullchain[current].parent !== genesis) {
+                        parent = fullchain[current].parent
+                        if (typeof fullchain[parent] !== 'undefined') {
+                            current = parent
+                        } else {
+                            candiate = false
+                        }
+                    }
+                    if (candidate) {
+                        best = key
+                    }
+                }
+            }
+        }
+    } else {
+        best = null
+    }
+    return best
+}
+```
+
+Finally, the most important function `mine()`. When this is called, it will run indefinitely, hashing the block forever.
+
+It first calls our `rand()` function to get the nonce, and adds the nonce to the block, as well as the current time. It then checks the difficulty by hashing the block and iterating through the hash. If it begins with as many `a`s as is stated in the block, then it passes. If so, it sends a message saying that the hash has been found, along with the nonce and the hash. It then sends the block, which will be sent on from `mine.js`. It then clears `txpool.json`, as those messages have now been sent, and increases the height and changes the parent to the hash that was just found.
+
+```javascript
+mine() {
+    // repeatedly hashes with a random nonce
+    while (true) {
+        this.rand((nonce) => {
+            this.block.body['nonce'] = nonce
+            // t2 is updated every loop
+            this.block.body['time'] = this.t2
+            this.hashBlock(this.block.body,(hash) => {
+                this.hashes++
+                this.dhash++
+                // checks difficulty
+                var pass = true
+                for (var i = 0; i < this.block.body.difficulty; i++) {
+                    if (hash.charAt(i) !== 'a') {
+                        pass = false
+                    }
+                }
+                this.t2 = Date.now()
+                // this triggers if the block has passed the difficulty test
+                if (pass) {
+                    postMessage('Hash found! Nonce: '+nonce)
+                    postMessage(hash)
+                    postMessage(this.block)
+                    // get rid of the pending transactions
+                    fs.writeFileSync(this.path+'txpool.json','[]','utf-8')
+                    // set the new block things
+                    this.block.body.transactions = []
+                    var top = this.getTopBlock()
+                    this.block.body['parent'] = hash
+                    this.block.body['height'] += 1 
+                }
+            })
+        })
+    }
+}
+```
+
+However, I also wanted it to print to the console occasionally to show that it was doing something. After much trial and error, I found the best way to do this was to use `this.t1` and `this.t2`. `t2` approximately the current time, and it is updated after every hash. `t1` is set in the constructor. Therefore, finding `this.t2-this.t1` will give time time in milliseconds since it started mining. I used this trigger code to run every 10 seconds - if `this.t2-this.t1` is larger than 10000 milliseconds, then it resets `t1` to the current time, and prints the hashing rate as well as the total number of hashes to the `#console`.
+
+```javascript
+if (pass) {
+    postMessage('Hash found! Nonce: '+nonce)
+    postMessage(hash)
+    postMessage(this.block)
+    // etc
+} else {
+    // printing for the console
+    if ((this.t2-this.t1) > 10000) {
+        // calculate hashes per second (maybe)
+        // *1000 turns it into seconds
+        var hs = (this.dhash/(this.t2-this.t1))*1000
+        this.dhash = 0
+        this.t1 = Date.now()
+        postMessage('Hashing at '+hs.toFixed(3)+' hashes/sec - '+this.hashes+' hashes in '+Math.floor((this.t1-this.tt)/1000)+' seconds')
+    }
+}
+```
+
+To find how fast hashes are being generated, we use `this.dhash`, which is the number of hashes that have happened since the last interval. Dividing that by `this.t2-this.t1` then multiplying by 1000 gives the number of hashes per second. I cropped that to 3 decimal places by using `toFixed(3)`.  I found the total time since it started hashing using `tt`, which is set in the constructor and not changed. `t1-tt` gives the time in milliseconds since the constructor was called, which I then converted to seconds and rounded.
+
+This is also a good opportunity to see if any more transactions have been added to `txpool.json`. We read that file, check to see if it's different, and if it is then we change the transactions in the block. The reason I decided to only do this every ten seconds is that doing that for every hash would slow the whole thing down with the reading operations, and would wear out the hard drive.
+
+```javascript
+// check to see if the block has updated
+fs.readFile(this.path+'txpool.json','utf-8',(err,content) => {
+    if (err) {
+        // if the file doesn't exist, set content to []
+        if (err.code === 'ENOENT') {
+            content = '[]'
+        } else {
+            postMessage('Error opening file')
+            throw err
+        }
+    }
+    var current = JSON.stringify(this.block.body.transactions)
+    // change the transactions if they are different
+    if (current !== content) {
+        var newtx = JSON.parse(content)
+        this.block.body['transactions'] = newtx
+        postMessage('Transactions updated')
+    }
+})
+```
+
+###### Testing
+
+I tested this by navigating to the `mine` page and clicking "Start". After 30 seconds:
+
+![mining](https://i.imgur.com/YGo2qVg.png)
+
+After 420 seconds, it still had not found a block. This either means that the difficulty test doesn't work, or the difficulty is too high.
+
+![420 seconds](https://i.imgur.com/b9UWbyc.png)
+
+I will investigate this later on. However, this does show that the printing function works.
+
+##### Viewing
+
+Viewing the blockchain is very similar to the `history` page and `wallets`. The HTML, `view.html`, looks like this:
+
+```html
+<h1>Blockchain</h1>
+
+<h2>View Blockchain</h2>
+
+<div class="highlight-box">
+    <h3>Blockchain</h3>
+    <button id="mine-button">Mine</button>
+    <div class="list" id="bk-list"></div>
+</div>
+```
+
+`view.js` looks like this:
+
+```javascript
+const file = require('../file.js')
+const blockchain = require('../blockchain.js')
+const changePage = require('../changepage').changePage
+
+function init() {
+    document.getElementById('mine-button').addEventListener('click',() => {
+        changePage('mine')
+    })
+    file.getAll('blockchain',(data) => {
+        var chain = JSON.parse(data)
+        var list = document.getElementById('bk-list')
+        var listItem
+        var block
+        for (var hash in chain) {
+            block = chain[hash]
+            listItem = document.createElement('div')
+            listItem.classList.add('list-item')
+            // timestamp to date
+            var date = new Date(block.time).toString()
+            // pretty printing json
+            var txs = JSON.stringify(block.transactions,null,4)
+            listItem.innerHTML = '<p><b>Time:</b> '+date+'</p><p><b>Hash:</b> '+hash+'</p><p><b>Parent:</b> '+block.parent+'</p><p><b>Miner:</b> '+block.miner+'</p><p><b>Height:</b> '+block.height+'</p><p><b>Transactions:</b></p><pre>'+txs+'</pre>'
+            list.appendChild(listItem)
+        }
+    })
+}
+
+exports.init = init
+```
+
+The only notable differences is that since `blockchain.json` is not an array, I used a for...in loop which gets the keys of the object.
+
+I also printed the transactions as raw JSON in a `pre` element. When `stringify()`ing the JSON data, I gave it the extra parameters of `null` and `4` which should indent it with 4 spaces.
+
+This needs the blockchain to work, so I will cover it in the Testing phase.
+
+#### Settings
+
+##### Network Settings
+
+The things I wanted to be able to do from network settings are:
+
+- manually ping nodes
+- set `advertise` in the ping messages
+- set the number of target connections
+- refresh the target connections.
+
+The first feature was already made for `testing.js`, so we can just copy that over. The next three change a file when a button is pressed.
+
+As such, `network-settings.html` looks like this:
+
+```html
+<h1>Settings</h1>
+
+<h2>Network Settings</h2>
+
+<h3>Add node</h3>
+<p>Enter an IP address, and it will attempt to connect.</p>
+<input type="text" id="sendto"/>
+<button id="send">Send ping</button>
+<p id="pg-save" class="hidden">Ping sent</p>
+
+<h3>Target connections</h3>
+<p>The target number of connections that the client will try to get. Current: <span id="curr"></span></p>
+<input type="number" id="target"/>
+<button id="target-save">Save</button>
+<p id="min-save" class="hidden">Option saved</p>
+
+<h3>Advertise</h3>
+<p>Sometimes, nodes will ask others to send a list of clients that they are in contact with. Your IP will only be shared if this setting is turned on.</p>
+<select id="advertise">
+    <option value="true">On</option>
+    <option value="false">Off</option>
+</select>
+<button id="save">Save</button>
+<p id="ad-save" class="hidden">Option saved</p>
+
+
+<h3>Refresh connections</h3>
+<p>Refresh this client's connections to other nodes.</p>
+<button id="refresh">Refresh</button>
+<p id="re-save" class="hidden">Connections refreshed</p>
+```
+
+I added messages confirming that the action has been completed, but are hidden by default. When the associated action is completed, `.hidden` will be removed confirming it did something.
+
+Next, I created `network-settings.js`. The outer section looks like this:
+
+```javascript
+const network = require('../network.js')
+const file = require('../file.js')
+
+function init() {
+    // setting the current target connections
+    file.get('target-connections','network-settings',(target) => {
+        document.getElementById('curr').textContent = target
+    })
+}
+
+exports.init = init
+```
+
+This sets the span `#curr` with the current connection target that we have on file.
+
+###### Manual Ping
+
+To ping a node, all we need to do is get `advertise` from `network-settings.json`, use that to form a ping message, then send that to whatever is in the text box using `network.sendMsg()`.
+
+When that is done, it removes `.hidden` from `#pg-save`,
+
+```javascript
+// ping an IP
+document.getElementById('send').addEventListener('click',() => {
+    file.get('advertise','network-settings',(data) => {
+        var msg = {
+            "header": {
+                "type": "pg"
+            },
+            "body": {
+                "advertise": data
+            }
+        }
+        network.sendMsg(msg,document.getElementById('sendto').value)
+        document.getElementById('pg-save').classList -= 'hidden'
+    })
+})
+```
+
+###### Target Connections
+
+"Target connections" is a number that indicates how many connections the network should try to attain. If the number of connections is less that this, it will send out node requests until it reaches that number. By default this is 5.
+
+This code simply uses `file.store()` to store the number in `#target` to `network-settings.json`.
+
+```javascript
+// saving the "target number of connections"
+document.getElementById('target-save').addEventListener('click',() => {
+    var min = document.getElementById('target').value
+    file.store('target-connections',min,'network-settings',() => {
+        document.getElementById('curr').textContent = min
+        document.getElementById('min-save').classList -= 'hidden'
+    })
+})
+```
+
+###### Advertise
+
+`advertise` is the variable used when creating error messages. All we need to do is get a value from the dropdown and store it in `network-settings.json`.
+
+```javascript
+// saving the advertise toggle
+document.getElementById('save').addEventListener('click',() => {
+    var options = document.getElementById('advertise')
+    file.store('advertise',options.value,'network-settings',() => {
+        document.getElementById('ad-save').classList -= 'hidden'
+    })
+})
+```
+
+###### Clear connections
+
+This simply wipes `connections.json` and calls the `connect()` function. It also sets `#connections`, the counter in the corner, to 0.
+
+```javascript
+// refreshing the cache
+document.getElementById('refresh').addEventListener('click',() => {
+    file.storeAll('connections','[]')
+    document.getElementById('connections').textContent = 0
+    network.connect()
+    document.getElementById('re-save').classList -= 'hidden'
+})
+```
+
+##### Application Settings
+
+Application settings is even simpler, as all I can think to put in it is:
+
+- Clear data in `%APPDATA%`
+- Save `wallets.json` to somewhere else
+- show version number
+
+`app-settings.html` looks like this:
+
+```html
+<h1>Settings</h1>
+
+<h2>App Settings</h2>
+
+<p>Application Version: <span id="version"></span></p>
+
+<h3>Save wallets</h3>
+<p>Save wallets.json to somewhere in your computer.</p>
+<button id="save">Save</button>
+
+<h3>Clear cached file</h3>
+<p>Warning - this will delete any pending transactions, and you will have to redownload the blockchain. It will not delete your wallets.</p>
+<button id="clear">Clear cache</button>
+<p id="ca-save" class="hidden">Cache cleared</p>
+```
+
+The outer Javascript looks like this:
+
+```javascript
+const file = require('../file.js')
+const version = require('../../package.json').version
+const fs = require('fs')
+const network = require('../network.js')
+const dialog = require('electron').remote.dialog
+
+function init() {
+    // stuff goes here
+}
+
+exports.init = init
+```
+
+There are some extra inports in this file. We import both `fs` and `file.js`, because `file.js` can only store data in `%APPDATA%`. `dialog` is a part of Electron, and as such we need to access it through `electron.remote`.
+
+I retrieved the version number by using `require()` on `package.json`, which is where that is stored. Getting the property `version` from that gives us the application version directly. We then set the version number using:
+
+```javascript
+document.getElementById('version').textContent = version
+```
+
+Next we need to save `wallets.json`. When the button is pressed, it uses `file.getAll()` to get `wallets.json`. It then opens a save dialog using `dialog.showSaveDialog()`. The "filters" are used for the extension dropdown thing in Windows. In the callback we get the file path, and use `fs.writeFile()` to save `wallets.json` to that file.
+
+```javascript
+document.getElementById('save').addEventListener('click',() => {
+    file.getAll('wallets',(data) => {
+        dialog.showSaveDialog({
+                filters: [
+                    // set default extensions
+                    {name:'JSON',extensions:['json']},
+                    {name:'All files',extensions:['*']}
+                ]
+            },(file) => {
+            fs.writeFile(file,data,(err) => {
+                if (err) throw err
+            })
+        })
+    })
+})
+```
+
+This solution used http://mylifeforthecode.com/getting-started-with-standard-dialogs-in-electron/
+
+Next is the "clear cache" button. This sets all the files to their empty values, which is self-explanatory. It then sets `#connections` to 0 and calls `network.connect()`.
+
+```javascript
+document.getElementById('clear').addEventListener('click',() => {
+    file.storeAll('blockchain',{})
+    file.storeAll('balances',{})
+    file.storeAll('connections',[])
+    file.storeAll('network-settings',{"advertise":"true","target-connections":5})
+    file.storeAll('recent-connections',[])
+    file.storeAll('txpool',[])
+    file.storeAll('recenttx',[])
+    file.storeAll('sent',[])
+    file.storeAll('error-log',[])
+    document.getElementById('ca-save').classList.remove('hidden')
+    document.getElementById('connections').textContent = 0
+    console.warn('All files wiped')
+    network.connect(false)
+})
+```
+
+Notice that `network-settings.json` has it's default values set.
+
+### Final Touches
+
+These are minor improvements that were not major enough to warrent their own section.
+
+#### Moving CSS
+
+I moved the CSS to a new folder called `/static`, as well as the icons. I also downloaded the font-awesome file to this folder. I then changed `index.html` to this:
+
+```html
+<head>
+    <meta charset="utf-8">
+    <title>Arbitra Client</title>
+    <link rel="stylesheet" href="static/style.css"/>
+    <script defer src="renderer.js" type="text/javascript"></script>
+    <script defer src="static/fontawesome.min.js"></script>
+</head>
+```
+
+I also discovered that the `defer` tag exists, which only loads the Javascript file when the rest of the page is finished, so I moved `renderer.js` up to the header.
+
+#### Height counter
+
+In the original concept, I had included several counters beneath the balance total. I had removed all of these except `#connections` as that was the only one that worked. However, I liked having multiple counters so I decided to add one back in. Since it is easy to get the height of the top block, I decided to display the length of the blockchain.
+
+I changed `index.html` to this:
+
+```html
+<ul>
+    <li><i class="fa fa-fw fa-rss" aria-hidden="true"></i> <span id="connections">0</span> connections</li>
+    <li><i class="fa fa-fw fa-chain" aria-hidden="true"></i> <span id="height">0</span> blocks in blockchain</li>
+</ul>
+```
+
+`.fa-chain` is a chain icon. I also added `.fa-fw` to both icons so that they are a fixed width.
+
+This looks like this:
+
+![chain length](https://i.imgur.com/eB37Y9W.png)
+
+Then, at the end of `blockchain.getTopBlock()`, I updated the counter
+
+```javascript
+                    ...
+                    if (candidate) {
+                        best = key
+                    }
+                }
+            }
+            document.getElementById('height').textContent = fullchain[best].height
+        }
+    } else {
+        best = null
+    }
+    callback(best)
+}
+```
+
+I also set it to 0 in the "clear cache" function in `app-settings`.
+
+#### Icon and Splash Screen
+
+I wanted for the application to have an icon, as otherwise the Electron logo is used. I made this in paint in about 30 seconds:
+
+![au icons](https://i.imgur.com/CvjidNa.png)
+
+I stored this in `/static`.
+
+In `main.js`, I set the icon.
+
+```javascript
+win = new BrowserWindow({
+    width: 1280,
+    height: 720,
+    frame: false,
+    icon: 'static/au-icon.png'
+})
+```
+
+Something that had irritated me through development is that the application displays the HTML before the Javascript is fully loaded, so there is a time when the buttons are unresponsive but there is no indication that that is the case.
+
+However, since `#body` is blank until the Javascript loads, after which it is replaced by the associated page, I realised that I could set `#body` to display the icon, and it would disappear when the Javascript loads. This visually indicates that the application is loaded.
+
+I therefore added the icon to `index.html`
+
+```html
+<div id="body">
+    <img src="static/au-icon.png" alt="splash image">
+</div>
+```
+
+I added the following CSS to centralise it:
+
+```css
+#body > img {
+    margin-top: calc(50vh - 100px);
+    margin-left: calc(50% - 50px);
+}
+```
+
+I then started the application to test it.
+
+![splash screen](https://i.imgur.com/sMCykMz.png)
+
+It worked, and was replaced by the `overview` page after a couple of seconds.
+
+#### Overview page
+
+Since `overview.js` doesn't do anything, and since it is loaded every time the application starts, I realised it would be a good place to make sure that all the JSON files exist. It is pretty much the same as the function in `app-settings.js`, but only sets a file to their empty state if they don't exist.
+
+```javascript
+const file = require('../file')
+const blockchain = require('../blockchain.js')
+function init() {
+    // since it runs when you start the program
+    // might as well check all the files exist
+    file.getAll('txpool',(data) => {
+        if (data === null || data === '') {
+            file.storeAll('txpool',[])
+        }
+    })
+    file.getAll('recenttx',(data) => {
+        if (data === null || data === '') {
+            file.storeAll('recenttx',[])
+        }
+    })
+    file.getAll('network-settings',(data) => {
+        if (data === null || data === '') {
+            var defaults = {
+                "advertise": "true",
+                "target-connections": 5
+            }
+            file.storeAll('network-settings',defaults)
+        }
+    })
+    file.getAll('blockchain',(data) => {
+        if (data === null || data === '' || data === '[]') {
+            file.storeAll('blockchain',{})
+        }
+    })
+    file.getAll('balances',(data) => {
+        if (data === null || data === '' || data === '[]') {
+            file.storeAll('blockchain',{})
+        }
+    })
+    file.getAll('connections',(data) => {
+        if (data === null || data === '') {
+            file.storeAll('connections',[])
+        }
+    })
+    file.getAll('recent-connections',(data) => {
+        if (data === null || data === '') {
+            file.storeAll('recent-connections',[])
+        }
+    })
+}
+
+exports.init = init
+```
+
+I also realised that if a person tries to mine the blockchain without a wallet, it would break. Therefore, if `wallets.json` is empty, I generated a new wallet called "My Wallet". This way, everyone starts with a wallet.
+
+```javascript
+file.getAll('wallets',(data) => {
+    if (data === null || data === '' || data === '[]') {
+        ecdsa.createKeys((public, private, err) => {
+            if(err) {
+                console.error(err)
+                alert(err)
+            } else {
+                var wallet = {
+                    "name": "My Wallet",
+                    "public": public,
+                    "private": private,
+                    "amount": 0
+                }
+                file.storeAll('wallets',[wallet])
+            }
+        })
+    }
+})
+```
+
+I also wanted the HTML on the page to be a helpful introduction on what is possible with Arbitra. Therefore, I changed `overview.html` to this:
+
+```html
+<h1>Arbitra</h1>
+
+<p>Welcome to Arbitra!</p>
+
+<br>
+
+<h3>You can:</h3>
+
+<p><i class="fa fa-fw fa-envelope" aria-hidden="true"></i> Send a transaction</p>
+<p><i class="fa fa-fw fa-chain" aria-hidden="true"></i> Mine the blockchain for Arbitrary Units</p>
+<p><i class="fa fa-fw fa-eye" aria-hidden="true"></i> View past transactions and the blockchain</p>
+<p><i class="fa fa-fw fa-rss" aria-hidden="true"></i> Connect to other nodes on the network</p>
+
+<br>
+
+<p>Got any questions/feedback? Email me at <a href="mailto:hello@samuelnewman.uk">hello@samuelnewman.uk</a></p>
+```
+
+Which looks like this:
+
+![overview page final](https://i.imgur.com/pw4bFFq.png)
+
+### npm start script
+
+To save me running `.\node_modules\.bin\electron .` every time, I added a script to `package.json`:
+
+```json
+{
+  "name": "arbitra-client",
+  "version": "0.2.0",
+  "main": "main.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Mozzius/arbitra.git"
+  },
+  "dependencies": {
+    "big-integer": "^1.6.26",
+    "electron": "^1.8.3",
+    "ip": "^1.1.5",
+    "tiny-worker": "^2.1.2"
+  },
+  "scripts": {
+    "start": ".\\node_modules\\.bin\\electron ."
+  }
+}
+```
+
+This means that I can use `npm start` in the console to start the application.

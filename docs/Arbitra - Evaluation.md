@@ -2,20 +2,20 @@
 
 ### Initial Objectives
 
-| Objective                                                    | Met?   | Comment                                                      |
-| ------------------------------------------------------------ | ------ | ------------------------------------------------------------ |
-| The user should be able to construct and send a valid transaction. | Yes    | This does work, provided the wallet has the funds required.  |
-| The program should be able to automatically parse, validate, and deal with messages. | Yes    | The `parseMsg()` calls functions with deal with all of the message types. |
-| The user should be able to mine the blockchain.              | Yes    | The user can mine the blockchain using the `mine` page.      |
-| Users should be rewarded for mining the blockchain.          | Yes    | Users are rewarded 50au per block.                           |
-| All transactions should be secured through the Elliptic Curve Digital Signature Algorithm. | Yes    | An ECDSA system was implemented and used.                    |
-| The user should be able to see sent transactions, their wallets, and the blockchain. | Yes    | Users can view sent transactions, their wallets, and the blockchain through the corresponding pages. |
-| The user should be able to change basic settings.            | Yes    | There is both an `app-settings` and `network-settings` page with multiple options. |
-| The program should connect to other clients automatically, and default to a IP that is running the program. | Yes    | Ping messages are automatically sent, with a friend's computer running as a backup node. |
-| The program should be able to detect and reject invalid messages. | Mostly | It detects obviously incorrect messages, but the system lacks sufficient depth and can easily be tricked. |
-| The blockchain should function as described by the previous section. | Mostly | The blockchain is a blockchain, but the difficulty is static. |
-| The user should be able to interact with the program through an easy-to-use UI. | Yes    | The UI is implemented using Electron and is easy-to-use.     |
-| The user should be able to save their wallets.               | Yes    | Users can save wallets through the `app-settings` page.      |
+| Objective                                                                                                   | Met?   | Comment                                                                                                   |
+| ----------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------- |
+| The user should be able to construct and send a valid transaction.                                          | Yes    | This does work, provided the wallet has the funds required.                                               |
+| The program should be able to automatically parse, validate, and deal with messages.                        | Yes    | The `parseMsg()` calls functions with deal with all of the message types.                                 |
+| The user should be able to mine the blockchain.                                                             | Yes    | The user can mine the blockchain using the `mine` page.                                                   |
+| Users should be rewarded for mining the blockchain.                                                         | Yes    | Users are rewarded 50au per block.                                                                        |
+| All transactions should be secured through the Elliptic Curve Digital Signature Algorithm.                  | Yes    | An ECDSA system was implemented and used.                                                                 |
+| The user should be able to see sent transactions, their wallets, and the blockchain.                        | Yes    | Users can view sent transactions, their wallets, and the blockchain through the corresponding pages.      |
+| The user should be able to change basic settings.                                                           | Yes    | There is both an `app-settings` and `network-settings` page with multiple options.                        |
+| The program should connect to other clients automatically, and default to a IP that is running the program. | Yes    | Ping messages are automatically sent, with a friend's computer running as a backup node.                  |
+| The program should be able to detect and reject invalid messages.                                           | Mostly | It detects obviously incorrect messages, but the system lacks sufficient depth and can easily be tricked. |
+| The blockchain should function as described by the previous section.                                        | Mostly | The blockchain is a blockchain, but the difficulty is static.                                             |
+| The user should be able to interact with the program through an easy-to-use UI.                             | Yes    | The UI is implemented using Electron and is easy-to-use.                                                  |
+| The user should be able to save their wallets.                                                              | Yes    | Users can save wallets through the `app-settings` page.                                                   |
 
 ### Personal Thoughts
 
@@ -27,11 +27,14 @@ I also am disappointed in the lack of focus on functions that deal with the bloc
 
 I am very happy with the UI (although it is irritating I couldn't find icons that fit with the Windows aesthetic), and I am very pleased with how the page system worked out. The code is modular and flexible, and I am happy that I did not need any libraries to deal with the UI except Electron. In fact, a personal goal was not to use modules outside of the standard library where possible, and I managed to end up with only four dependencies, including Electron. Whilst this was probably not the best idea if I was trying to make an actual cryptocurrency, it made me deal with a lot of things on a very low level, especially the cryptography, and ultimately made the project more interesting.
 
-If I had more time, I would have:
+If I had more time, I would:
 
-- Cleaned up the networking aspect and added the dynamic difficulty.
-- Changed the way mining works, possibly using another Electron renderer process instead.
-- Made the styling better match a Windows application.
-- Added a system to give the user more feedback outside of the developer console.
-- Made some of the algorithms more efficient.
-- Added a systen where you could request money through the network.
+- Clean up the networking aspect and add the dynamic difficulty.
+- Change the way mining works, possibly using another Electron renderer process instead.
+- Make the styling better match a Windows application.
+- Add a system to give the user more feedback outside of the developer console.
+- Make some of the algorithms more efficient.
+- Add a systen where you could request money through the network.
+- Build the application so it could be run as a normal `.exe`
+
+I had attempted to build the project, but however it was far more complex that anticipated and I had to settle with the `npm start` script due to time constraints.

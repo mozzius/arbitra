@@ -1,6 +1,6 @@
 ## Testing
 
-Since Arbitra's systems are very interconnected, I have decided to test them by attempting to perform a high level task then making sure that every bit along the way works.
+In this section, I will attempt to verify that the application and the network work to the standard of the inital objectives.
 
 For some of the tests, I installed Arbitra on a friend's PC, which was running 24/7 anyway for their project. Luckily for me, they had a static IP, so I used that for the backup server.
 
@@ -229,11 +229,9 @@ Success
 
 #### Proof
 
-![test 8.1]()
+![test 8.1](https://i.imgur.com/XMJdajo.png)
 
-![test 8.2]()
-
-![test 8.3]()
+![test 8.2](https://i.imgur.com/Zt2dki8.png)
 
 ### Test 9 - Save wallets.json
 
@@ -253,7 +251,13 @@ Success
 
 #### Proof
 
+![test 9.1](https://i.imgur.com/T3PVRGw.png)
 
+`C:\Users\Mozzi\Documents\wallets.json`:
+
+```json
+[{"name":"My Wallet","public":"71870e4352b2d266cbac8ffa88cc92c1b9c93b9c532ad972fa066404bb080010-beae4c7d8995824d2d600d09b4e4784a6a013973202154e28b134ad2c3efc937","private":"732e33449bf91ae9dcf4d7eef791301280bd64935b4cee6854d0d582db7bcd69","amount":100},{"name":"Test Wallet","public":"6bcfc9193ac2b8db237583afa9bb8a347f28ea1af6fb78856f077d3569a26e074fb62fbf8e7f8ad4842ef39da8490953b87b1492c4c219cdfe83a2743dbdc01e","private":"aee7882724828734665fd7810b4caaedbfbaf2e53c713bd919f98dd18657caf4","amount":0}]
+```
 
 ### Test 10 - Invalid transaction
 
@@ -277,3 +281,21 @@ Success
 
 ![test 10.2](https://i.imgur.com/JIucRGw.png)
 
+## Evaluation
+
+### Initial Objectives
+
+| Objective                                                                                                   | Met?   | Comment                                                                                                   |
+| ----------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------- |
+| The user should be able to construct and send a valid transaction.                                          | Yes    | This does work, provided the wallet has the funds required.                                               |
+| The program should be able to automatically parse, validate, and deal with messages.                        | Yes    | The `parseMsg()` calls functions with deal with all of the message types.                                 |
+| The user should be able to mine the blockchain.                                                             | Yes    | The user can mine the blockchain using the `mine` page.                                                   |
+| Users should be rewarded for mining the blockchain.                                                         | Yes    | Users are rewarded 50au per block.                                                                        |
+| All transactions should be secured through the Elliptic Curve Digital Signature Algorithm.                  | Yes    | An ECDSA system was implemented and used.                                                                 |
+| The user should be able to see sent transactions, their wallets, and the blockchain.                        | Yes    | Users can view sent transactions, their wallets, and the blockchain through the corresponding pages.      |
+| The user should be able to change basic settings.                                                           | Yes    | There is both an `app-settings` and `network-settings` page with multiple options.                        |
+| The program should connect to other clients automatically, and default to a IP that is running the program. | Yes    | Ping messages are automatically sent, with a friend's computer running as a backup node.                  |
+| The program should be able to detect and reject invalid messages.                                           | Mostly | It detects obviously incorrect messages, but the system lacks sufficient depth and can easily be tricked. |
+| The blockchain should function as described by the previous section.                                        | Mostly | The blockchain is a blockchain, but the difficulty is static.                                             |
+| The user should be able to interact with the program through an easy-to-use UI.                             | Yes    | The UI is implemented using Electron and is easy-to-use.                                                  |
+| The user should be able to save their wallets.                                                              | Yes    | Users can save wallets through the `app-settings` page.                                                   |

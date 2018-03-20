@@ -60,37 +60,7 @@ The Bitcoin whitepaper (https://bitcoin.org/bitcoin.pdf) was used to understand 
 
 ### A brief introduction to Cryptocurrencies
 
-A transaction, most simply, is a message that says "I want to send this person x arbitrary units". The idea of a cryptocurrency is that rather than having a physical unit that you hand over to someone, you instead have a list of all transactions ever made and determine your account balance from that. This means that everyone can be certain that no-one is forging money or faking transactions - everyone can see the list and validate it. It also removes trust out of the equation - you don't have to just hope that your bank is keeping your money safe. 
-
-To create a transaction, you must have a “wallet” that has some currency in, and use a public/private key pair to cryptographically “sign” your transaction. Public/private key pairs are a cryptographic function that allows a private key to create a message with which one can use the public key to mathematical verify that the message was created with it's paired private key. You would then submit your transaction to a node on the network. If your transaction is valid, the node will send it to all other nodes in the network who will add it to a “block” of transactions.
-
-A block consists of all transactions submitted since the previous block, the timestamp, the hash of the block that came before, and a nonce (which I’ll get to). Having the hash of the previous block irrevocably links the block to the one that came before it, and since it is easy to check, it is impossible to change the previous block’s contents without changing all the blocks that have come after. It also ensures that they are ordered. These blocks thereby form a chain from the genesis block, hence “blockchain”.
-
-```json
-{
-	id: "cad944434a29dcfcfb4080cec264396fd23d73c1708db39bd780e7e30ef9072f",
-    sender: "4a57bd2226eb76cceddf0cfe0baa2a1391b4952db4610dc3762845cedffdff62",
-    recipient: "aed1fe98cda4ba5a1681a19aa768f73b9d707c5621c7effdf2938e242080505e",
-    amount: 50.0,
-    timestamp: "1505052733",
-    signature: "5773487d221545d26fd0f57fdb3a7d986bc479a850d7b0d762e8c7f4772790a0"
-}
-```
-This is an example of a transaction, represented in JavaScript Object Notation (JSON).  A block would be a collection of these.
-
-A blockchain is the equivalent of a bank's ledger - all transactions are recorded to keep track of everyone's balance. The difference between a ledger and a blockchain is that a ledger is kept secret by the banks, whereas the blockchain is held by anyone who wants it. This guarantees that the transactions cannot be messed with.
-
-Anyone can download the blockchain and see if it is valid. But how do you stop someone adding a malicious yet technically valid block to the chain? This is what the nonce is for. In order to be added to the blockchain, the block is hashed using SHA-256 and if the hash meets some criteria, it is sent to all the other nodes in the network. Otherwise, the nonce is changed over and over until the right hash is found. This means that it takes a lot of work to find a valid block, and this work can be verified almost instantly.
-
-This means that if someone wants to submit a malicious block, they will have to either get impossibly lucky, or have more computing power at their disposal than the rest of the network, which is infeasible. Furthermore, even if you do manage to validate a malicious block, nodes will always accept the longest chain, so you would have to keep adding to your malicious chain effectively forever, which gets exponentially harder.
-
-This means, to become a node in the network, you (or your computer) would need to:
-
-1. Collect transactions until the next block is added to the chain.
-2. Start iterating the nonce and hashing the block, while collecting transactions for the next block.
-   a. If you find the right hash, broadcast it to the network.
-   b. If a completed block is sent to you, check if it is valid. If so, accept it.
-3. Start hashing the next block.
+3. ​
 
 Hashing the block in order to find the correct nonce is called “mining”.
 
@@ -492,11 +462,11 @@ If the line does not intersect, we say that it intersects the point at infinity,
 
 ##### Point Multiplication
 
-Now that we can do the basic function, we need to be able to multiply points, as we need to get to the stage where we can calculate $nP = Q$. The obvious way would be to double $P$, and then calculate $\text{Ans} + P$ for $n$ number of times. However, as *Elliptic Curve Cryptography: a gentle introduction* points out, this equation has an efficiency of $O(n)$, which is not particularly fast. However, they suggest using the **double and add** method to multiply points.
+Now that we can do the basic function, we need to be able to multiply points, as we need to get to the stage where we can calculate $[Math Processing Error]nP = Q$. The obvious way would be to double $[Math Processing Error]P$, and then calculate $[Math Processing Error]\text{Ans} + P$ for $[Math Processing Error]n$ number of times. However, as *Elliptic Curve Cryptography: a gentle introduction* points out, this equation has an efficiency of $[Math Processing Error]O(n)$, which is not particularly fast. However, they suggest using the **double and add** method to multiply points.
 
 http://andrea.corbellini.name/2015/05/17/elliptic-curve-cryptography-a-gentle-introduction/#scalar-multiplication
 
-In summary, if you repeatedly double $P$, you would get the pattern:
+In summary, if you repeatedly double $[Math Processing Error]P$, you would get the pattern:
 $$
 P, 2P, 2^2P, 2^3P, 2^4P, 2^5P...
 $$
@@ -517,7 +487,7 @@ Therefore:
 $$
 20P = 2^5P + 2^3P
 $$
-Since we can find $2^nP$ using point doubling, and since we can represent a large number very easily using binary, we can massively cut down on the calculations needed to multiply a point. In our example, five doublings and one addition is needed to find $20P$ and in the article, they show that only seven doublings and four additions are needed to find $151P$. This brings the complexity down to $O(\log n)$, which is much faster for larger numbers.
+Since we can find $[Math Processing Error]2^nP$ using point doubling, and since we can represent a large number very easily using binary, we can massively cut down on the calculations needed to multiply a point. In our example, five doublings and one addition is needed to find $[Math Processing Error]20P$ and in the article, they show that only seven doublings and four additions are needed to find $[Math Processing Error]151P$. This brings the complexity down to $[Math Processing Error]O(\log n)$, which is much faster for larger numbers.
 
 ![algorithmic complexity graph](https://i.stack.imgur.com/WcBRI.png)
 
@@ -3113,7 +3083,7 @@ function randomNum(min=1,max=curve.n) {
 
 Note this function can be passed minimum and  maximum values, but default to $1$ and $n$, as that is all we need the function for.
 
-##### sha256
+##### `sha256()`
 
 We need to convert the `sha256()` function we made earlier to return `bigInt`s. This is relatively easy.
 
@@ -3125,7 +3095,7 @@ function sha256(data) {
 }
 ```
 
-##### onCurve
+##### `onCurve()`
 
 This one is pretty simple to translate. However, we have to use `big-integer`, so that means using `.minus()` instead of simply `-` etc.
 
@@ -3143,11 +3113,11 @@ function onCurve(point) {
 }
 ```
 
-##### invMod
+##### `invMod()`
 
 `big-integer` has an `modInv()` function which is identical, but is designed to work specifically with `bigInt`s, so I decided to use that instead.
 
-##### addPoints
+##### `addPoints()`
 
 Now we have the other functions, we can implement `addPoints()`. Due to `big-integer`, it looks incredibly messy, although I tried to separate out the expressions a bit
 
@@ -3190,7 +3160,7 @@ function addPoints(P1,P2) {
 
 ```
 
-##### multiPoints
+##### `multiPoints()`
 
 With `multiPoints()`, we need to convert a number to binary then iterate through it. First of all, we need to get the binary number. Luckily, when we use `.toString()`, we can specify the base, in this case `.toString(2)`. Otherwise, the function is very similar to the Python version. `yranib` is the word "binary" reversed.
 
@@ -3217,7 +3187,7 @@ function multiPoints(n, P) {
 }
 ```
 
-##### createKeys
+##### `createKeys()`
 
 Now for the key creation function. Here is where we use `randomNum()`.
 
@@ -3248,7 +3218,7 @@ function createKeys(callback) {
 
 This is now much simpler and should work much better down the road.
 
-##### signMsg
+##### `signMsg()`
 
 `signMsg()` also uses callbacks. It also catches any errors in the `multiPoints()` function, which would appear if `w` was an invalid number, and return a error to the callback. I also restructured the function around a while loop which is much easier to understand.
 
@@ -3275,7 +3245,7 @@ function signMsg(msg,w,callback) {
 }
 ```
 
-##### verifyMsg
+##### `verifyMsg()`
 
 `verifyMsg()` is also similar to it's Python equivalent
 
@@ -3455,7 +3425,7 @@ By using the hash as a key, we can simply use `file[hash]` to retrieve the array
 
 The method by which you read and write to files in Node.js is using the `fs`  (file system) module, a default library. However, it is powerful but quite clumsy, so I created some functions that wrap around `fs`' functions that are better adapted to this project's needs. These are stored in `file.js`.
 
-#### store
+#### `store()`
 
 First we need to import `fs` and `electron.remote` into `file.js`, since we need `remote` to get the file path of the `%APPDATA%` folder where the JSON files will be located.
 
@@ -3508,7 +3478,6 @@ function store(key,data) {
         }
     })
 }
-
 ```
 
 However, this will throw an error if `sent.json` doesn't exist. We can fix this by catching the corresponding error (`ENOENT`) and creating a new file if that's the case. We do however have to put `content` into an array so it is in the correct format.
@@ -3788,7 +3757,7 @@ We can now test the array concatenation. Calling `store('test',['data2','data3']
 
 It worked!
 
-#### get
+#### `get()`
 
 Now we need to retrieve data. This function is very similar, except instead of writing to the file at the end, it just calls the callback with the data it retrieved.
 
@@ -3875,7 +3844,7 @@ I realised that it would be helpful to add some more functions to deal with othe
 - `storeAll()`, the corresponding wrapper around `fs.writeFile()`
 - `append()`, which appends data to a file which contains an array rather than an object literal.
 
-#### getAll
+#### `getAll()`
 
 This is simply stripping the complicated parts out of `get()`.
 
@@ -3902,9 +3871,9 @@ function getAll(file,callback,fail=null) {
 exports.getAll = getAll
 ```
 
-#### storeAll
+#### `storeAll()`
 
-`storeAll()` is even simpler.
+`storeAll()` is even simpler, as it just wraps `fs.writeFile()`.
 
 ```javascript
 function storeAll(file,data,callback=()=>{}) {
@@ -3917,7 +3886,7 @@ function storeAll(file,data,callback=()=>{}) {
 }
 ```
 
-#### append
+#### `append()`
 
 Append is very similar to `get()`, but rather than dealing with objects that sometimes have arrays as data and using `Array.isArray()`, it simply appends the data to the file using `jsondata.push()` as the file is assumed to be an array rather than an object literal.
 
@@ -4075,7 +4044,7 @@ I decided the best place for this is within the `network.init()` function, after
 
 Next, we need to connect to the nodes listed in `recent-connections.json`, to reaffirm that they are still around. I decided to put this in a function called `connect()`.
 
-#### connect
+#### `connect()`
 
 This is a fairly simple function, as it simply gets all the nodes in `recent-connections.json` and sends them a ping, if they're not currently connected to. However, I also wanted it to connect to the backup server if it couldn't find any connections. Therefore, after it sends the pings I wanted to see how many connections there are, and if there's none it should attempt to connect to the backup server. First, I ran into the issue of knowing how many connections I had. Initially, I tried a complex callback system but this ultimately failed.
 
@@ -4131,7 +4100,7 @@ function connect() {
 }
 ```
 
-#### setInterval
+#### `setInterval()`
 
 As per the list, the next thing we need to do is create a loop that sends out hash request messages and pings, where neccessary. Rather than use a `while` loop, I found that a better way of doing it was by using the `setInterval()` function, as then we can set a gap between the loops. I chose 60 seconds, or 60000 milliseconds.
 
@@ -4249,7 +4218,7 @@ var message = {
 
 This is  a JSON object that represents a transaction. Whilst it is not at all correct, we can use it for testing the system as we build it. The function that the server calls is called `parseMsg()`, and it takes the received data and a callback function. First of all, we need to be able to store sent transactions.
 
-#### parseMsg
+#### `parseMsg()`
 
 The best way of doing this that I can think of is having a function for each message type. First, we need to create the if statement that handles this. First, it creates an object literal for the reply. It then attempts to parse the message into JSON. If it doesn't parse, it catches the error and calls the `er()` function, which takes the error message, which should set the reply to an error message. Otherwise, it checks the header type and calls the corresponding function. After the reply has been constructed, the header is created and then the reply is turned back to a string. Finally, it is passed to the callback function where it will be sent back to the sender.
 
@@ -4363,7 +4332,7 @@ const file = require('./file.js')
 
 The first of these functions is `pg()`. Since we need the IP of the node that sent it, we pass the IP as well as the message.
 
-##### pg
+##### `pg()`
 
 What we need to achieve with this function is:
 
@@ -4551,7 +4520,7 @@ function pg(msg,ip,callback) {
 
 However, since the callback is itself a function, this is simply returning `reply` to where it is called in `file.get()` rather than returning it back to `parseMsg()`. I struggled with this issue for quite a while, as I didn't know how to get the data from `file.get()` to return syncronously.
 
-###### Restructuring parseMsg
+###### Restructuring `parseMsg()`
 
 The solution, it turned out, does not use returns. Going back to `parseMsg()`, the callback is effectively a function that sends a reply. Therefore, rather than getting each file to return a reply, it is better to pass `callback()` to each of the `type` functions. Then, it creates a reply and passes it to the callback, rather than returning it back down to `parseMsg()`
 
@@ -4667,11 +4636,11 @@ var server = net.createServer((socket) => {
 })
 ```
 
-##### tx
+##### `tx()`
 
 Much like `pg()`, we will be reusing the code to verify transactions, so I split it up into a separate function. This way, it can be used across the program and not just in this context.
 
-###### transaction
+###### `transaction()`
 
 `transaction()` will take in a message's body, then iterate through the inputs to see if they are valid, using `ecdsa.verifyMsg()`. The message is the amount plus the recipient's address plus the time. It is a subroutine and does not return anything.
 
@@ -4761,7 +4730,7 @@ function tx(msg,callback) {
 }
 ```
 
-##### bk
+##### `bk()`
 
 As with `tx()`, I made a separate subroutine to see if a block is valid. This iterates checks the difficulty of a block and then goes through the transactions, calling `transaction()` for each one. However, I ran into a major problem, in that I could not figure out how to verify the difficulty if it could change. At the moment, the system only lets blocks into `blockchain.json` if the block is valid. However, with dynamic difficulties, the block could be invalid (by having a difficulty that's too small) but still be in `blockchain.json` if we don't have it's parent on disk to verify that. This would lead to a lot of issues if the blocks in `blockchain.json` could not be trusted, and would require an extremely complex restructuring of the whole system, or would require running this subroutine on the whole blockchain every time a block is valid, which would be far too resource-intensive. I could not figure out how to solve this issue, so unfortunatly I had to instead set the difficulty to 6, permanantly. I set the difficulty as a `const` at the top of the program.
 
@@ -4814,7 +4783,7 @@ function bk(msg,callback) {
 }
 ```
 
-##### hr
+##### `hr()`
 
 To construct a `bh`, we need to use a function that has not yet been covered, `blockchain.getTopBlock()`. This simply returns the hash of the top block of the blockchain.
 
@@ -4840,7 +4809,7 @@ function hr(msg,callback) {
 }
 ```
 
-##### nr
+##### `nr()`
 
 For a node request, we simply iterate through connections, and add them to an array if `"advertise"` is `"true"`, the IP is not the same as the node that sent us this message, and if the number of connections is less than the number that was requested. We also need to make sure that if `msg.max` does not exist, we use `Infinity` instead since `i` will always be less than `Infinity`.
 
@@ -4874,7 +4843,7 @@ function nr(msg,ip,callback) {
 }
 ```
 
-##### cr
+##### `cr()`
 
 When a client receives a chain request, there are three possibilites:
 
@@ -5055,7 +5024,7 @@ function parseReply(data,ip,callback=()=>{}) {
 
 Now we need to make the parsing functions for the replies, in `parse.js`. I have already covered `parse.pgreply()` in the previous section.
 
-##### cn
+##### `cn()`
 
 In theory, we should just be able to iterate through the nodes and add them one by one. However, an oversight in the `blockchain.addBlock()` function means that it takes in full messages rather than just the body. I worked around this by putting each block into an object as the `"body"`, like so:
 
@@ -5069,7 +5038,7 @@ function cn(msg) {
 }
 ```
 
-##### nd
+##### `nd()`
 
 When we receive these nodes, we need to make sure that we are not pinging nodes that we are already connected to. This means that we need to get the list of nodes and only send `pg` messages to those that aren't on both lists.
 
@@ -5113,7 +5082,7 @@ function nd(msg) {
 }
 ```
 
-##### bh
+##### `bh()`
 
 This is the reply to a hash request, and is the hash of that client's top block. In this function, we need to check if it's in the blockchain, and if not, send out chain requests. To do this, we use `!Object.keys(mainchain).includes(msg.body.hash)`, which gets all the keys from a block and checks to see if `msg.body.hash` is one of them. If it does, it returns `!true`, which is `false`.
 
@@ -5138,11 +5107,11 @@ function bh(msg,callback) {
 }
 ```
 
-##### ok
+##### `ok()`
 
 I didn't even make an `ok()` function, I just had it print `"Message received ok"` into the console back in `parseReply()`.
 
-##### er
+##### `er()`
 
 All we need to do here is append the message to `error-logs.json`.
 
@@ -5186,7 +5155,7 @@ To aid with the first function, I decided to structure the blockchain as an obje
 
 I creates all these functions in a file called `blockchain.js`. The blockchain itself is stored in `blockchain.json`, in `%APPDATA%`. First of all, I created `getBlock()`.
 
-#### getBlock
+#### `getBlock()`
 
 This simply uses `file.get()` to get the block
 
@@ -5202,7 +5171,7 @@ function getBlock(hash,callback) {
 
 Since we don't want to have to trawl through the blockchain to check every input of every transaction, I decided to store just the balances in a new file called `balances.json`. This file is again a dictionary-style object, with the wallet as the key storing the amount assigned to them. This is much more efficient for getting the amount assigned to a block. We will only need to generate this file when the blockchain changes. To generate it, I created a function called `calcBalances()`
 
-##### calcBalances
+##### `calcBalances()`
 
 `calcBalances()` needs to iterate through all the inputs in each transaction in each block in the blockchain. I decided to use `forEach()` to do this, as although it is technically slower, it is much clearer to see what is happening. In each input, it sees if `balances`, the object that stores the balances, contains the wallet referred to in the input, using `hasOwnProperty()` which returns `true` if the property has a value assigned to it. If that's case, it deducts the amount defined in the input, and increases the recipient's balance by the same amount.
 
@@ -5324,7 +5293,7 @@ function calcBalances() {
 }
 ```
 
-##### getTopBlock
+##### `getTopBlock()`
 
 To get the main chain, we need to know what the top block is. Initally, I iterated through them and based it off of `height`, using `time` as a tie-break. To make it more flexible, I made it so you have to pass the blockchain to the function to avoid repeating reading the file.
 
@@ -5422,7 +5391,7 @@ function getTopBlock(fullchain,callback) {
 }
 ```
 
-##### mainChain
+##### `mainChain()`
 
 `mainChain()` pretty much repeats what `getTopBlock()` does to verify that a block is a part of the chain, except it stores the blocks that it finds, to create a subsection of the chain. Only this part of the chain is valid, which is why it is so important.
 
@@ -5450,7 +5419,7 @@ function mainChain(callback) {
 }
 ```
 
-##### getChain
+##### `getChain()`
 
 `getChain()` gets a specific part of the chain under a hash passed to it as a parameter, rather than the one given by `getTopBlock()`. Other than that, it is very similar to `mainChain()`, other than it has more error handling since it is unknown if the requested chain actually reaches the bottom, unlike in `mainChain()`.
 
@@ -5482,7 +5451,7 @@ function getChain(top,callback) {
 }
 ```
 
-##### checkBalance
+##### `checkBalance()`
 
 We need a function which checks the balance of a wallet to see if it greater than or equal to some amount. This function is called `checkBalance()`.
 
@@ -5496,7 +5465,7 @@ function checkBalance(key,amount,callback) {
 }
 ```
 
-#### addBlock
+#### `addBlock()`
 
 The `addBlock()` function is fairly simple, as all it needs to do is check if it's valid, append the block to `blockchain.json` and then call `calcBalances()`. However, we also need to remove any transactions from `txpool` that are in the block. To do this, we iterate through the transactions listed in the block and use `splice()` and `indexOf()` to remove the transaction from `txpool`, if it is there.
 
@@ -7602,3 +7571,15 @@ If I had more time, I would:
 - Build the application so it could be run as a normal `.exe`
 
 I had attempted to build the project, but however it was far more complex that anticipated and I had to settle with the `npm start` script due to time constraints.
+
+## Code
+
+### app
+
+#### static
+
+#### pages
+
+#### js
+
+##### pages
